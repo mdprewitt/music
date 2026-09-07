@@ -105,10 +105,13 @@ onBeforeUnmount(revokePdfUrl)
           Chord diagrams
         </label>
         <InstrumentSelector v-model="store.instrument" />
-        <DiagramPositionSelector
-          v-if="store.showDiagrams && store.viewFormat !== 'pdf'"
-          v-model="store.diagramPosition"
-        />
+        <template v-if="store.showDiagrams && store.viewFormat !== 'pdf'">
+          <DiagramPositionSelector v-model="store.diagramPosition" />
+          <label class="diagram-toggle">
+            <input v-model="store.pinDiagrams" type="checkbox" />
+            Pin
+          </label>
+        </template>
         <ViewSelector v-model="store.viewFormat" />
       </div>
       <button @click="store.reset()">Load another</button>
@@ -125,13 +128,18 @@ onBeforeUnmount(revokePdfUrl)
       <p v-else class="loading">Generating PDF…</p>
     </div>
 
-    <div v-else class="sheet-body" :class="`pos-${store.diagramPosition}`">
+    <div
+      v-else
+      class="sheet-body"
+      :class="[`pos-${store.diagramPosition}`, { pinned: store.pinDiagrams }]"
+    >
       <ChordDiagrams
         v-if="song && store.showDiagrams"
         :song="song"
         :instrument="store.instrument"
         :raw-text="store.rawText"
         :position="store.diagramPosition"
+        :pinned="store.pinDiagrams"
       />
       <!-- v-html is safe: content comes from chordsheetjs formatter, not user-injected markup -->
       <div v-if="store.viewFormat === 'html'" class="sheet" v-html="html" />

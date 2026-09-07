@@ -120,6 +120,38 @@ describe('SheetViewer', () => {
     })
   })
 
+  describe('pinned chord diagrams', () => {
+    const pinToggle = (wrapper: Awaited<ReturnType<typeof mountWithSong>>['wrapper']) =>
+      wrapper.findAll('.diagram-toggle').find((l) => l.text().includes('Pin'))
+
+    it('is off by default and adds the pinned class when toggled on', async () => {
+      const { store, wrapper } = await mountWithSong('html')
+      expect(wrapper.find('.sheet-body').classes()).not.toContain('pinned')
+      store.pinDiagrams = true
+      await nextTick()
+      expect(wrapper.find('.sheet-body').classes()).toContain('pinned')
+      expect(wrapper.find('.chord-diagrams').classes()).toContain('pinned')
+    })
+
+    it('toggles store.pinDiagrams from the Pin checkbox', async () => {
+      const { store, wrapper } = await mountWithSong('html')
+      await pinToggle(wrapper)?.find('input').setValue(true)
+      expect(store.pinDiagrams).toBe(true)
+    })
+
+    it('hides the Pin checkbox with diagrams off and in the PDF view', async () => {
+      const { store, wrapper } = await mountWithSong('html')
+      expect(pinToggle(wrapper)).toBeTruthy()
+      store.showDiagrams = false
+      await nextTick()
+      expect(pinToggle(wrapper)).toBeUndefined()
+      store.showDiagrams = true
+      store.viewFormat = 'pdf'
+      await nextTick()
+      expect(pinToggle(wrapper)).toBeUndefined()
+    })
+  })
+
   describe('PDF view', () => {
     beforeEach(() => {
       vi.stubGlobal('URL', {

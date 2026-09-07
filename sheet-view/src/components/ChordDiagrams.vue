@@ -11,6 +11,7 @@ const props = defineProps<{
   instrument: Instrument
   rawText?: string | null
   position?: DiagramPosition
+  pinned?: boolean
 }>()
 
 const shapes = computed(() =>
@@ -24,7 +25,7 @@ const shapes = computed(() =>
   <div
     v-if="shapes.length"
     class="chord-diagrams"
-    :class="`pos-${position ?? 'top'}`"
+    :class="[`pos-${position ?? 'top'}`, { pinned }]"
     aria-label="Chord diagrams"
   >
     <ChordDiagram v-for="shape in shapes" :key="shape.name" :shape="shape" />
@@ -60,5 +61,28 @@ const shapes = computed(() =>
   align-content: flex-start;
   padding-left: 1rem;
   border-left: 1px solid #eee;
+}
+
+/* Pinned: the strip holds its place (against the window scroll) while the chart
+   scrolls past. An opaque background keeps chart text from showing through the
+   top/bottom strips; the right strip is beside the chart so it needs none. */
+.chord-diagrams.pinned {
+  position: sticky;
+  z-index: 1;
+}
+
+.chord-diagrams.pinned.pos-top {
+  top: 0;
+  background: var(--color-background);
+}
+
+.chord-diagrams.pinned.pos-bottom {
+  bottom: 0;
+  background: var(--color-background);
+}
+
+.chord-diagrams.pinned.pos-right {
+  top: 0;
+  align-self: flex-start;
 }
 </style>

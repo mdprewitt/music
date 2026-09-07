@@ -98,4 +98,22 @@ describe('useSheetStore', () => {
     setActivePinia(createPinia())
     expect(useSheetStore().diagramPosition).toBe('bottom')
   })
+
+  it('defaults pinDiagrams to false', () => {
+    expect(useSheetStore().pinDiagrams).toBe(false)
+  })
+
+  it('keeps pinDiagrams across a reset', async () => {
+    const store = useSheetStore()
+    store.pinDiagrams = true
+    await store.loadFile(fileOf(SAMPLE_CHORDPRO))
+    store.reset()
+    expect(store.pinDiagrams).toBe(true)
+  })
+
+  it('persists pinDiagrams and restores it in a fresh store', () => {
+    useSheetStore().pinDiagrams = true
+    setActivePinia(createPinia())
+    expect(useSheetStore().pinDiagrams).toBe(true)
+  })
 })
