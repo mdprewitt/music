@@ -27,3 +27,10 @@ once you pick one.
 
 Chord diagrams position can be toggled from top to right-side to bottom and can be pinned so they stay in one position while the music can scroll.
 
+## Deployment
+
+The app is published to GitHub Pages at <https://mdprewitt.github.io/music/>. Any push to `main`
+that touches `sheet-view/**` triggers `.github/workflows/pages.yml`, which runs `bun run build`
+with `BASE_PATH` set to the project-page subpath and deploys `sheet-view/dist`. The workflow can
+also be run manually from the Actions tab.
+

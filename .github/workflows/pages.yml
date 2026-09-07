@@ -1,0 +1,48 @@
+name: Deploy sheet-view to GitHub Pages
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'sheet-view/**'
+      - '.github/workflows/pages.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: sheet-view
+    steps:
+      - uses: actions/checkout@v5
+      - uses: oven-sh/setup-bun@v2
+      - id: pages
+        uses: actions/configure-pages@v5
+      - run: bun install --frozen-lockfile
+      - run: bun run build
+        env:
+          BASE_PATH: ${{ steps.pages.outputs.base_path }}
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          # `with:` inputs ignore defaults.working-directory
+          path: sheet-view/dist
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4
