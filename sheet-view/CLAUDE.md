@@ -55,21 +55,27 @@ src/
   sheet/                  # chart-rendering helpers (no Vue imports)
     inline.ts             # toInlineSheet() — Song -> flat token model for the
                           #   "HTML inline" view (bracketed chords in the lyric flow)
+    interactive.ts        # markChordCells() — add tabindex/role to the chord cells
+                          #   in HtmlTableFormatter output (it's v-html, so no template)
   chords/                 # chord-diagram feature (no Vue imports except *.vue)
     types.ts              # Instrument, InstrumentSpec, RawChordDefinition, DiagramShape
     diagram.ts            # toDiagramShape() — definition -> renderer-agnostic geometry
     definitions.ts        # resolveDiagramChords(), canonicalChordName(), add: recovery
+    shapes.ts             # buildDiagramIndex()/findShape() — the single entry point for
+                          #   chord -> DiagramShape: {shapes[] for the strip, byName lookup}
     detectInstrument.ts   # guess guitar vs ukulele from a Song
     ukulele.ts            # GENERATED ukulele shape dictionary
     pdf.ts                # drawDiagramSheet() — prepend a diagram page to a jsPDF doc
   components/
     DropZone.vue          # drag-drop + file picker + paste-a-URL; calls store.loadFile() / store.loadFromUrl()
-    SheetViewer.vue       # renders store.song; hosts the view + instrument + theme selectors
+    SheetViewer.vue       # renders store.song; hosts the view + instrument + theme selectors;
+                          #   owns the click-a-chord -> ChordPopover interaction (both HTML views)
     ViewSelector.vue / InstrumentSelector.vue   # radiogroup, v-model on the store
     ThemeSelector.vue     # radiogroup of 4 presets + Custom; :model-value/@update -> theme.selectTheme
     CustomColorEditor.vue # 5 <input type=color> bound to theme.customColors; shown when themeId==='custom'
     ChordDiagram.vue      # one SVG diagram from a DiagramShape
     ChordDiagrams.vue     # the strip of diagrams above the chart
+    ChordPopover.vue      # anchored popover — one diagram shown above a clicked chord
     InlineSheet.vue       # renders toInlineSheet() output — the "HTML inline" view
     __tests__/
   assets/
@@ -129,6 +135,8 @@ scripts/
 - **`PdfFormatter` can't be told the neck has 4 strings.** `chordDiagrams.renderingConfig` has no `stringCount` / `fretCount`; the internal builder hard-codes 6/4. So for ukulele PDFs we set `chordDiagrams.enabled: false` and prepend our own page via `drawDiagramSheet` (`src/chords/pdf.ts`) using the raw jsPDF from `formatter.getDocumentWrapper().doc`. Pass `jsPDF` as the 2nd arg to `formatter.format(song, jsPDF)`.
 - **`{define}` lines with an `add: string N fret N finger N` clause are dropped without a warning.** `recoverDroppedDefinitions()` in `src/chords/definitions.ts` re-parses them from `rawText` after stripping the `add:` clauses.
 - **Chord-name spelling varies wildly** (`maj7`/`M7`, `7-9`/`7b9`, `F#`/`Gb`). `resolveDiagramChords()` layers: sheet define → recovered define → library exact → library by normalised name (`canonicalChordName` for uke, `Chord.normalize()` + enharmonic flip for the guitar lib, which keys sharps only) → `null`.
+- **Resolve once, look up many.** `buildDiagramIndex(song, instrument, rawText)` in `src/chords/shapes.ts` runs `resolveDiagramChords` + `toDiagramShape` a single time (the guitar merge is ~900 shapes) and returns `{ shapes[], byName }`. `ChordDiagrams.vue`, `SheetViewer.vue`'s PDF path, and the click-to-peek popover all go through it; memoise it in a `computed` keyed on (song, instrument). `findShape(index, label)` strips brackets and falls back to `canonicalChordName` — the *displayed* chord name (from `templateHelpers.renderChord` / the formatter) diverges from `song.getChords()` under transpose/capo, so never match by string equality.
+- **Click-a-chord popover.** `SheetViewer.vue` opens `ChordPopover.vue` above a clicked chord in both HTML views. The `html-inline` view emits `chord-click` from real `<span>` nodes; the `html` view is `v-html`, so chord cells are reached by a delegated `@click`/`@keydown` on the `.sheet` wrapper (`event.target.closest('td.chord')`) and made focusable by `markChordCells()` (`src/sheet/interactive.ts`) before insertion. The popover works even when the diagram strip (`store.showDiagrams`) is off; an unresolvable chord still opens it with a "no diagram" note.
 
 ## Commits
 

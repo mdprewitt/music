@@ -144,6 +144,68 @@ describe('SheetViewer', () => {
     })
   })
 
+  describe('click a chord to peek its diagram', () => {
+    it('opens a popover with a diagram when a chord is clicked in the HTML view', async () => {
+      const { wrapper } = await mountWithSong('html')
+      await wrapper.find('td.chord').trigger('click')
+      await nextTick()
+      const popover = wrapper.find('.chord-popover')
+      expect(popover.exists()).toBe(true)
+      expect(popover.find('svg.chord-diagram').exists()).toBe(true)
+    })
+
+    it('toggles the popover shut when the same chord is clicked again', async () => {
+      const { wrapper } = await mountWithSong('html')
+      const chord = wrapper.find('td.chord')
+      await chord.trigger('click')
+      await nextTick()
+      expect(wrapper.find('.chord-popover').exists()).toBe(true)
+      await chord.trigger('click')
+      await nextTick()
+      expect(wrapper.find('.chord-popover').exists()).toBe(false)
+    })
+
+    it('opens a popover from a chord in the HTML inline view', async () => {
+      const { wrapper } = await mountWithSong('html-inline')
+      await wrapper.find('.inline-sheet .chord').trigger('click')
+      await nextTick()
+      expect(wrapper.find('.chord-popover svg.chord-diagram').exists()).toBe(true)
+    })
+
+    it('closes the popover on Escape', async () => {
+      const { wrapper } = await mountWithSong('html')
+      await wrapper.find('td.chord').trigger('click')
+      await nextTick()
+      expect(wrapper.find('.chord-popover').exists()).toBe(true)
+      document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }))
+      await nextTick()
+      expect(wrapper.find('.chord-popover').exists()).toBe(false)
+    })
+
+    it('still opens when the chord-diagram strip is turned off', async () => {
+      const { store, wrapper } = await mountWithSong('html')
+      store.showDiagrams = false
+      await nextTick()
+      expect(wrapper.find('.chord-diagrams').exists()).toBe(false)
+      await wrapper.find('td.chord').trigger('click')
+      await nextTick()
+      expect(wrapper.find('.chord-popover svg.chord-diagram').exists()).toBe(true)
+    })
+
+    it('shows a "no diagram" note for a chord with no known shape', async () => {
+      const store = useSheetStore()
+      await store.loadFile(new File(['[Zqz9]nope'], 'x.cho', { type: 'text/plain' }))
+      store.viewFormat = 'html-inline'
+      const wrapper = mount(SheetViewer)
+      await flushPromises()
+      await nextTick()
+      await wrapper.find('.inline-sheet .chord').trigger('click')
+      await nextTick()
+      expect(wrapper.find('.chord-popover .no-diagram').exists()).toBe(true)
+      expect(wrapper.find('.chord-popover svg.chord-diagram').exists()).toBe(false)
+    })
+  })
+
   describe('PDF view', () => {
     beforeEach(() => {
       vi.stubGlobal('URL', {

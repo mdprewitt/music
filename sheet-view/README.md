@@ -38,6 +38,10 @@ once you pick one.
 
 Chord diagrams position can be toggled from top to right-side to bottom and can be pinned so they stay in one position while the music can scroll.
 
+In the HTML and HTML-inline views you can also **click any chord** to pop its diagram up right above
+that chord — a quick look at one shape without scanning the whole strip. It works even with the
+"Chord diagrams" toggle off; press Esc, click elsewhere, or click the chord again to dismiss.
+
 ## Colour themes
 
 A theme selector in the viewer header offers four standard colour templates —

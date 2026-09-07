@@ -72,6 +72,21 @@ hovers, overlay, error) from them with `color-mix()`.
 - The PDF export is intentionally not themed (`chordsheetjs`' `PdfFormatter` and
   `src/chords/pdf.ts` own their ink colours).
 
+## Chord diagrams
+
+`buildDiagramIndex(song, instrument, rawText)` in `src/chords/shapes.ts` is the
+**single entry point** for turning a song's chords into drawable shapes. It wraps
+`resolveDiagramChords` + `toDiagramShape` and returns `{ shapes, byName }` — the
+ordered strip and a name→shape lookup. It runs the ~900-shape guitar merge, so
+memoise it in a `computed`; never call it per event. Use `findShape(index, label)`
+(not `byName.get`) when matching a chord label from the rendered chart — it strips
+brackets and normalises the spelling.
+
+The click-a-chord popover (`ChordPopover.vue`, driven from `SheetViewer.vue`) reads
+from that same index. The `html-inline` view emits `chord-click` from real spans;
+the `html` view is `v-html`, so its chord cells are made focusable by
+`markChordCells()` (`src/sheet/interactive.ts`) and handled by event delegation.
+
 ## Deployment
 
 The app is published to GitHub Pages at <https://mdprewitt.github.io/music/>. Any push to `main`

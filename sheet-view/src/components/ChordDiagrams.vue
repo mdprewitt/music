@@ -2,8 +2,7 @@
 import { computed } from 'vue'
 import type { Song } from 'chordsheetjs'
 import type { DiagramPosition, Instrument } from '@/chords/types'
-import { resolveDiagramChords } from '@/chords/definitions'
-import { toDiagramShape } from '@/chords/diagram'
+import { buildDiagramIndex } from '@/chords/shapes'
 import ChordDiagram from './ChordDiagram.vue'
 
 const props = defineProps<{
@@ -14,10 +13,8 @@ const props = defineProps<{
   pinned?: boolean
 }>()
 
-const shapes = computed(() =>
-  resolveDiagramChords(props.song, props.instrument, props.rawText ?? null)
-    .filter((resolved) => resolved.definition !== null)
-    .map((resolved) => toDiagramShape(resolved.definition!)),
+const shapes = computed(
+  () => buildDiagramIndex(props.song, props.instrument, props.rawText ?? null).shapes,
 )
 </script>
 

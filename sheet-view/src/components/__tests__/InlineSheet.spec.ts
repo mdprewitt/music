@@ -36,4 +36,27 @@ describe('InlineSheet', () => {
     expect(comment.exists()).toBe(true)
     expect(comment.text()).toBe('softly')
   })
+
+  it('emits chord-click with the bare chord name when a chord is clicked', async () => {
+    const wrapper = mount(InlineSheet, { props: { song: songOf('[C]Amazing [G]grace') } })
+    await wrapper.findAll('.chord')[1]!.trigger('click')
+    const events = wrapper.emitted('chord-click')
+    expect(events).toHaveLength(1)
+    expect(events![0]![1]).toBe('G')
+    expect(events![0]![0]).toBeInstanceOf(HTMLElement)
+  })
+
+  it('only makes real chords clickable, not annotations', () => {
+    const wrapper = mount(InlineSheet, { props: { song: songOf('[C]hi [*loud]there') } })
+    expect(wrapper.findAll('.chord.clickable').map((c) => c.text())).toEqual(['[C]'])
+    expect(wrapper.find('.annotation').exists()).toBe(true)
+    expect(wrapper.find('.annotation').classes()).not.toContain('clickable')
+  })
+
+  it('still reproduces the source line exactly with clickable chords', () => {
+    const wrapper = mount(InlineSheet, {
+      props: { song: songOf('[C]Amazing [G]grace, how [C]sweet the sound') },
+    })
+    expect(wrapper.find('p.line').text()).toBe('[C]Amazing [G]grace, how [C]sweet the sound')
+  })
 })

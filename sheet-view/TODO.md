@@ -4,6 +4,14 @@
 - Flow chord grid better, right side, use multi columns
 - Add live scroll for music
 - Improve chord catalog
+- Click a chord to see its diagram
+  - **Done:** in the HTML and HTML-inline views, clicking a chord opens
+    `ChordPopover.vue` anchored above it (`SheetViewer.vue` owns the interaction).
+    Independent of the "Chord diagrams" toggle; dismiss with Esc / outside click /
+    re-click. `buildDiagramIndex()` + `findShape()` in `src/chords/shapes.ts` are
+    the shared chord→shape resolver (also used by the strip and the PDF path);
+    `markChordCells()` in `src/sheet/interactive.ts` makes the `v-html` table's
+    chord cells keyboard-focusable. An unresolvable chord shows a "no diagram" note.
 - Support for other instruments (banjo, tenor guitar, mandolin)
 - Load files from github or other url
   - **Done:** DropZone takes a pasted URL, and a `?view=<chart-url>` query param
