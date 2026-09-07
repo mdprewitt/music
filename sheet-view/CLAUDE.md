@@ -104,3 +104,6 @@ Use **Conventional Commits** with scope `sheet-view/<feature>`:
 feat(sheet-view/viewer): add plain-text view
 fix(sheet-view): handle empty song gracefully
 ```
+## Freshness
+
+Keep CLAUDE.md and README.md up to date with the newest information as each new feature is added.

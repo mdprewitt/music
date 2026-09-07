@@ -84,6 +84,42 @@ describe('SheetViewer', () => {
     expect(wrapper.find('.chord-diagrams').exists()).toBe(false)
   })
 
+  describe('chord-diagram position', () => {
+    it('defaults the sheet body to the top position', async () => {
+      const { wrapper } = await mountWithSong('html')
+      expect(wrapper.find('.sheet-body').classes()).toContain('pos-top')
+    })
+
+    it('moves the strip when the store position changes', async () => {
+      const { store, wrapper } = await mountWithSong('html')
+      store.diagramPosition = 'right'
+      await nextTick()
+      expect(wrapper.find('.sheet-body').classes()).toContain('pos-right')
+      expect(wrapper.find('.chord-diagrams').classes()).toContain('pos-right')
+      store.diagramPosition = 'bottom'
+      await nextTick()
+      expect(wrapper.find('.sheet-body').classes()).toContain('pos-bottom')
+    })
+
+    it('keeps the strip in the plain-text views', async () => {
+      const { wrapper } = await mountWithSong('chordpro')
+      expect(wrapper.find('.sheet-body .chord-diagrams').exists()).toBe(true)
+      expect(wrapper.find('pre.plain').exists()).toBe(true)
+    })
+
+    it('shows the position selector only with diagrams on and outside the PDF view', async () => {
+      const { store, wrapper } = await mountWithSong('html')
+      expect(wrapper.find('.position-selector').exists()).toBe(true)
+      store.showDiagrams = false
+      await nextTick()
+      expect(wrapper.find('.position-selector').exists()).toBe(false)
+      store.showDiagrams = true
+      store.viewFormat = 'pdf'
+      await nextTick()
+      expect(wrapper.find('.position-selector').exists()).toBe(false)
+    })
+  })
+
   describe('PDF view', () => {
     beforeEach(() => {
       vi.stubGlobal('URL', {

@@ -15,6 +15,7 @@ import { toDiagramShape } from '@/chords/diagram'
 import { drawDiagramSheet, type PdfDoc } from '@/chords/pdf'
 import ViewSelector from './ViewSelector.vue'
 import InstrumentSelector from './InstrumentSelector.vue'
+import DiagramPositionSelector from './DiagramPositionSelector.vue'
 import ChordDiagrams from './ChordDiagrams.vue'
 
 const store = useSheetStore()
@@ -104,6 +105,10 @@ onBeforeUnmount(revokePdfUrl)
           Chord diagrams
         </label>
         <InstrumentSelector v-model="store.instrument" />
+        <DiagramPositionSelector
+          v-if="store.showDiagrams && store.viewFormat !== 'pdf'"
+          v-model="store.diagramPosition"
+        />
         <ViewSelector v-model="store.viewFormat" />
       </div>
       <button @click="store.reset()">Load another</button>
@@ -120,26 +125,18 @@ onBeforeUnmount(revokePdfUrl)
       <p v-else class="loading">Generating PDF…</p>
     </div>
 
-    <template v-else-if="store.viewFormat === 'html'">
+    <div v-else class="sheet-body" :class="`pos-${store.diagramPosition}`">
       <ChordDiagrams
         v-if="song && store.showDiagrams"
         :song="song"
         :instrument="store.instrument"
         :raw-text="store.rawText"
+        :position="store.diagramPosition"
       />
       <!-- v-html is safe: content comes from chordsheetjs formatter, not user-injected markup -->
-      <div class="sheet" v-html="html" />
-    </template>
-
-    <template v-else>
-      <ChordDiagrams
-        v-if="song && store.showDiagrams"
-        :song="song"
-        :instrument="store.instrument"
-        :raw-text="store.rawText"
-      />
-      <pre class="plain">{{ text }}</pre>
-    </template>
+      <div v-if="store.viewFormat === 'html'" class="sheet" v-html="html" />
+      <pre v-else class="plain">{{ text }}</pre>
+    </div>
   </div>
 </template>
 
@@ -203,6 +200,28 @@ button:hover {
   padding: 1rem;
   background: #fdf0ee;
   border-radius: 4px;
+}
+
+.sheet-body {
+  display: flex;
+  gap: 1rem;
+  min-width: 0;
+}
+
+.sheet-body.pos-top,
+.sheet-body.pos-bottom {
+  flex-direction: column;
+}
+
+.sheet-body.pos-right {
+  flex-direction: row;
+  align-items: flex-start;
+}
+
+.sheet-body > .sheet,
+.sheet-body > .plain {
+  flex: 1 1 auto;
+  min-width: 0;
 }
 
 .plain {

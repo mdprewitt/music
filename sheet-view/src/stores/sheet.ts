@@ -2,26 +2,33 @@ import { ref, markRaw, watch } from 'vue'
 import { defineStore } from 'pinia'
 import { ChordProParser, type Song } from 'chordsheetjs'
 import { detectInstrument } from '@/chords/detectInstrument'
-import { isInstrument, type Instrument } from '@/chords/types'
+import {
+  isDiagramPosition,
+  isInstrument,
+  type DiagramPosition,
+  type Instrument,
+} from '@/chords/types'
 
 type SourceFormat = 'chordpro'
 export type ViewFormat = 'chordpro' | 'text' | 'chords-over-words' | 'html' | 'pdf'
 
 const INSTRUMENT_STORAGE_KEY = 'sheet-view:instrument'
+const DIAGRAM_POSITION_STORAGE_KEY = 'sheet-view:diagramPosition'
 const DEFAULT_INSTRUMENT: Instrument = 'guitar'
+const DEFAULT_DIAGRAM_POSITION: DiagramPosition = 'top'
 
-function readStoredInstrument(): Instrument | null {
+function readStored<T>(key: string, guard: (value: unknown) => value is T): T | null {
   try {
-    const stored = localStorage.getItem(INSTRUMENT_STORAGE_KEY)
-    return isInstrument(stored) ? stored : null
+    const stored = localStorage.getItem(key)
+    return guard(stored) ? stored : null
   } catch {
     return null
   }
 }
 
-function writeStoredInstrument(value: Instrument): void {
+function writeStored(key: string, value: string): void {
   try {
-    localStorage.setItem(INSTRUMENT_STORAGE_KEY, value)
+    localStorage.setItem(key, value)
   } catch {
     // storage unavailable (private mode, disabled) — the choice just won't persist
   }
@@ -34,13 +41,18 @@ export const useSheetStore = defineStore('sheet', () => {
   const parseError = ref<string | null>(null)
   const sourceFormat = ref<SourceFormat>('chordpro')
   const viewFormat = ref<ViewFormat>('html')
-  const instrument = ref<Instrument>(readStoredInstrument() ?? DEFAULT_INSTRUMENT)
+  const instrument = ref<Instrument>(
+    readStored(INSTRUMENT_STORAGE_KEY, isInstrument) ?? DEFAULT_INSTRUMENT,
+  )
+  const diagramPosition = ref<DiagramPosition>(
+    readStored(DIAGRAM_POSITION_STORAGE_KEY, isDiagramPosition) ?? DEFAULT_DIAGRAM_POSITION,
+  )
   const showDiagrams = ref(true)
   // A remembered choice is authoritative; auto-detection only fills the gap for
   // the first sheet loaded on a fresh browser. `autoDetecting` marks the one
   // assignment that came from detection rather than the user, so it is not
   // mistaken for an explicit choice and persisted.
-  let instrumentPinned = readStoredInstrument() !== null
+  let instrumentPinned = readStored(INSTRUMENT_STORAGE_KEY, isInstrument) !== null
   let autoDetecting = false
 
   watch(
@@ -48,10 +60,16 @@ export const useSheetStore = defineStore('sheet', () => {
     (value) => {
       if (autoDetecting) return
       instrumentPinned = true
-      writeStoredInstrument(value)
+      writeStored(INSTRUMENT_STORAGE_KEY, value)
     },
     { flush: 'sync' },
   )
+
+  // Nothing auto-detects a diagram position, so no pinned/auto bookkeeping —
+  // every assignment is an explicit user choice worth persisting.
+  watch(diagramPosition, (value) => writeStored(DIAGRAM_POSITION_STORAGE_KEY, value), {
+    flush: 'sync',
+  })
 
   function parse() {
     if (!rawText.value) return
@@ -87,7 +105,8 @@ export const useSheetStore = defineStore('sheet', () => {
     sourceFormat.value = 'chordpro'
     viewFormat.value = 'html'
     showDiagrams.value = true
-    // keep `instrument` — it is a user preference that outlives a single sheet
+    // keep `instrument` and `diagramPosition` — they are user preferences that
+    // outlive a single sheet
   }
 
   return {
@@ -98,6 +117,7 @@ export const useSheetStore = defineStore('sheet', () => {
     sourceFormat,
     viewFormat,
     instrument,
+    diagramPosition,
     showDiagrams,
     loadFile,
     reset,

@@ -24,3 +24,6 @@ Chord diagrams are displayed at the top of the chart. Switch chord display by ch
 (guitar, ukulele), or hide them with the "Chord diagrams" toggle. The instrument is guessed from the
 file (an `{instrument}` directive, or the string count of its own chord definitions) and remembered
 once you pick one.
+
+Chord diagrams position can be toggled from top to right-side to bottom and can be pinned so they stay in one position while the music can scroll.
+

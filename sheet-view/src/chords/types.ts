@@ -19,6 +19,19 @@ export function isInstrument(value: unknown): value is Instrument {
   return value === 'guitar' || value === 'ukulele'
 }
 
+/** Where the chord-diagram strip sits relative to the chart. */
+export type DiagramPosition = 'top' | 'right' | 'bottom'
+
+export const DIAGRAM_POSITIONS: readonly { id: DiagramPosition; label: string }[] = [
+  { id: 'top', label: 'Top' },
+  { id: 'right', label: 'Right' },
+  { id: 'bottom', label: 'Bottom' },
+]
+
+export function isDiagramPosition(value: unknown): value is DiagramPosition {
+  return value === 'top' || value === 'right' || value === 'bottom'
+}
+
 /**
  * A raw chord definition as produced by `chordsheetjs`' `ChordDefinition` /
  * `ChordDefinition.parse()`. Frets are relative to `baseFret` (see chordpro's
