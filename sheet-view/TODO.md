@@ -1,17 +1,7 @@
 # TODOs
 
-- Remove teh PlainText and "chord over Words" options
-- Flow chord grid better, right side, use multi columns
 - Add live scroll for music
 - Improve chord catalog
-- Click a chord to see its diagram
-  - **Done:** in the HTML and HTML-inline views, clicking a chord opens
-    `ChordPopover.vue` anchored above it (`SheetViewer.vue` owns the interaction).
-    Independent of the "Chord diagrams" toggle; dismiss with Esc / outside click /
-    re-click. `buildDiagramIndex()` + `findShape()` in `src/chords/shapes.ts` are
-    the shared chord→shape resolver (also used by the strip and the PDF path);
-    `markChordCells()` in `src/sheet/interactive.ts` makes the `v-html` table's
-    chord cells keyboard-focusable. An unresolvable chord shows a "no diagram" note.
 - Support for other instruments (banjo, tenor guitar, mandolin)
 - Load files from github or other url
   - **Done:** DropZone takes a pasted URL, and a `?view=<chart-url>` query param
@@ -31,11 +21,3 @@
     directly. Gate the client on `import.meta.env.VITE_FETCH_PROXY` (added to the
     CI build step's `env:` next to `BASE_PATH`) so dev and tests run without it.
     It still can't defeat bot challenges.
-- Color customization templates. Provide Standard 4 templates + custom for background, lyrics, chord colors. customization is saved in localStorage
-  - **Done:** a theme selector in the viewer header offers 4 presets (Light,
-    Dark, Sepia, Stage) plus Custom (5 colour pickers: background, lyrics,
-    chords, comments, title). The whole app is coloured by five `--sv-*` CSS
-    vars on `:root`; `applyTheme()` (`src/theme/apply.ts`) writes them inline so
-    a choice outranks `prefers-color-scheme`. `src/stores/theme.ts` persists
-    `sheet-view:theme` + `sheet-view:customColors` and follows the OS scheme on
-    first visit. PDF output stays black-on-white.

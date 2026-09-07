@@ -53,9 +53,11 @@ const shapes = computed(
 
 .chord-diagrams.pos-right {
   order: 1;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   flex: 0 0 auto;
-  width: 6.5rem;
-  align-content: flex-start;
+  width: 12rem;
+  align-content: start;
   padding-left: 1rem;
   border-left: 1px solid var(--sv-divider);
 }
