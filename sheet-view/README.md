@@ -1,6 +1,8 @@
 # Sheet-View
 
-Sheet-View is a web app that let's people view chordpro and other chord sheets.
+Sheet-View is a web app that let's people view chordpro and other chord sheets. You bring your own music and Sheet-View display it for you.
+
+Use it for free here: https://mdprewitt.github.io/music/
 
 File Support:
 
