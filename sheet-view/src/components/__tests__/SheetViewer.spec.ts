@@ -36,23 +36,6 @@ describe('SheetViewer', () => {
     expect(text).toContain('[C]Hello')
   })
 
-  it('renders the plain-text view with a title header and chords over lyrics', async () => {
-    const { wrapper } = await mountWithSong('text')
-    const text = wrapper.find('pre.plain').text()
-    expect(text).toContain('TEST') // TextFormatter upper-cases the title
-    expect(text).toMatch(/C\s+G/)
-    expect(text).toContain('Hello world')
-  })
-
-  it('renders the chords-over-words view with a metadata header', async () => {
-    const { wrapper } = await mountWithSong('chords-over-words')
-    const text = wrapper.find('pre.plain').text()
-    expect(text).toContain('title: Test')
-    expect(text).toContain('artist: Artist')
-    expect(text).toMatch(/C\s+G/)
-    expect(text).toContain('Hello world')
-  })
-
   it('switches views reactively without remounting', async () => {
     const { store, wrapper } = await mountWithSong('html')
     store.viewFormat = 'chordpro'

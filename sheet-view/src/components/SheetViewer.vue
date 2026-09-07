@@ -1,12 +1,6 @@
 <script setup lang="ts">
 import { computed, ref, watch, onBeforeUnmount } from 'vue'
-import {
-  ChordProFormatter,
-  ChordsOverWordsFormatter,
-  HtmlTableFormatter,
-  TextFormatter,
-  type Song,
-} from 'chordsheetjs'
+import { ChordProFormatter, HtmlTableFormatter, type Song } from 'chordsheetjs'
 import { PdfFormatter } from 'chordsheetjs/pdf'
 import { jsPDF } from 'jspdf'
 import { useSheetStore } from '@/stores/sheet'
@@ -28,19 +22,9 @@ const song = computed(() => (store.song ? (store.song as Song) : null))
 
 const html = computed(() => (song.value ? new HtmlTableFormatter().format(song.value) : ''))
 
-const text = computed(() => {
-  if (!song.value) return ''
-  switch (store.viewFormat) {
-    case 'chordpro':
-      return new ChordProFormatter().format(song.value)
-    case 'text':
-      return new TextFormatter().format(song.value)
-    case 'chords-over-words':
-      return new ChordsOverWordsFormatter().format(song.value)
-    default:
-      return ''
-  }
-})
+const text = computed(() =>
+  song.value && store.viewFormat === 'chordpro' ? new ChordProFormatter().format(song.value) : '',
+)
 
 const pdfUrl = ref<string | null>(null)
 const pdfError = ref<string | null>(null)
@@ -250,7 +234,7 @@ button:hover {
   white-space: pre;
   overflow-x: auto;
   margin: 0;
-  /* Plain-text views emit undifferentiated text, so one colour applies. */
+  /* The ChordPro view emits undifferentiated text, so one colour applies. */
   color: var(--sv-lyrics);
 }
 

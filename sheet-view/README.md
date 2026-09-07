@@ -27,8 +27,6 @@ encoding.
 The viewer opens each sheet in the HTML view by default. A view selector in the viewer header
 lets the user switch between:
 - ChordPro
-- Plain Text
-- Chords over words
 - HTML (default)
 - PDF (inline preview with a download button)
 

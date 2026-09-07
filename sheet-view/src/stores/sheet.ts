@@ -11,7 +11,7 @@ import {
 } from '@/chords/types'
 
 type SourceFormat = 'chordpro'
-export type ViewFormat = 'chordpro' | 'text' | 'chords-over-words' | 'html' | 'pdf'
+export type ViewFormat = 'chordpro' | 'html' | 'pdf'
 
 const INSTRUMENT_STORAGE_KEY = 'sheet-view:instrument'
 const DIAGRAM_POSITION_STORAGE_KEY = 'sheet-view:diagramPosition'

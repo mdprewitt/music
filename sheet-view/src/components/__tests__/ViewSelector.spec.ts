@@ -6,20 +6,20 @@ describe('ViewSelector', () => {
   it('renders one button per view format', () => {
     const wrapper = mount(ViewSelector, { props: { modelValue: 'html' } })
     const labels = wrapper.findAll('button').map((b) => b.text())
-    expect(labels).toEqual(['ChordPro', 'Plain Text', 'Chords over Words', 'HTML', 'PDF'])
+    expect(labels).toEqual(['ChordPro', 'HTML', 'PDF'])
   })
 
   it('marks the active view', () => {
-    const wrapper = mount(ViewSelector, { props: { modelValue: 'text' } })
+    const wrapper = mount(ViewSelector, { props: { modelValue: 'chordpro' } })
     const active = wrapper.findAll('button').filter((b) => b.classes('active'))
     expect(active).toHaveLength(1)
-    expect(active[0]?.text()).toBe('Plain Text')
+    expect(active[0]?.text()).toBe('ChordPro')
     expect(active[0]?.attributes('aria-checked')).toBe('true')
   })
 
   it('emits update:modelValue with the selected format', async () => {
     const wrapper = mount(ViewSelector, { props: { modelValue: 'html' } })
-    await wrapper.findAll('button')[4]?.trigger('click')
+    await wrapper.findAll('button')[2]?.trigger('click')
     expect(wrapper.emitted('update:modelValue')?.[0]).toEqual(['pdf'])
   })
 })

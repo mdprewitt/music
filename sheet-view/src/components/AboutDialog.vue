@@ -24,7 +24,7 @@ defineExpose({ isOpen })
         <h3>Features</h3>
         <ul>
           <li>
-            Multiple view formats: ChordPro, Plain Text, Chords over Words, HTML, and PDF
+            Multiple view formats: ChordPro, HTML, and PDF
           </li>
           <li>Chord diagrams for guitar and ukulele with auto-detection</li>
           <li>Toggle chord diagram position (top, right, or bottom)</li>
