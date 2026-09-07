@@ -8,8 +8,14 @@ import {
   type Song,
 } from 'chordsheetjs'
 import { PdfFormatter } from 'chordsheetjs/pdf'
+import { jsPDF } from 'jspdf'
 import { useSheetStore } from '@/stores/sheet'
+import { resolveDiagramChords } from '@/chords/definitions'
+import { toDiagramShape } from '@/chords/diagram'
+import { drawDiagramSheet, type PdfDoc } from '@/chords/pdf'
 import ViewSelector from './ViewSelector.vue'
+import InstrumentSelector from './InstrumentSelector.vue'
+import ChordDiagrams from './ChordDiagrams.vue'
 
 const store = useSheetStore()
 // store.song is markRaw(Song), but Pinia's UnwrapRef loses class fidelity — cast back to Song
@@ -44,18 +50,35 @@ function revokePdfUrl() {
 }
 
 watch(
-  [song, () => store.viewFormat],
-  async ([currentSong, view]) => {
+  [song, () => store.viewFormat, () => store.instrument, () => store.showDiagrams],
+  async ([currentSong, view, instrument, showDiagrams]) => {
     if (view !== 'pdf' || !currentSong) {
       revokePdfUrl()
       pdfError.value = null
       return
     }
     try {
-      const formatter = new PdfFormatter()
+      // For guitar we let chordsheetjs draw its own (six-string) diagrams — it
+      // reserves layout space and paginates them correctly. For ukulele it has
+      // no way to know the neck has four strings, so we suppress its diagrams
+      // and prepend our own page below.
+      const drawOwnDiagrams = showDiagrams && instrument === 'ukulele'
+      const formatter = new PdfFormatter({
+        layout: { chordDiagrams: { enabled: showDiagrams && instrument === 'guitar' } },
+      } as unknown as ConstructorParameters<typeof PdfFormatter>[0])
       // chordsheetjs/pdf ships its own nominal copies of the AST classes and (a bug in its
       // .d.ts) types generatePDF as returning node's buffer Blob — cast across both seams.
-      formatter.format(currentSong as unknown as Parameters<typeof formatter.format>[0])
+      formatter.format(
+        currentSong as unknown as Parameters<typeof formatter.format>[0],
+        jsPDF as unknown as Parameters<typeof formatter.format>[1],
+      )
+      if (drawOwnDiagrams) {
+        const wrapper = formatter.getDocumentWrapper()
+        const shapes = resolveDiagramChords(currentSong, instrument, store.rawText)
+          .filter((resolved) => resolved.definition !== null)
+          .map((resolved) => toDiagramShape(resolved.definition!))
+        drawDiagramSheet(wrapper.doc as unknown as PdfDoc, wrapper.pageSize, shapes)
+      }
       const blob = (await formatter.generatePDF()) as unknown as Blob
       revokePdfUrl()
       pdfUrl.value = URL.createObjectURL(blob)
@@ -75,7 +98,14 @@ onBeforeUnmount(revokePdfUrl)
   <div class="viewer">
     <header class="viewer-header">
       <span class="filename">{{ store.filename }}</span>
-      <ViewSelector v-model="store.viewFormat" />
+      <div class="viewer-controls">
+        <label class="diagram-toggle">
+          <input v-model="store.showDiagrams" type="checkbox" />
+          Chord diagrams
+        </label>
+        <InstrumentSelector v-model="store.instrument" />
+        <ViewSelector v-model="store.viewFormat" />
+      </div>
       <button @click="store.reset()">Load another</button>
     </header>
 
@@ -90,10 +120,26 @@ onBeforeUnmount(revokePdfUrl)
       <p v-else class="loading">Generating PDF…</p>
     </div>
 
-    <!-- v-html is safe: content comes from chordsheetjs formatter, not user-injected markup -->
-    <div v-else-if="store.viewFormat === 'html'" class="sheet" v-html="html" />
+    <template v-else-if="store.viewFormat === 'html'">
+      <ChordDiagrams
+        v-if="song && store.showDiagrams"
+        :song="song"
+        :instrument="store.instrument"
+        :raw-text="store.rawText"
+      />
+      <!-- v-html is safe: content comes from chordsheetjs formatter, not user-injected markup -->
+      <div class="sheet" v-html="html" />
+    </template>
 
-    <pre v-else class="plain">{{ text }}</pre>
+    <template v-else>
+      <ChordDiagrams
+        v-if="song && store.showDiagrams"
+        :song="song"
+        :instrument="store.instrument"
+        :raw-text="store.rawText"
+      />
+      <pre class="plain">{{ text }}</pre>
+    </template>
   </div>
 </template>
 
@@ -102,6 +148,9 @@ onBeforeUnmount(revokePdfUrl)
   display: flex;
   flex-direction: column;
   gap: 1rem;
+  /* chord accent — brighter on dark so chord names stay legible.
+     Inherits into ChordDiagram.vue too (custom properties pierce scoping). */
+  --chord-accent: #42b883;
 }
 
 .viewer-header {
@@ -117,6 +166,22 @@ onBeforeUnmount(revokePdfUrl)
 .filename {
   font-weight: bold;
   color: #333;
+}
+
+.viewer-controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem 1rem;
+}
+
+.diagram-toggle {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-size: 0.85rem;
+  color: #333;
+  cursor: pointer;
 }
 
 button {
@@ -201,7 +266,7 @@ button:hover {
 }
 
 .sheet :deep(td.chord) {
-  color: #42b883;
+  color: var(--chord-accent);
   font-weight: bold;
   padding-right: 0.25em;
 }
@@ -213,5 +278,21 @@ button:hover {
 .sheet :deep(.comment) {
   color: #888;
   font-style: italic;
+}
+
+/* Dark-mode overrides — must follow the base rules above so equal-specificity
+   selectors win on source order. */
+@media (prefers-color-scheme: dark) {
+  .viewer {
+    --chord-accent: #5fd39e;
+  }
+
+  .filename {
+    color: #eee;
+  }
+
+  .diagram-toggle {
+    color: #ddd;
+  }
 }
 </style>

@@ -20,4 +20,7 @@ lets the user switch between:
 - HTML (default)
 - PDF (inline preview with a download button)
 
-Chord diagrams are displayed at the top of the chart.
+Chord diagrams are displayed at the top of the chart. Switch chord display by choosing the instrument
+(guitar, ukulele), or hide them with the "Chord diagrams" toggle. The instrument is guessed from the
+file (an `{instrument}` directive, or the string count of its own chord definitions) and remembered
+once you pick one.

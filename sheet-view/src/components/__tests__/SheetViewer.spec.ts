@@ -63,9 +63,25 @@ describe('SheetViewer', () => {
 
   it('resets the store when "Load another" is clicked', async () => {
     const { store, wrapper } = await mountWithSong('html')
+    // the instrument/view selectors live in a nested div, so the header's only
+    // direct-child button is still the reset button
     await wrapper.find('.viewer-header > button').trigger('click')
     expect(store.song).toBeNull()
     expect(store.filename).toBeNull()
+  })
+
+  it('shows the chord-diagram strip above the HTML view', async () => {
+    const { wrapper } = await mountWithSong('html')
+    const diagrams = wrapper.find('.chord-diagrams')
+    expect(diagrams.exists()).toBe(true)
+    expect(diagrams.findAll('svg.chord-diagram').length).toBeGreaterThan(0)
+  })
+
+  it('hides the chord-diagram strip when showDiagrams is off', async () => {
+    const { store, wrapper } = await mountWithSong('html')
+    store.showDiagrams = false
+    await nextTick()
+    expect(wrapper.find('.chord-diagrams').exists()).toBe(false)
   })
 
   describe('PDF view', () => {
