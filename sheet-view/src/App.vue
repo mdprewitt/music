@@ -32,6 +32,8 @@ function openLicense() {
       <nav>
         <button @click="openAbout" class="link-btn">About</button>
         <button @click="openLicense" class="link-btn">License</button>
+        <a href="https://github.com/mdprewitt/music" target="_blank" rel="noopener noreferrer"
+          class="link-btn">GitHub</a>
       </nav>
     </footer>
     <AboutDialog ref="aboutDialog" />
