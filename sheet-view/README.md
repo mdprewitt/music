@@ -10,7 +10,14 @@ File Support:
 
 ## Usage
 
-From the main screen, drop a file into the "View" area or click "View" to select a file.
+From the main screen, drop a file into the "View" area, click "View" to select a file, or paste
+the URL of a chart and click "Fetch".
+
+GitHub and Gist links are handled specially: a `github.com/.../blob/...` page URL (the one you
+copy from the browser address bar) is rewritten to its `raw.githubusercontent.com` equivalent
+automatically, so it just works. Any other URL is fetched directly and only succeeds if that
+site allows cross-origin requests (many do not). When a fetch is blocked, or the URL returns a
+web page instead of a chart file, download the file and drop it in instead.
 
 The viewer opens each sheet in the HTML view by default. A view selector in the viewer header
 lets the user switch between:

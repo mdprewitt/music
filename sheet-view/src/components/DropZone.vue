@@ -5,7 +5,9 @@ import { useSheetStore } from '@/stores/sheet'
 const store = useSheetStore()
 const fileInput = ref<HTMLInputElement | null>(null)
 const isDragging = ref(false)
-const dropError = ref<string | null>(null)
+const loadError = ref<string | null>(null)
+const url = ref('')
+const fetching = ref(false)
 
 const ACCEPTED_EXT = ['.cho', '.chopro', '.chordpro', '.pro', '.txt']
 
@@ -16,11 +18,25 @@ function hasAcceptedExt(name: string): boolean {
 async function handleFile(file: File | undefined) {
   if (!file) return
   if (!file.type.startsWith('text/') && !hasAcceptedExt(file.name)) {
-    dropError.value = 'Please drop a text or ChordPro file.'
+    loadError.value = 'Please drop a text or ChordPro file.'
     return
   }
-  dropError.value = null
+  loadError.value = null
   await store.loadFile(file)
+}
+
+async function fetchUrl() {
+  const trimmed = url.value.trim()
+  if (!trimmed || fetching.value) return
+  loadError.value = null
+  fetching.value = true
+  try {
+    await store.loadFromUrl(trimmed)
+  } catch (err) {
+    loadError.value = err instanceof Error ? err.message : 'Could not load that URL.'
+  } finally {
+    fetching.value = false
+  }
 }
 
 function onDrop(e: DragEvent) {
@@ -56,7 +72,20 @@ function onPick(e: Event) {
       hidden
       @change="onPick"
     />
-    <p v-if="dropError" class="error">{{ dropError }}</p>
+    <p class="instruction">or paste a link to a chart</p>
+    <form class="url-form" @submit.prevent="fetchUrl">
+      <input
+        v-model="url"
+        type="url"
+        inputmode="url"
+        placeholder="https://github.com/user/repo/blob/main/song.chopro"
+        aria-label="Chart URL"
+      />
+      <button type="submit" :disabled="fetching || !url.trim()">
+        {{ fetching ? 'Fetching…' : 'Fetch' }}
+      </button>
+    </form>
+    <p v-if="loadError" class="error">{{ loadError }}</p>
   </div>
 </template>
 
@@ -107,6 +136,31 @@ button:hover {
   background: #33a06f;
 }
 
+button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.url-form {
+  display: flex;
+  gap: 0.5rem;
+  width: 100%;
+  max-width: 420px;
+}
+
+.url-form input {
+  flex: 1;
+  min-width: 0;
+  padding: 0.5rem 0.75rem;
+  font-size: 1rem;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+}
+
+.url-form button {
+  white-space: nowrap;
+}
+
 .error {
   color: #c0392b;
   margin: 0;
@@ -124,6 +178,12 @@ button:hover {
 
   .instruction {
     color: #999;
+  }
+
+  .url-form input {
+    border-color: #555;
+    background: #1a1a1a;
+    color: inherit;
   }
 
   button {

@@ -41,6 +41,38 @@ function writeStored(key: string, value: string): void {
   }
 }
 
+/**
+ * Map a human-facing GitHub URL to its CORS-enabled raw equivalent, so a pasted
+ * "view this file on GitHub" link fetches the file rather than the HTML page:
+ *
+ *   github.com/{o}/{r}/blob/{ref}/{path}  → raw.githubusercontent.com/{o}/{r}/{ref}/{path}
+ *   github.com/{o}/{r}/raw/{ref}/{path}   → (same)
+ *   gist.github.com/{u}/{id}              → gist.githubusercontent.com/{u}/{id}/raw
+ *
+ * The query and hash are dropped on rewrite (`?plain=1`, `#L4-L9` are page-viewer
+ * params). Any other URL — including already-raw links — is returned unchanged.
+ */
+export function toFetchableUrl(url: URL): URL {
+  const host = url.hostname.replace(/^www\./, '')
+  const segments = url.pathname.split('/').filter(Boolean)
+
+  if (host === 'github.com' && (segments[2] === 'blob' || segments[2] === 'raw')) {
+    const [owner, repo, , ...rest] = segments
+    if (owner && repo && rest.length > 0) {
+      return new URL(`https://raw.githubusercontent.com/${owner}/${repo}/${rest.join('/')}`)
+    }
+  }
+
+  if (host === 'gist.github.com') {
+    const [user, id] = segments
+    if (user && id) {
+      return new URL(`https://gist.githubusercontent.com/${user}/${id}/raw`)
+    }
+  }
+
+  return url
+}
+
 export const useSheetStore = defineStore('sheet', () => {
   const rawText = ref<string | null>(null)
   const filename = ref<string | null>(null)
@@ -109,6 +141,56 @@ export const useSheetStore = defineStore('sheet', () => {
     parse()
   }
 
+  /** Last path segment of a URL, decoded — or the hostname when there is none. */
+  function filenameFromUrl(url: URL): string {
+    const last = url.pathname.split('/').filter(Boolean).pop()
+    try {
+      return last ? decodeURIComponent(last) : url.hostname
+    } catch {
+      return last ?? url.hostname
+    }
+  }
+
+  /**
+   * Fetch a chart from `rawUrl` and load it as if it had been dropped in.
+   * Throws on a bad URL or a failed fetch so the caller can surface the message;
+   * a fetched-but-unparseable body lands in `parseError` like any other sheet.
+   */
+  async function loadFromUrl(rawUrl: string) {
+    let url: URL
+    try {
+      url = new URL(rawUrl)
+    } catch {
+      throw new Error('That does not look like a valid URL.')
+    }
+    if (url.protocol !== 'http:' && url.protocol !== 'https:') {
+      throw new Error('The URL must start with http:// or https://.')
+    }
+    let res: Response
+    try {
+      res = await fetch(toFetchableUrl(url).href)
+    } catch {
+      throw new Error(
+        'Could not load that URL. The site may block cross-origin requests (CORS) or ' +
+          'require a browser. Try downloading the file and dropping it in instead.',
+      )
+    }
+    if (!res.ok) {
+      throw new Error(`Could not fetch the chart — the server returned ${res.status}.`)
+    }
+    const text = await res.text()
+    if (/^\s*<(?:!doctype html|html[\s>])/i.test(text)) {
+      throw new Error(
+        'That URL returned a web page, not a chart file. Link directly to the .cho or .txt file.',
+      )
+    }
+    // A rewritten GitHub URL points at the raw host; the original URL still
+    // carries the real filename (and avoids naming a gist chart "raw").
+    filename.value = filenameFromUrl(url)
+    rawText.value = text
+    parse()
+  }
+
   function reset() {
     rawText.value = null
     filename.value = null
@@ -133,6 +215,7 @@ export const useSheetStore = defineStore('sheet', () => {
     pinDiagrams,
     showDiagrams,
     loadFile,
+    loadFromUrl,
     reset,
   }
 })

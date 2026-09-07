@@ -35,7 +35,12 @@ src/
   stores/
     sheet.ts              # Pinia store: rawText, filename, song, parseError,
                           #   sourceFormat, viewFormat, instrument, showDiagrams
-                          #   + loadFile/parse/reset
+                          #   + loadFile/loadFromUrl/parse/reset
+                          #   loadFromUrl: no proxy. toFetchableUrl() rewrites
+                          #   github.com blob/raw + gist URLs to their CORS-enabled
+                          #   raw hosts; other URLs are fetched as-is and fail on
+                          #   CORS. Bot-challenged sites (Cloudflare) can't be
+                          #   fetched at all — a proxy wouldn't help.
     __tests__/sheet.spec.ts
   chords/                 # chord-diagram feature (no Vue imports except *.vue)
     types.ts              # Instrument, InstrumentSpec, RawChordDefinition, DiagramShape
@@ -45,7 +50,7 @@ src/
     ukulele.ts            # GENERATED ukulele shape dictionary
     pdf.ts                # drawDiagramSheet() — prepend a diagram page to a jsPDF doc
   components/
-    DropZone.vue          # drag-drop + file picker; calls store.loadFile()
+    DropZone.vue          # drag-drop + file picker + paste-a-URL; calls store.loadFile() / store.loadFromUrl()
     SheetViewer.vue       # renders store.song; hosts the view + instrument selectors
     ViewSelector.vue / InstrumentSelector.vue   # radiogroup, v-model on the store
     ChordDiagram.vue      # one SVG diagram from a DiagramShape
