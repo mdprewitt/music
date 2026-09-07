@@ -12,9 +12,7 @@ defineExpose({ isOpen })
       <button class="close-btn" aria-label="Close" @click="isOpen = false">×</button>
       <h2>About Sheet-View</h2>
       <div class="content">
-        <p>
-          Sheet-View is a web app that lets people view chordpro and other chord sheets.
-        </p>
+        <p>Sheet-View is a web app that lets people view chordpro and other chord sheets.</p>
         <h3>File Support</h3>
         <ul>
           <li>Chord Pro</li>
@@ -23,9 +21,7 @@ defineExpose({ isOpen })
         </ul>
         <h3>Features</h3>
         <ul>
-          <li>
-            Multiple view formats: ChordPro, HTML, and PDF
-          </li>
+          <li>Multiple view formats: ChordPro, HTML, HTML inline, and PDF</li>
           <li>Chord diagrams for guitar and ukulele with auto-detection</li>
           <li>Toggle chord diagram position (top, right, or bottom)</li>
           <li>Pin chord diagrams to keep them visible while scrolling</li>

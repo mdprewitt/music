@@ -6,6 +6,7 @@ const model = defineModel<ViewFormat>({ required: true })
 const VIEWS: readonly { value: ViewFormat; label: string }[] = [
   { value: 'chordpro', label: 'ChordPro' },
   { value: 'html', label: 'HTML' },
+  { value: 'html-inline', label: 'HTML inline' },
   { value: 'pdf', label: 'PDF' },
 ]
 </script>

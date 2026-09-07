@@ -27,7 +27,8 @@ encoding.
 The viewer opens each sheet in the HTML view by default. A view selector in the viewer header
 lets the user switch between:
 - ChordPro
-- HTML (default)
+- HTML (default) — chords stacked above the words, exact alignment
+- HTML inline — chords bracketed in the lyric flow, wraps to the window width
 - PDF (inline preview with a download button)
 
 Chord diagrams are displayed at the top of the chart. Switch chord display by choosing the instrument

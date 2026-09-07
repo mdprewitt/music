@@ -52,6 +52,9 @@ src/
     types.ts              # ThemeId, ThemeColors, ThemePreset, isThemeId/isThemeColors
     presets.ts            # THEME_PRESETS — the 4 standard palettes (light/dark/sepia/stage)
     apply.ts              # applyTheme() — write the 5 --sv-* vars inline on :root
+  sheet/                  # chart-rendering helpers (no Vue imports)
+    inline.ts             # toInlineSheet() — Song -> flat token model for the
+                          #   "HTML inline" view (bracketed chords in the lyric flow)
   chords/                 # chord-diagram feature (no Vue imports except *.vue)
     types.ts              # Instrument, InstrumentSpec, RawChordDefinition, DiagramShape
     diagram.ts            # toDiagramShape() — definition -> renderer-agnostic geometry
@@ -67,6 +70,7 @@ src/
     CustomColorEditor.vue # 5 <input type=color> bound to theme.customColors; shown when themeId==='custom'
     ChordDiagram.vue      # one SVG diagram from a DiagramShape
     ChordDiagrams.vue     # the strip of diagrams above the chart
+    InlineSheet.vue       # renders toInlineSheet() output — the "HTML inline" view
     __tests__/
   assets/
     base.css              # --sv-* theme palette + derived tokens, reset (do not import directly in components)
@@ -115,6 +119,7 @@ scripts/
 - **Parsing**: `new ChordProParser().parse(rawText)` → `Song`
 - **Rendering**: use `HtmlTableFormatter` (not `HtmlDivFormatter`). The table structure (`<tr>` for chords, `<tr>` for lyrics, `<td>` per column) gives reliable chord-over-lyric alignment out of the box. `HtmlDivFormatter` requires non-trivial flex CSS to avoid column-height misalignment.
 - Style the formatter output via `SheetViewer`'s scoped `:deep()` selectors. Key classes: `.chord-sheet`, `.paragraph`, `table.row`, `td.chord`, `td.lyrics`, `.comment`.
+- **The "HTML inline" view is ours, not a library formatter.** chordsheetjs has no inline-chord HTML output, so `src/sheet/inline.ts` walks the `Song` AST (`song.bodyParagraphs` → `line.items`, branching on `instanceof ChordLyricsPair` / `Tag` / `SoftLineBreak`, chord text via `templateHelpers.renderChord`) into a flat token model that `InlineSheet.vue` renders as real nodes. Its own scoped styles — it does **not** share the `.sheet :deep()` table rules.
 - Future formatters: `ChordProFormatter`, `ChordsOverWordsFormatter` (plain text), `TextFormatter`. PDF via `jspdf` (already installed).
 
 ### Chord-diagram gotchas (learned the hard way — see `src/chords/`)

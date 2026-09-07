@@ -6,7 +6,7 @@ describe('ViewSelector', () => {
   it('renders one button per view format', () => {
     const wrapper = mount(ViewSelector, { props: { modelValue: 'html' } })
     const labels = wrapper.findAll('button').map((b) => b.text())
-    expect(labels).toEqual(['ChordPro', 'HTML', 'PDF'])
+    expect(labels).toEqual(['ChordPro', 'HTML', 'HTML inline', 'PDF'])
   })
 
   it('marks the active view', () => {
@@ -19,7 +19,7 @@ describe('ViewSelector', () => {
 
   it('emits update:modelValue with the selected format', async () => {
     const wrapper = mount(ViewSelector, { props: { modelValue: 'html' } })
-    await wrapper.findAll('button')[2]?.trigger('click')
+    await wrapper.findAll('button')[3]?.trigger('click')
     expect(wrapper.emitted('update:modelValue')?.[0]).toEqual(['pdf'])
   })
 })

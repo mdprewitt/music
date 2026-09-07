@@ -36,6 +36,15 @@ describe('SheetViewer', () => {
     expect(text).toContain('[C]Hello')
   })
 
+  it('renders the HTML inline view with bracketed chords and no table', async () => {
+    const { wrapper } = await mountWithSong('html-inline')
+    expect(wrapper.find('.inline-sheet').exists()).toBe(true)
+    expect(wrapper.find('.sheet').exists()).toBe(false)
+    expect(wrapper.findAll('.inline-sheet .chord').map((c) => c.text())).toEqual(['[C]', '[G]'])
+    // the chord-diagram strip still rides above the chart
+    expect(wrapper.find('.sheet-body .chord-diagrams').exists()).toBe(true)
+  })
+
   it('switches views reactively without remounting', async () => {
     const { store, wrapper } = await mountWithSong('html')
     store.viewFormat = 'chordpro'

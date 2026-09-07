@@ -14,6 +14,7 @@ import DiagramPositionSelector from './DiagramPositionSelector.vue'
 import ThemeSelector from './ThemeSelector.vue'
 import CustomColorEditor from './CustomColorEditor.vue'
 import ChordDiagrams from './ChordDiagrams.vue'
+import InlineSheet from './InlineSheet.vue'
 
 const store = useSheetStore()
 const theme = useThemeStore()
@@ -138,6 +139,7 @@ onBeforeUnmount(revokePdfUrl)
       />
       <!-- v-html is safe: content comes from chordsheetjs formatter, not user-injected markup -->
       <div v-if="store.viewFormat === 'html'" class="sheet" v-html="html" />
+      <InlineSheet v-else-if="song && store.viewFormat === 'html-inline'" :song="song" />
       <pre v-else class="plain">{{ text }}</pre>
     </div>
   </div>
@@ -223,6 +225,7 @@ button:hover {
 }
 
 .sheet-body > .sheet,
+.sheet-body > .inline-sheet,
 .sheet-body > .plain {
   flex: 1 1 auto;
   min-width: 0;
