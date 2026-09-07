@@ -3,7 +3,7 @@ import { defineStore } from 'pinia'
 import { ChordProParser, type Song } from 'chordsheetjs'
 
 type SourceFormat = 'chordpro'
-type ViewFormat = 'html'
+export type ViewFormat = 'chordpro' | 'text' | 'chords-over-words' | 'html' | 'pdf'
 
 export const useSheetStore = defineStore('sheet', () => {
   const rawText = ref<string | null>(null)
