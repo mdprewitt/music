@@ -1,7 +1,8 @@
-import { ref, markRaw, watch } from 'vue'
+import { ref, computed, markRaw, watch } from 'vue'
 import { defineStore } from 'pinia'
-import { ChordProParser, type Song } from 'chordsheetjs'
+import { ChordProParser, keyHelpers, type Song } from 'chordsheetjs'
 import { detectInstrument } from '@/chords/detectInstrument'
+import { songIdentity, recallKey, rememberKey } from '@/sheet/key'
 import { readStored, writeStored } from '@/stores/storage'
 import {
   isDiagramPosition,
@@ -86,12 +87,44 @@ export const useSheetStore = defineStore('sheet', () => {
   // Whether the "Display" settings panel in the viewer header is expanded.
   const displayPanelOpen = ref<boolean>(readStored(DISPLAY_PANEL_STORAGE_KEY, asBoolean) ?? false)
   const showDiagrams = ref(true)
+  // `null` means "render in the sheet's own key". Only meaningful when the
+  // ChordPro carries a `{key: …}` directive — see `canChangeKey`.
+  const targetKey = ref<string | null>(null)
   // A remembered choice is authoritative; auto-detection only fills the gap for
   // the first sheet loaded on a fresh browser. `autoDetecting` marks the one
   // assignment that came from detection rather than the user, so it is not
   // mistaken for an explicit choice and persisted.
   let instrumentPinned = readStored(INSTRUMENT_STORAGE_KEY, asInstrument) !== null
   let autoDetecting = false
+  // Marks the `targetKey` assignment in `parse()` that restores a remembered
+  // choice, so the persistence watcher does not echo it straight back.
+  let restoringKey = false
+
+  /** The key the loaded sheet was written in — `null` without a `{key: …}` line. */
+  const originalKey = computed<string | null>(() => (song.value as Song | null)?.key ?? null)
+  /** Transpose targets for the current key (minor keys when the song is minor). */
+  const availableKeys = computed<string[]>(() =>
+    originalKey.value ? keyHelpers.getKeys(originalKey.value) : [],
+  )
+  /** Whether the key can be changed at all — needs an original key to move from. */
+  const canChangeKey = computed(() => originalKey.value !== null)
+  /**
+   * The song as it should be rendered: the pristine parse, or a re-keyed copy
+   * when a different `targetKey` is chosen. `store.song` always stays original so
+   * the transform is idempotent; `changeKey` throws without a `{key}` directive,
+   * hence the guard and the belt-and-braces catch.
+   */
+  const displaySong = computed<Song | null>(() => {
+    const s = song.value as Song | null
+    if (!s) return null
+    const target = targetKey.value
+    if (!target || originalKey.value === null || target === originalKey.value) return s
+    try {
+      return markRaw(s.changeKey(target))
+    } catch {
+      return s
+    }
+  })
 
   watch(
     instrument,
@@ -115,6 +148,16 @@ export const useSheetStore = defineStore('sheet', () => {
   watch(displayPanelOpen, (value) => writeStored(DISPLAY_PANEL_STORAGE_KEY, String(value)), {
     flush: 'sync',
   })
+  // Not a global preference — remembered per song so reopening a chart brings
+  // back the key it was last read in (see `src/sheet/key.ts`).
+  watch(
+    targetKey,
+    (value) => {
+      if (restoringKey) return
+      rememberKey(songIdentity(song.value as Song | null, filename.value), value)
+    },
+    { flush: 'sync' },
+  )
 
   function parse() {
     if (!rawText.value) return
@@ -130,6 +173,13 @@ export const useSheetStore = defineStore('sheet', () => {
         instrument.value = detectInstrument(song.value as Song)
         autoDetecting = false
       }
+      // Reopen the sheet in the key it was last read in, if that key is still a
+      // valid target for its (possibly edited) original key.
+      restoringKey = true
+      const remembered = recallKey(songIdentity(song.value as Song | null, filename.value))
+      targetKey.value =
+        remembered && availableKeys.value.includes(remembered) ? remembered : null
+      restoringKey = false
     } catch (err) {
       song.value = null
       parseError.value = err instanceof Error ? err.message : String(err)
@@ -199,8 +249,11 @@ export const useSheetStore = defineStore('sheet', () => {
     parseError.value = null
     sourceFormat.value = 'chordpro'
     showDiagrams.value = true
+    targetKey.value = null
     // keep `instrument`, `diagramPosition`, `pinDiagrams`, `viewFormat` and
-    // `displayPanelOpen` — they are user preferences that outlive a single sheet
+    // `displayPanelOpen` — they are user preferences that outlive a single sheet.
+    // `targetKey` is song-scoped (like `showDiagrams`) so it is cleared here, but
+    // the per-song choice stays in localStorage and is restored on reload.
   }
 
   return {
@@ -215,6 +268,11 @@ export const useSheetStore = defineStore('sheet', () => {
     pinDiagrams,
     displayPanelOpen,
     showDiagrams,
+    targetKey,
+    originalKey,
+    availableKeys,
+    canChangeKey,
+    displaySong,
     loadFile,
     loadFromUrl,
     reset,

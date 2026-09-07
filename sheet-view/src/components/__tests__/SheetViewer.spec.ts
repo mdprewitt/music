@@ -7,6 +7,7 @@ import { useSheetStore } from '@/stores/sheet'
 import type { ViewFormat } from '@/stores/sheet'
 
 const SAMPLE_CHORDPRO = '{title: Test}\n{artist: Artist}\n\n[C]Hello [G]world'
+const KEYED_CHORDPRO = '{title: Keyed}\n{artist: Artist}\n{key: C}\n\n[C]Hello [G]world'
 
 async function mountWithSong(view: ViewFormat) {
   const store = useSheetStore()
@@ -81,6 +82,21 @@ describe('SheetViewer', () => {
     store.showDiagrams = false
     await nextTick()
     expect(wrapper.find('.chord-diagrams').exists()).toBe(false)
+  })
+
+  it('re-renders the HTML view in the chosen key', async () => {
+    const store = useSheetStore()
+    await store.loadFile(new File([KEYED_CHORDPRO], 'keyed.cho', { type: 'text/plain' }))
+    const wrapper = mount(SheetViewer)
+    await flushPromises()
+    await nextTick()
+    expect(wrapper.find('.sheet').text()).toContain('G')
+    store.targetKey = 'E'
+    await nextTick()
+    const text = wrapper.find('.sheet').text()
+    expect(text).toContain('E')
+    expect(text).toContain('B')
+    expect(text).not.toContain('G')
   })
 
   describe('chord-diagram position', () => {

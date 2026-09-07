@@ -8,14 +8,16 @@ import { buildDiagramIndex, findShape } from '@/chords/shapes'
 import { drawDiagramSheet, type PdfDoc } from '@/chords/pdf'
 import { markChordCells } from '@/sheet/interactive'
 import ViewSelector from './ViewSelector.vue'
+import KeySelector from './KeySelector.vue'
 import DisplayPanel from './DisplayPanel.vue'
 import ChordDiagrams from './ChordDiagrams.vue'
 import InlineSheet from './InlineSheet.vue'
 import ChordPopover, { type AnchorRect } from './ChordPopover.vue'
 
 const store = useSheetStore()
-// store.song is markRaw(Song), but Pinia's UnwrapRef loses class fidelity — cast back to Song
-const song = computed(() => (store.song ? (store.song as Song) : null))
+// store.displaySong is store.song, or a re-keyed copy when a target key is set.
+// It is markRaw(Song), but Pinia's UnwrapRef loses class fidelity — cast back.
+const song = computed(() => (store.displaySong ? (store.displaySong as Song) : null))
 
 // The formatter output is inserted via v-html; markChordCells adds tabindex/role
 // to its chord cells so they can be focused and activated from the keyboard.
@@ -25,6 +27,10 @@ const html = computed(() =>
 
 // One resolution pass per (song, instrument) — feeds both the click-to-peek
 // popover here and (via the same helper) the always-on diagram strip.
+// `song.value` is the re-keyed display song, but `rawText` is the pristine
+// source: its `{define}` blocks are keyed by the original chord names, so after
+// a key change a user-defined shape falls through to the library resolver like
+// any other chord. Fine — the common case has no `{define}`s.
 const diagramIndex = computed(() =>
   song.value ? buildDiagramIndex(song.value, store.instrument, store.rawText) : null,
 )
@@ -167,6 +173,11 @@ watch([song, () => store.viewFormat, () => store.instrument], closePopover)
       <span class="filename">{{ store.filename }}</span>
       <div class="viewer-controls">
         <ViewSelector v-model="store.viewFormat" />
+        <KeySelector
+          v-model="store.targetKey"
+          :keys="store.availableKeys"
+          :original-key="store.originalKey"
+        />
         <label class="diagram-toggle">
           <input v-model="store.showDiagrams" type="checkbox" />
           Diagrams

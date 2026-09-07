@@ -35,11 +35,15 @@ src/
   stores/
     sheet.ts              # Pinia store: rawText, filename, song, parseError,
                           #   sourceFormat, viewFormat, instrument, diagramPosition,
-                          #   pinDiagrams, displayPanelOpen, showDiagrams
+                          #   pinDiagrams, displayPanelOpen, showDiagrams, targetKey
+                          #   + originalKey/availableKeys/canChangeKey/displaySong (computed)
                           #   + loadFile/loadFromUrl/parse/reset
                           #   viewFormat, instrument, diagramPosition, pinDiagrams and
                           #   displayPanelOpen persist (sheet-view:*) and survive reset();
-                          #   only showDiagrams resets to true
+                          #   showDiagrams + targetKey reset per sheet. targetKey is
+                          #   remembered per song in sheet-view:songKeys (see sheet/key.ts)
+                          #   and restored in parse(); displaySong = song.changeKey(targetKey)
+                          #   feeds every view, song stays pristine.
                           #   loadFromUrl: no proxy. toFetchableUrl() rewrites
                           #   github.com blob/raw + gist URLs to their CORS-enabled
                           #   raw hosts; other URLs are fetched as-is and fail on
@@ -61,6 +65,9 @@ src/
                           #   "HTML inline" view (bracketed chords in the lyric flow)
     interactive.ts        # markChordCells() — add tabindex/role to the chord cells
                           #   in HtmlTableFormatter output (it's v-html, so no template)
+    key.ts                # songIdentity()/recallKey()/rememberKey() — per-song key
+                          #   memory (sheet-view:songKeys JSON map, id = title‖artist
+                          #   or filename). The transpose itself is Song#changeKey.
   chords/                 # chord-diagram feature (no Vue imports except *.vue)
     types.ts              # Instrument, InstrumentSpec, RawChordDefinition, DiagramShape
     diagram.ts            # toDiagramShape() — definition -> renderer-agnostic geometry
@@ -81,6 +88,8 @@ src/
                           #   each captioned; open state = store.displayPanelOpen; dismiss on
                           #   Esc / outside pointerdown (same idiom as SheetViewer's popover)
     ViewSelector.vue / InstrumentSelector.vue / DiagramPositionSelector.vue   # radiogroup, v-model on the store
+    KeySelector.vue       # header <select> of transpose targets, v-model on store.targetKey;
+                          #   disabled with a hint when store.originalKey is null (no {key})
     ThemeSelector.vue     # radiogroup of 4 presets + Custom; :model-value/@update -> theme.selectTheme
     CustomColorEditor.vue # 5 <input type=color> bound to theme.customColors; shown when themeId==='custom'
     ChordDiagram.vue      # one SVG diagram from a DiagramShape
@@ -137,6 +146,7 @@ scripts/
 - Style the formatter output via `SheetViewer`'s scoped `:deep()` selectors. Key classes: `.chord-sheet`, `.paragraph`, `table.row`, `td.chord`, `td.lyrics`, `.comment`.
 - **The "HTML inline" view is ours, not a library formatter.** chordsheetjs has no inline-chord HTML output, so `src/sheet/inline.ts` walks the `Song` AST (`song.bodyParagraphs` → `line.items`, branching on `instanceof ChordLyricsPair` / `Tag` / `SoftLineBreak`, chord text via `templateHelpers.renderChord`) into a flat token model that `InlineSheet.vue` renders as real nodes. Its own scoped styles — it does **not** share the `.sheet :deep()` table rules.
 - Future formatters: `ChordProFormatter`, `ChordsOverWordsFormatter` (plain text), `TextFormatter`. PDF via `jspdf` (already installed).
+- **Changing the key = `Song#changeKey(target)`.** Returns a **new** Song (original untouched), rewrites the `{key}` tag and every chord. **Throws** ("original key is unknown") when the sheet has no `{key: …}` directive — `song.key` is `null`, which is the feature gate (`store.canChangeKey`). It does **not** touch `{define}` tags, so a user-defined shape for an original-key chord won't match after a transpose and falls through to the library resolver. `keyHelpers.getKeys(key)` gives the target list (mode-matched). The store's `displaySong` computed applies it once and feeds every view + the diagram index; `store.song` stays pristine so the transform is idempotent.
 
 ### Chord-diagram gotchas (learned the hard way — see `src/chords/`)
 

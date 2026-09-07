@@ -6,6 +6,9 @@ import { installMemoryStorage } from '@/__tests__/memoryStorage'
 const SAMPLE_CHORDPRO = '{title: Test Song}\n{artist: Test Artist}\n\n[C]Hello [G]world'
 const UKULELE_CHORDPRO =
   '{title: Uke Song}\n{define: C frets 0 0 0 3}\n{define: G frets 0 2 3 2}\n\n[C]Hello [G]world'
+const SAMPLE_WITH_KEY =
+  '{title: Keyed Song}\n{artist: Some Artist}\n{key: C}\n\n[C]Hello [Am]world [F]now [G7]end'
+const NO_KEY_CHORDPRO = '{title: Keyless}\n{artist: Some Artist}\n\n[C]Hello [F]world'
 
 function fileOf(text: string, name = 'test.cho') {
   return new File([text], name, { type: 'text/plain' })
@@ -132,6 +135,80 @@ describe('useSheetStore', () => {
     await store.loadFile(fileOf(SAMPLE_CHORDPRO))
     store.reset()
     expect(store.displayPanelOpen).toBe(true)
+  })
+
+  describe('changing the key', () => {
+    it('exposes the original key and its transpose targets for a keyed sheet', async () => {
+      const store = useSheetStore()
+      await store.loadFile(fileOf(SAMPLE_WITH_KEY))
+      expect(store.originalKey).toBe('C')
+      expect(store.canChangeKey).toBe(true)
+      expect(store.availableKeys).toContain('E')
+      expect(store.availableKeys).toContain('C')
+    })
+
+    it('leaves a keyless sheet unchangeable and its display song untransformed', async () => {
+      const store = useSheetStore()
+      await store.loadFile(fileOf(NO_KEY_CHORDPRO))
+      expect(store.originalKey).toBeNull()
+      expect(store.canChangeKey).toBe(false)
+      expect(store.availableKeys).toEqual([])
+      // Setting a target key must not throw and must be a no-op.
+      store.targetKey = 'E'
+      expect(store.displaySong).toBe(store.song)
+    })
+
+    it('transposes the display song when a target key is set', async () => {
+      const store = useSheetStore()
+      await store.loadFile(fileOf(SAMPLE_WITH_KEY))
+      store.targetKey = 'E'
+      expect(store.displaySong).not.toBe(store.song)
+      expect(store.displaySong?.key).toBe('E')
+      expect(store.displaySong?.getChords()).toEqual(['E', 'C#m', 'A', 'B7'])
+      // The pristine song is untouched.
+      expect(store.song?.getChords()).toEqual(['C', 'Am', 'F', 'G7'])
+    })
+
+    it('clears the target key on reset', async () => {
+      const store = useSheetStore()
+      await store.loadFile(fileOf(SAMPLE_WITH_KEY))
+      store.targetKey = 'E'
+      store.reset()
+      expect(store.targetKey).toBeNull()
+    })
+
+    it('remembers the key per song and restores it in a fresh store', async () => {
+      const store = useSheetStore()
+      await store.loadFile(fileOf(SAMPLE_WITH_KEY))
+      store.targetKey = 'E'
+
+      setActivePinia(createPinia())
+      const fresh = useSheetStore()
+      await fresh.loadFile(fileOf(SAMPLE_WITH_KEY))
+      expect(fresh.targetKey).toBe('E')
+      expect(fresh.displaySong?.key).toBe('E')
+    })
+
+    it('does not carry a remembered key onto a different song', async () => {
+      const store = useSheetStore()
+      await store.loadFile(fileOf(SAMPLE_WITH_KEY))
+      store.targetKey = 'E'
+      await store.loadFile(
+        fileOf('{title: Another Song}\n{artist: X}\n{key: G}\n\n[G]a [C]b', 'other.cho'),
+      )
+      expect(store.targetKey).toBeNull()
+    })
+
+    it('identifies a titleless sheet by its filename', async () => {
+      const store = useSheetStore()
+      await store.loadFile(fileOf('{key: C}\n\n[C]a [F]b', 'song-a.cho'))
+      store.targetKey = 'E'
+
+      setActivePinia(createPinia())
+      const fresh = useSheetStore()
+      await fresh.loadFile(fileOf('{key: C}\n\n[C]a [F]b', 'song-a.cho'))
+      expect(fresh.targetKey).toBe('E')
+    })
   })
 
   describe('loadFromUrl', () => {

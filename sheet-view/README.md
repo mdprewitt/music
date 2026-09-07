@@ -26,9 +26,9 @@ startup — e.g. `https://mdprewitt.github.io/music/?view=https://github.com/mdp
 Percent-encode the chart URL if it has its own query string; a plain GitHub/Gist link needs no
 encoding.
 
-The viewer header stays to a single row: the filename, a view selector, a **Diagrams** on/off
-toggle, a **Display** button (see below), and **Load another**. A view selector lets the user
-switch between:
+The viewer header stays to a single row: the filename, a view selector, a **Key** picker, a
+**Diagrams** on/off toggle, a **Display** button (see below), and **Load another**. A view
+selector lets the user switch between:
 - ChordPro
 - HTML — chords stacked above the words, exact alignment
 - HTML inline — chords bracketed in the lyric flow, wraps to the window width
@@ -36,6 +36,14 @@ switch between:
 
 The first sheet opens in the HTML view; after that the viewer remembers the last view you chose
 and reopens each sheet in it.
+
+**Key** transposes the whole chart — every chord, in all four views, and the chord diagrams —
+into a key that fits your voice or instrument. It only works for ChordPro files that carry a
+`{key: …}` line; without one the picker is disabled and says so. The dropdown lists the twelve
+target keys (minor keys for a minor song, both spellings where they differ, e.g. `C#`/`Db`), the
+original marked `(original)`, and a **↺** button appears while you're away from it. The key you
+pick is remembered per song — identified by its `{title}` and `{artist}` — so reopening a chart
+brings it back in the key you last read it in; loading a different chart does not inherit it.
 
 **Display** opens a small panel with the set-once preferences, grouped and labelled:
 - **Instrument** — guitar or ukulele. Guessed from the file (an `{instrument}` directive, or the

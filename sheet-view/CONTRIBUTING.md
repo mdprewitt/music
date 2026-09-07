@@ -87,6 +87,30 @@ from that same index. The `html-inline` view emits `chord-click` from real spans
 the `html` view is `v-html`, so its chord cells are made focusable by
 `markChordCells()` (`src/sheet/interactive.ts`) and handled by event delegation.
 
+## Changing the key
+
+`store.song` is always the pristine parse. The key change is a **derived**
+`store.displaySong` computed: `song.changeKey(store.targetKey)` when a different
+key is chosen, otherwise `song` itself. Every view in `SheetViewer.vue` reads
+through its local `song` computed, which points at `store.displaySong` — so a
+component that needs the rendered song must use `store.displaySong`, never
+`store.song`, or it will ignore the key change.
+
+- The feature is gated on `store.canChangeKey` (`song.key !== null`).
+  `Song#changeKey` throws without a `{key: …}` directive, so `KeySelector.vue`
+  renders disabled with a hint in that case, and `displaySong` has a
+  belt-and-braces `try/catch` that falls back to the pristine song.
+- `store.availableKeys` comes from `keyHelpers.getKeys(originalKey)` — already
+  mode-matched (minor targets for a minor song).
+- The chosen key is remembered per song, not globally. `src/sheet/key.ts`
+  (`songIdentity` / `recallKey` / `rememberKey`) keeps a `sheet-view:songKeys`
+  JSON map keyed by `title‖artist` (or the filename). `parse()` restores it
+  behind a `restoringKey` flag so the persistence watcher doesn't echo it back —
+  the same trick as `autoDetecting` on `instrument`.
+- `{define}` blocks are keyed by chord name and are **not** transposed, so a
+  user-defined shape for an original-key chord simply falls through to the
+  library resolver after a key change. Acceptable; not worth remapping.
+
 ## Deployment
 
 The app is published to GitHub Pages at <https://mdprewitt.github.io/music/>. Any push to `main`
