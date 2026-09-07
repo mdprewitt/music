@@ -97,43 +97,43 @@ function onPick(e: Event) {
   justify-content: center;
   gap: 1rem;
   min-height: 16rem;
-  border: 2px dashed #ccc;
+  border: 2px dashed var(--sv-border);
   border-radius: 8px;
   padding: 2rem;
   transition: border-color 0.2s;
 }
 
 .drop-zone.dragging {
-  border-color: #42b883;
-  background: rgba(66, 184, 131, 0.05);
+  border-color: var(--sv-chord);
+  background: color-mix(in srgb, var(--sv-chord) 8%, transparent);
 }
 
 .description {
   max-width: 400px;
   text-align: center;
-  color: #555;
+  color: var(--sv-comment);
   margin: 0 0 1.5rem 0;
   font-size: 0.95rem;
   line-height: 1.5;
 }
 
 .instruction {
-  color: #666;
+  color: var(--sv-comment);
   margin: 0;
 }
 
 button {
   padding: 0.5rem 1.5rem;
   font-size: 1rem;
-  border: 1px solid #42b883;
+  border: 1px solid var(--sv-chord);
   border-radius: 4px;
-  background: #42b883;
-  color: #fff;
+  background: var(--sv-chord);
+  color: var(--sv-on-accent);
   cursor: pointer;
 }
 
 button:hover {
-  background: #33a06f;
+  opacity: 0.85;
 }
 
 button:disabled {
@@ -153,8 +153,10 @@ button:disabled {
   min-width: 0;
   padding: 0.5rem 0.75rem;
   font-size: 1rem;
-  border: 1px solid #ccc;
+  border: 1px solid var(--sv-border);
   border-radius: 4px;
+  background: var(--sv-surface);
+  color: var(--sv-lyrics);
 }
 
 .url-form button {
@@ -162,37 +164,7 @@ button:disabled {
 }
 
 .error {
-  color: #c0392b;
+  color: var(--sv-error);
   margin: 0;
-}
-
-@media (prefers-color-scheme: dark) {
-  .drop-zone.dragging {
-    border-color: #5fd39e;
-    background: rgba(95, 211, 158, 0.1);
-  }
-
-  .description {
-    color: #aaa;
-  }
-
-  .instruction {
-    color: #999;
-  }
-
-  .url-form input {
-    border-color: #555;
-    background: #1a1a1a;
-    color: inherit;
-  }
-
-  button {
-    border-color: #5fd39e;
-    background: #5fd39e;
-  }
-
-  button:hover {
-    background: #4ab383;
-  }
 }
 </style>

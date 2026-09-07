@@ -10,15 +10,19 @@ import {
 import { PdfFormatter } from 'chordsheetjs/pdf'
 import { jsPDF } from 'jspdf'
 import { useSheetStore } from '@/stores/sheet'
+import { useThemeStore } from '@/stores/theme'
 import { resolveDiagramChords } from '@/chords/definitions'
 import { toDiagramShape } from '@/chords/diagram'
 import { drawDiagramSheet, type PdfDoc } from '@/chords/pdf'
 import ViewSelector from './ViewSelector.vue'
 import InstrumentSelector from './InstrumentSelector.vue'
 import DiagramPositionSelector from './DiagramPositionSelector.vue'
+import ThemeSelector from './ThemeSelector.vue'
+import CustomColorEditor from './CustomColorEditor.vue'
 import ChordDiagrams from './ChordDiagrams.vue'
 
 const store = useSheetStore()
+const theme = useThemeStore()
 // store.song is markRaw(Song), but Pinia's UnwrapRef loses class fidelity — cast back to Song
 const song = computed(() => (store.song ? (store.song as Song) : null))
 
@@ -113,9 +117,16 @@ onBeforeUnmount(revokePdfUrl)
           </label>
         </template>
         <ViewSelector v-model="store.viewFormat" />
+        <ThemeSelector
+          :model-value="theme.themeId"
+          :custom-colors="theme.customColors"
+          @update:model-value="theme.selectTheme"
+        />
       </div>
       <button @click="store.reset()">Load another</button>
     </header>
+
+    <CustomColorEditor v-if="theme.themeId === 'custom'" />
 
     <pre v-if="store.parseError" class="error">{{ store.parseError }}</pre>
 
@@ -153,9 +164,9 @@ onBeforeUnmount(revokePdfUrl)
   display: flex;
   flex-direction: column;
   gap: 1rem;
-  /* chord accent — brighter on dark so chord names stay legible.
-     Inherits into ChordDiagram.vue too (custom properties pierce scoping). */
-  --chord-accent: #42b883;
+  /* Chord accent — sourced from the active theme. Inherits into
+     ChordDiagram.vue too (custom properties pierce scoping). */
+  --chord-accent: var(--sv-chord);
 }
 
 .viewer-header {
@@ -165,12 +176,12 @@ onBeforeUnmount(revokePdfUrl)
   flex-wrap: wrap;
   gap: 0.5rem;
   padding-bottom: 0.5rem;
-  border-bottom: 1px solid #eee;
+  border-bottom: 1px solid var(--sv-divider);
 }
 
 .filename {
   font-weight: bold;
-  color: #333;
+  color: var(--sv-meta);
 }
 
 .viewer-controls {
@@ -185,28 +196,29 @@ onBeforeUnmount(revokePdfUrl)
   align-items: center;
   gap: 0.3rem;
   font-size: 0.85rem;
-  color: #333;
+  color: var(--sv-lyrics);
   cursor: pointer;
 }
 
 button {
   padding: 0.4rem 1rem;
   font-size: 0.9rem;
-  border: 1px solid #ccc;
+  border: 1px solid var(--sv-border);
   border-radius: 4px;
-  background: #fff;
+  background: var(--sv-surface);
+  color: var(--sv-lyrics);
   cursor: pointer;
 }
 
 button:hover {
-  background: #f5f5f5;
+  background: var(--sv-surface-hover);
 }
 
 .error {
-  color: #c0392b;
+  color: var(--sv-error);
   white-space: pre-wrap;
   padding: 1rem;
-  background: #fdf0ee;
+  background: var(--sv-error-bg);
   border-radius: 4px;
 }
 
@@ -238,6 +250,8 @@ button:hover {
   white-space: pre;
   overflow-x: auto;
   margin: 0;
+  /* Plain-text views emit undifferentiated text, so one colour applies. */
+  color: var(--sv-lyrics);
 }
 
 .pdf {
@@ -249,7 +263,7 @@ button:hover {
 .pdf-frame {
   width: 100%;
   height: 75vh;
-  border: 1px solid #ccc;
+  border: 1px solid var(--sv-border);
   border-radius: 4px;
 }
 
@@ -257,19 +271,19 @@ button:hover {
   align-self: flex-start;
   padding: 0.4rem 1rem;
   font-size: 0.9rem;
-  border: 1px solid #42b883;
+  border: 1px solid var(--sv-chord);
   border-radius: 4px;
-  background: #42b883;
-  color: #fff;
+  background: var(--sv-chord);
+  color: var(--sv-on-accent);
   text-decoration: none;
 }
 
 .download:hover {
-  background: #33a06f;
+  opacity: 0.85;
 }
 
 .loading {
-  color: #888;
+  color: var(--sv-comment);
   font-style: italic;
 }
 
@@ -299,27 +313,12 @@ button:hover {
 }
 
 .sheet :deep(td.lyrics) {
+  color: var(--sv-lyrics);
   padding-right: 0.25em;
 }
 
 .sheet :deep(.comment) {
-  color: #888;
+  color: var(--sv-comment);
   font-style: italic;
-}
-
-/* Dark-mode overrides — must follow the base rules above so equal-specificity
-   selectors win on source order. */
-@media (prefers-color-scheme: dark) {
-  .viewer {
-    --chord-accent: #5fd39e;
-  }
-
-  .filename {
-    color: #eee;
-  }
-
-  .diagram-toggle {
-    color: #ddd;
-  }
 }
 </style>

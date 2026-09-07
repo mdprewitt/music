@@ -52,6 +52,26 @@ bun test:unit
 ```sh
 bun lint
 ```
+## Theming
+
+Colours live in one place. `src/assets/base.css` declares five authored custom
+properties on `:root` — `--sv-background`, `--sv-lyrics`, `--sv-chord`,
+`--sv-comment`, `--sv-meta` — and derives everything else (borders, surfaces,
+hovers, overlay, error) from them with `color-mix()`.
+
+- **Components must reference `--sv-*` only.** No hex literals, no
+  `rgba(...)`, and no `@media (prefers-color-scheme: ...)` blocks — the "Dark"
+  preset covers dark mode.
+- At runtime `applyTheme()` (`src/theme/apply.ts`) writes the five vars as inline
+  styles on `<html>`, which is what lets an explicit theme choice beat the OS
+  `prefers-color-scheme` setting.
+- **To add a preset:** widen the `ThemeId` union and `THEME_IDS` in
+  `src/theme/types.ts`, then add an `{ id, label, colors }` entry to
+  `THEME_PRESETS` in `src/theme/presets.ts`. The selector and the store pick it
+  up automatically; no component edits.
+- The PDF export is intentionally not themed (`chordsheetjs`' `PdfFormatter` and
+  `src/chords/pdf.ts` own their ink colours).
+
 ## Deployment
 
 The app is published to GitHub Pages at <https://mdprewitt.github.io/music/>. Any push to `main`

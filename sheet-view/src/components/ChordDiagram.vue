@@ -132,20 +132,13 @@ const baseFretLabel = computed(() =>
   width: 5em;
   height: auto;
   overflow: visible;
-  --cd-ink: #333;
-  --cd-grid: #999;
-  --cd-muted-ink: #666;
-  --cd-indicator: #555;
-  --cd-accent: var(--chord-accent, #42b883);
-}
-
-@media (prefers-color-scheme: dark) {
-  .chord-diagram {
-    --cd-ink: #dcdcdc;
-    --cd-grid: #777;
-    --cd-muted-ink: #aaa;
-    --cd-indicator: #bbb;
-  }
+  /* Sourced from the active theme: ink is the lyric colour, the grid/indicator
+     greys are lyric-into-background blends, dots take the chord accent. */
+  --cd-ink: var(--sv-lyrics);
+  --cd-grid: color-mix(in srgb, var(--sv-lyrics) 45%, var(--sv-background));
+  --cd-muted-ink: color-mix(in srgb, var(--sv-lyrics) 65%, var(--sv-background));
+  --cd-indicator: color-mix(in srgb, var(--sv-lyrics) 70%, var(--sv-background));
+  --cd-accent: var(--chord-accent, var(--sv-chord));
 }
 
 .cd-title {
@@ -191,6 +184,6 @@ const baseFretLabel = computed(() =>
   text-anchor: middle;
   dominant-baseline: central;
   font-size: 6px;
-  fill: #fff;
+  fill: var(--sv-on-accent);
 }
 </style>

@@ -41,7 +41,17 @@ src/
                           #   raw hosts; other URLs are fetched as-is and fail on
                           #   CORS. Bot-challenged sites (Cloudflare) can't be
                           #   fetched at all — a proxy wouldn't help.
+    theme.ts              # Pinia store: themeId, customColors, colors (computed),
+                          #   selectTheme/resetCustom. Persists sheet-view:theme +
+                          #   sheet-view:customColors. OS scheme honoured once.
+    storage.ts            # readStored()/writeStored() — localStorage helpers
+                          #   shared by sheet.ts and theme.ts (swallow exceptions)
     __tests__/sheet.spec.ts
+    __tests__/theme.spec.ts
+  theme/                  # colour-theming feature (no Vue imports)
+    types.ts              # ThemeId, ThemeColors, ThemePreset, isThemeId/isThemeColors
+    presets.ts            # THEME_PRESETS — the 4 standard palettes (light/dark/sepia/stage)
+    apply.ts              # applyTheme() — write the 5 --sv-* vars inline on :root
   chords/                 # chord-diagram feature (no Vue imports except *.vue)
     types.ts              # Instrument, InstrumentSpec, RawChordDefinition, DiagramShape
     diagram.ts            # toDiagramShape() — definition -> renderer-agnostic geometry
@@ -51,13 +61,15 @@ src/
     pdf.ts                # drawDiagramSheet() — prepend a diagram page to a jsPDF doc
   components/
     DropZone.vue          # drag-drop + file picker + paste-a-URL; calls store.loadFile() / store.loadFromUrl()
-    SheetViewer.vue       # renders store.song; hosts the view + instrument selectors
+    SheetViewer.vue       # renders store.song; hosts the view + instrument + theme selectors
     ViewSelector.vue / InstrumentSelector.vue   # radiogroup, v-model on the store
+    ThemeSelector.vue     # radiogroup of 4 presets + Custom; :model-value/@update -> theme.selectTheme
+    CustomColorEditor.vue # 5 <input type=color> bound to theme.customColors; shown when themeId==='custom'
     ChordDiagram.vue      # one SVG diagram from a DiagramShape
     ChordDiagrams.vue     # the strip of diagrams above the chart
     __tests__/
   assets/
-    base.css              # CSS variables, reset (do not import directly in components)
+    base.css              # --sv-* theme palette + derived tokens, reset (do not import directly in components)
     main.css              # #app layout; imports base.css
   App.vue                 # shows DropZone or SheetViewer based on store.song;
                           #   on mount, a `?view=<chart-url>` query param calls
@@ -80,6 +92,15 @@ scripts/
 - Use Composition-API style stores (`defineStore('id', () => { })`) — not Options API stores.
 - Wrap `chordsheetjs` class instances in `markRaw()` before storing in a ref. Pinia's deep reactivity mangles class instances and causes type errors (TypeScript sees `UnwrapRef<Song>` ≠ `Song`). When accessing `store.song` in a component for a library method call, cast with `store.song as Song`.
 - `sourceFormat` and `viewFormat` are union-typed strings. To add a new parser/formatter: widen the union, add a `case` to `store.parse()` / a branch in `SheetViewer`, and add a `<ViewSelector>` component that `v-model`s on `store.viewFormat`.
+- New stores share `readStored`/`writeStored` from `@/stores/storage` — don't re-implement the try/catch. `theme.ts` and `sheet.ts` both use them; the `flush: 'sync'` persistence-watcher idiom is the same in both.
+
+## Theming
+
+- The whole app is coloured by **five** authored CSS custom properties on `:root` — `--sv-background`, `--sv-lyrics`, `--sv-chord`, `--sv-comment`, `--sv-meta` (see `ThemeColors`). Every other colour (`--sv-border`, `--sv-surface`, `--sv-surface-hover`, `--sv-divider`, `--sv-on-accent`, `--sv-error*`, `--sv-overlay`) is **derived** from those five with `color-mix()` in `base.css`. Components reference `--sv-*` only — **no hex literals, no `@media (prefers-color-scheme: …)` blocks** (the old per-component dark blocks were all removed; the "Dark" preset replaces them).
+- `applyTheme(colors)` (`src/theme/apply.ts`) writes the five vars as **inline** styles on `document.documentElement`, which outranks any stylesheet rule including a `prefers-color-scheme` media query. `App.vue` calls it in a `watchEffect` on `theme.colors`.
+- OS scheme is honoured **once**: `theme.ts` seeds `themeId` from `matchMedia('(prefers-color-scheme: dark)')` only when nothing is stored. Guard `matchMedia` — jsdom lacks it.
+- To add a preset: widen the `ThemeId` union and `THEME_IDS` array in `src/theme/types.ts`, then add the matching entry (id + label + five colours) to `THEME_PRESETS` in `src/theme/presets.ts`. The selector and store enumerate `THEME_PRESETS` — no component changes.
+- The PDF view is **not** themed — `PdfFormatter` / `src/chords/pdf.ts` carry their own ink constants. Stays black-on-white.
 
 ## Testing conventions
 
@@ -87,6 +108,7 @@ scripts/
 - Always call `setActivePinia(createPinia())` in `beforeEach` for store tests.
 - Use `@vue/test-utils` `mount` + `flushPromises` for async component interactions.
 - Test files are excluded from `tsconfig.app.json` but included in `tsconfig.vitest.json`.
+- jsdom ships no working `Storage` — store tests that touch persistence call `installMemoryStorage()` from `@/__tests__/memoryStorage` in `beforeEach` and `vi.unstubAllGlobals()` in `afterEach`. jsdom also lacks `matchMedia`.
 
 ## chordsheetjs notes
 

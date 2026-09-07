@@ -39,7 +39,7 @@ defineExpose({ isOpen })
 .dialog-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.5);
+  background: var(--sv-overlay);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -48,7 +48,7 @@ defineExpose({ isOpen })
 
 .dialog {
   background: var(--color-background);
-  border: 1px solid #ccc;
+  border: 1px solid var(--sv-border);
   border-radius: 8px;
   padding: 2rem;
   max-width: 500px;
@@ -65,7 +65,7 @@ defineExpose({ isOpen })
   border: none;
   font-size: 2rem;
   cursor: pointer;
-  color: #666;
+  color: var(--sv-comment);
   padding: 0;
   width: 2rem;
   height: 2rem;
@@ -75,12 +75,12 @@ defineExpose({ isOpen })
 }
 
 .close-btn:hover {
-  color: #333;
+  color: var(--sv-lyrics);
 }
 
 h2 {
   margin-top: 0;
-  color: #42b883;
+  color: var(--sv-chord);
 }
 
 h3 {
@@ -104,15 +104,5 @@ li {
 
 .content {
   color: var(--color-text);
-}
-
-@media (prefers-color-scheme: dark) {
-  .dialog {
-    border-color: #555;
-  }
-
-  .close-btn:hover {
-    color: #ddd;
-  }
 }
 </style>

@@ -2,6 +2,7 @@ import { ref, markRaw, watch } from 'vue'
 import { defineStore } from 'pinia'
 import { ChordProParser, type Song } from 'chordsheetjs'
 import { detectInstrument } from '@/chords/detectInstrument'
+import { readStored, writeStored } from '@/stores/storage'
 import {
   isDiagramPosition,
   isInstrument,
@@ -18,28 +19,10 @@ const PIN_DIAGRAMS_STORAGE_KEY = 'sheet-view:pinDiagrams'
 const DEFAULT_INSTRUMENT: Instrument = 'guitar'
 const DEFAULT_DIAGRAM_POSITION: DiagramPosition = 'top'
 
-/** Read a persisted preference, running `parse` on the raw string (absent → null). */
-function readStored<T>(key: string, parse: (raw: string) => T | null): T | null {
-  try {
-    const raw = localStorage.getItem(key)
-    return raw === null ? null : parse(raw)
-  } catch {
-    return null
-  }
-}
-
 const asInstrument = (raw: string): Instrument | null => (isInstrument(raw) ? raw : null)
 const asDiagramPosition = (raw: string): DiagramPosition | null =>
   isDiagramPosition(raw) ? raw : null
 const asBoolean = (raw: string): boolean => raw === 'true'
-
-function writeStored(key: string, value: string): void {
-  try {
-    localStorage.setItem(key, value)
-  } catch {
-    // storage unavailable (private mode, disabled) — the choice just won't persist
-  }
-}
 
 /**
  * Map a human-facing GitHub URL to its CORS-enabled raw equivalent, so a pasted

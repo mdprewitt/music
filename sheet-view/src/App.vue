@@ -1,12 +1,19 @@
 <script setup lang="ts">
-import { onMounted, ref } from 'vue'
+import { onMounted, ref, watchEffect } from 'vue'
 import { useSheetStore } from '@/stores/sheet'
+import { useThemeStore } from '@/stores/theme'
+import { applyTheme } from '@/theme/apply'
 import DropZone from './components/DropZone.vue'
 import SheetViewer from './components/SheetViewer.vue'
 import AboutDialog from './components/AboutDialog.vue'
 import LicenseDialog from './components/LicenseDialog.vue'
 
 const store = useSheetStore()
+const theme = useThemeStore()
+
+// Push the active palette onto :root as inline custom properties whenever it
+// changes — this is what makes an explicit theme choice outrank the OS setting.
+watchEffect(() => applyTheme(theme.colors))
 const aboutDialog = ref<InstanceType<typeof AboutDialog>>()
 const licenseDialog = ref<InstanceType<typeof LicenseDialog>>()
 
@@ -66,7 +73,7 @@ header {
 h1 {
   font-size: 1.5rem;
   margin: 0;
-  color: #42b883;
+  color: var(--sv-chord);
 }
 
 main {
@@ -76,7 +83,7 @@ main {
 footer {
   margin-top: 2rem;
   padding-top: 1.5rem;
-  border-top: 1px solid #eee;
+  border-top: 1px solid var(--sv-divider);
   text-align: center;
   font-size: 0.9rem;
 }
@@ -90,7 +97,7 @@ nav {
 .link-btn {
   background: none;
   border: none;
-  color: #42b883;
+  color: var(--sv-chord);
   cursor: pointer;
   font-size: inherit;
   padding: 0;
@@ -99,15 +106,5 @@ nav {
 
 .link-btn:hover {
   text-decoration: underline;
-}
-
-@media (prefers-color-scheme: dark) {
-  footer {
-    border-top-color: #555;
-  }
-
-  .link-btn {
-    color: #5fd39e;
-  }
 }
 </style>

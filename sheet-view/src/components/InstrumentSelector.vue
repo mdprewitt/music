@@ -33,19 +33,20 @@ const OPTIONS = INSTRUMENT_IDS.map((id) => ({ value: id, label: INSTRUMENTS[id].
 button {
   padding: 0.3rem 0.75rem;
   font-size: 0.85rem;
-  border: 1px solid #ccc;
+  border: 1px solid var(--sv-border);
   border-radius: 4px;
-  background: #fff;
+  background: var(--sv-surface);
+  color: var(--sv-lyrics);
   cursor: pointer;
 }
 
 button:hover {
-  background: #f5f5f5;
+  background: var(--sv-surface-hover);
 }
 
 button.active {
-  border-color: #42b883;
-  background: #42b883;
-  color: #fff;
+  border-color: var(--sv-chord);
+  background: var(--sv-chord);
+  color: var(--sv-on-accent);
 }
 </style>

@@ -21,33 +21,45 @@
   --vt-c-text-dark-2: rgba(235, 235, 235, 0.64);
 }
 
-/* semantic color variables for this project */
+/*
+ * Theme palette. Five colours are authored (defaults below = the "Light"
+ * preset); `applyTheme()` in src/theme/apply.ts overrides them as inline
+ * custom properties on :root at runtime. Everything else is derived here with
+ * color-mix() so a theme (preset or custom) only ever supplies five values.
+ * There is deliberately no `@media (prefers-color-scheme: dark)` block — the
+ * "Dark" preset replaces it, and the OS preference is honoured once, in the
+ * theme store, when nothing is stored yet.
+ */
 :root {
-  --color-background: var(--vt-c-white);
-  --color-background-soft: var(--vt-c-white-soft);
-  --color-background-mute: var(--vt-c-white-mute);
+  --sv-background: #ffffff;
+  --sv-lyrics: #1a1a1a;
+  --sv-chord: #0066cc;
+  --sv-comment: #767676;
+  --sv-meta: #1a1a1a;
 
-  --color-border: var(--vt-c-divider-light-2);
-  --color-border-hover: var(--vt-c-divider-light-1);
-
-  --color-heading: var(--vt-c-text-light-1);
-  --color-text: var(--vt-c-text-light-1);
-
-  --section-gap: 160px;
+  --sv-surface: color-mix(in srgb, var(--sv-lyrics) 6%, var(--sv-background));
+  --sv-surface-hover: color-mix(in srgb, var(--sv-lyrics) 12%, var(--sv-background));
+  --sv-border: color-mix(in srgb, var(--sv-lyrics) 25%, var(--sv-background));
+  --sv-divider: color-mix(in srgb, var(--sv-lyrics) 12%, var(--sv-background));
+  --sv-on-accent: var(--sv-background);
+  --sv-error: #c0392b;
+  --sv-error-bg: color-mix(in srgb, var(--sv-error) 12%, var(--sv-background));
+  --sv-overlay: color-mix(in srgb, var(--sv-lyrics) 55%, transparent);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --color-background: var(--vt-c-black);
-    --color-background-soft: var(--vt-c-black-soft);
-    --color-background-mute: var(--vt-c-black-mute);
+/* semantic color variables for this project */
+:root {
+  --color-background: var(--sv-background);
+  --color-background-soft: var(--sv-surface);
+  --color-background-mute: var(--sv-surface-hover);
 
-    --color-border: var(--vt-c-divider-dark-2);
-    --color-border-hover: var(--vt-c-divider-dark-1);
+  --color-border: var(--sv-border);
+  --color-border-hover: var(--sv-border);
 
-    --color-heading: var(--vt-c-text-dark-1);
-    --color-text: var(--vt-c-text-dark-2);
-  }
+  --color-heading: var(--sv-meta);
+  --color-text: var(--sv-lyrics);
+
+  --section-gap: 160px;
 }
 
 *,

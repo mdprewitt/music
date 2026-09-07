@@ -44,14 +44,14 @@ const shapes = computed(() =>
 .chord-diagrams.pos-top {
   padding-bottom: 1rem;
   margin-bottom: 1rem;
-  border-bottom: 1px solid #eee;
+  border-bottom: 1px solid var(--sv-divider);
 }
 
 .chord-diagrams.pos-bottom {
   order: 1;
   padding-top: 1rem;
   margin-top: 1rem;
-  border-top: 1px solid #eee;
+  border-top: 1px solid var(--sv-divider);
 }
 
 .chord-diagrams.pos-right {
@@ -60,7 +60,7 @@ const shapes = computed(() =>
   width: 6.5rem;
   align-content: flex-start;
   padding-left: 1rem;
-  border-left: 1px solid #eee;
+  border-left: 1px solid var(--sv-divider);
 }
 
 /* Pinned: the strip holds its place (against the window scroll) while the chart

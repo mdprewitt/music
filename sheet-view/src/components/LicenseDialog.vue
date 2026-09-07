@@ -27,7 +27,7 @@ defineExpose({ isOpen })
             >https://www.gnu.org/licenses/agpl-3.0.html</a
           >
         </p>
-        <p style="font-size: 0.9rem; margin-top: 2rem; color: #666">
+        <p style="font-size: 0.9rem; margin-top: 2rem; color: var(--sv-comment)">
           THE SOFTWARE IS PROVIDED "AS IS" WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED,
           INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A
           PARTICULAR PURPOSE AND NONINFRINGEMENT.
@@ -41,7 +41,7 @@ defineExpose({ isOpen })
 .dialog-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.5);
+  background: var(--sv-overlay);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -50,7 +50,7 @@ defineExpose({ isOpen })
 
 .dialog {
   background: var(--color-background);
-  border: 1px solid #ccc;
+  border: 1px solid var(--sv-border);
   border-radius: 8px;
   padding: 2rem;
   max-width: 500px;
@@ -67,7 +67,7 @@ defineExpose({ isOpen })
   border: none;
   font-size: 2rem;
   cursor: pointer;
-  color: #666;
+  color: var(--sv-comment);
   padding: 0;
   width: 2rem;
   height: 2rem;
@@ -77,12 +77,12 @@ defineExpose({ isOpen })
 }
 
 .close-btn:hover {
-  color: #333;
+  color: var(--sv-lyrics);
 }
 
 h2 {
   margin-top: 0;
-  color: #42b883;
+  color: var(--sv-chord);
 }
 
 p {
@@ -91,29 +91,11 @@ p {
 }
 
 a {
-  color: #42b883;
+  color: var(--sv-chord);
   text-decoration: none;
 }
 
 a:hover {
   text-decoration: underline;
-}
-
-@media (prefers-color-scheme: dark) {
-  .dialog {
-    border-color: #555;
-  }
-
-  .close-btn:hover {
-    color: #ddd;
-  }
-
-  a {
-    color: #5fd39e;
-  }
-
-  p {
-    color: #ddd;
-  }
 }
 </style>

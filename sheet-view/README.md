@@ -39,3 +39,19 @@ once you pick one.
 
 Chord diagrams position can be toggled from top to right-side to bottom and can be pinned so they stay in one position while the music can scroll.
 
+## Colour themes
+
+A theme selector in the viewer header offers four standard colour templates —
+**Light**, **Dark**, **Sepia** (warm, paper-like) and **Stage** (near-black with
+high-contrast amber chords, for low-light use) — plus **Custom**. Choosing Custom
+reveals five colour pickers (background, lyrics, chords, comments, title); they
+start from whatever theme was showing, so you can nudge one colour rather than
+build a palette from scratch. "Reset to Light" restores the defaults.
+
+The theme colours everything: the page, the chord sheet, the chord diagrams and
+the controls. Your choice — preset or custom colours — is remembered in the
+browser and restored on the next visit. On a first visit with nothing saved, the
+app follows your operating system's light/dark setting.
+
+The **PDF** view is always rendered black-on-white regardless of the theme.
+

@@ -1,18 +1,7 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
 import { setActivePinia, createPinia } from 'pinia'
 import { useSheetStore, toFetchableUrl } from '../sheet'
-
-// jsdom in this project ships without a working Storage, so provide a minimal
-// in-memory one for the tests that exercise preference persistence.
-function installMemoryStorage() {
-  const map = new Map<string, string>()
-  vi.stubGlobal('localStorage', {
-    getItem: (key: string) => map.get(key) ?? null,
-    setItem: (key: string, value: string) => void map.set(key, String(value)),
-    removeItem: (key: string) => void map.delete(key),
-    clear: () => map.clear(),
-  })
-}
+import { installMemoryStorage } from '@/__tests__/memoryStorage'
 
 const SAMPLE_CHORDPRO = '{title: Test Song}\n{artist: Test Artist}\n\n[C]Hello [G]world'
 const UKULELE_CHORDPRO =
