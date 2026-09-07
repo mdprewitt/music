@@ -52,3 +52,10 @@ bun test:unit
 ```sh
 bun lint
 ```
+## Deployment
+
+The app is published to GitHub Pages at <https://mdprewitt.github.io/music/>. Any push to `main`
+that touches `sheet-view/**` triggers `.github/workflows/pages.yml`, which runs `bun run build`
+with `BASE_PATH` set to the project-page subpath and deploys `sheet-view/dist`. The workflow can
+also be run manually from the Actions tab.
+

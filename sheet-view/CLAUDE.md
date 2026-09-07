@@ -106,4 +106,7 @@ fix(sheet-view): handle empty song gracefully
 ```
 ## Freshness
 
-Keep CLAUDE.md and README.md up to date with the newest information as each new feature is added.
+Keep CLAUDE.md, CONTRIBUTING.md and README.md up to date with the newest information as each new feature is added.
+- CLAUDE.md - agent instructions
+- REAMDE.md - end user info / documenation
+- CONTRIBUTING.md - developer info / documentation
