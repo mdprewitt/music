@@ -19,6 +19,11 @@ automatically, so it just works. Any other URL is fetched directly and only succ
 site allows cross-origin requests (many do not). When a fetch is blocked, or the URL returns a
 web page instead of a chart file, download the file and drop it in instead.
 
+You can also link straight to a chart with a `?view=` query parameter, which loads it on
+startup — e.g. `https://mdprewitt.github.io/music/?view=https://github.com/mdprewitt/music/blob/main/chpro/deacon-blues.cho`.
+Percent-encode the chart URL if it has its own query string; a plain GitHub/Gist link needs no
+encoding.
+
 The viewer opens each sheet in the HTML view by default. A view selector in the viewer header
 lets the user switch between:
 - ChordPro

@@ -1,8 +1,9 @@
 # TODOs
 
 - Load files from github or other url
-  - **Done:** DropZone takes a pasted URL. `toFetchableUrl()` in
-    `src/stores/sheet.ts` rewrites `github.com/.../blob|raw/...` and
+  - **Done:** DropZone takes a pasted URL, and a `?view=<chart-url>` query param
+    on the app URL auto-loads a chart on startup (`App.vue`). `toFetchableUrl()`
+    in `src/stores/sheet.ts` rewrites `github.com/.../blob|raw/...` and
     `gist.github.com/...` links to their CORS-enabled raw hosts; everything else
     is fetched as-is. A blocked fetch or an HTML body throws a message telling
     the user to download and drop the file.

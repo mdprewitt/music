@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { onMounted, ref } from 'vue'
 import { useSheetStore } from '@/stores/sheet'
 import DropZone from './components/DropZone.vue'
 import SheetViewer from './components/SheetViewer.vue'
@@ -9,6 +9,17 @@ import LicenseDialog from './components/LicenseDialog.vue'
 const store = useSheetStore()
 const aboutDialog = ref<InstanceType<typeof AboutDialog>>()
 const licenseDialog = ref<InstanceType<typeof LicenseDialog>>()
+
+// `?view=<chart-url>` on the page URL auto-loads that chart on startup, so a
+// chart can be linked to directly. The value should be percent-encoded if it
+// carries its own query string; a plain GitHub/Gist link needs no encoding.
+onMounted(() => {
+  const viewUrl = new URLSearchParams(window.location.search).get('view')
+  if (!viewUrl) return
+  store.loadFromUrl(viewUrl).catch((err: unknown) => {
+    store.parseError = err instanceof Error ? err.message : 'Could not load that URL.'
+  })
+})
 
 function openAbout() {
   if (aboutDialog.value) aboutDialog.value.isOpen = true

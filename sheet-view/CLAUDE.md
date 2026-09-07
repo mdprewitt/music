@@ -59,7 +59,9 @@ src/
   assets/
     base.css              # CSS variables, reset (do not import directly in components)
     main.css              # #app layout; imports base.css
-  App.vue                 # shows DropZone or SheetViewer based on store.song
+  App.vue                 # shows DropZone or SheetViewer based on store.song;
+                          #   on mount, a `?view=<chart-url>` query param calls
+                          #   store.loadFromUrl() (errors → store.parseError)
   main.ts                 # createApp + createPinia + mount
 scripts/
   generate-ukulele-chords.mjs   # regenerates src/chords/ukulele.ts (run by hand)
