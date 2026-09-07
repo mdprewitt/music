@@ -8,11 +8,13 @@ File Support:
 - chords over words (regular chord sheets)
 - Ultimate Guitar sheets
 
-The viewer displays the sheet in Chord Pro format and allows the user to select alternative views like:
+The viewer opens each sheet in the HTML view by default. A view selector in the viewer header
+lets the user switch between:
+- ChordPro
 - Plain Text
-- HTML
 - Chords over words
-- PDF
+- HTML (default)
+- PDF (inline preview with a download button)
 
 ## Usage
 
