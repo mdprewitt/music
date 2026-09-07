@@ -34,8 +34,12 @@ Run `bun lint` before committing. `bun run build` catches type errors that vites
 src/
   stores/
     sheet.ts              # Pinia store: rawText, filename, song, parseError,
-                          #   sourceFormat, viewFormat, instrument, showDiagrams
+                          #   sourceFormat, viewFormat, instrument, diagramPosition,
+                          #   pinDiagrams, displayPanelOpen, showDiagrams
                           #   + loadFile/loadFromUrl/parse/reset
+                          #   viewFormat, instrument, diagramPosition, pinDiagrams and
+                          #   displayPanelOpen persist (sheet-view:*) and survive reset();
+                          #   only showDiagrams resets to true
                           #   loadFromUrl: no proxy. toFetchableUrl() rewrites
                           #   github.com blob/raw + gist URLs to their CORS-enabled
                           #   raw hosts; other URLs are fetched as-is and fail on
@@ -68,9 +72,15 @@ src/
     pdf.ts                # drawDiagramSheet() — prepend a diagram page to a jsPDF doc
   components/
     DropZone.vue          # drag-drop + file picker + paste-a-URL; calls store.loadFile() / store.loadFromUrl()
-    SheetViewer.vue       # renders store.song; hosts the view + instrument + theme selectors;
+    SheetViewer.vue       # renders store.song; header = filename + ViewSelector + Diagrams
+                          #   toggle + DisplayPanel + "Load another" (the sole direct-child
+                          #   <button> of .viewer-header — a spec depends on that);
                           #   owns the click-a-chord -> ChordPopover interaction (both HTML views)
-    ViewSelector.vue / InstrumentSelector.vue   # radiogroup, v-model on the store
+    DisplayPanel.vue      # "Display" disclosure button + anchored panel holding the set-once
+                          #   prefs (Instrument / Diagrams position+pin / Theme+CustomColorEditor),
+                          #   each captioned; open state = store.displayPanelOpen; dismiss on
+                          #   Esc / outside pointerdown (same idiom as SheetViewer's popover)
+    ViewSelector.vue / InstrumentSelector.vue / DiagramPositionSelector.vue   # radiogroup, v-model on the store
     ThemeSelector.vue     # radiogroup of 4 presets + Custom; :model-value/@update -> theme.selectTheme
     CustomColorEditor.vue # 5 <input type=color> bound to theme.customColors; shown when themeId==='custom'
     ChordDiagram.vue      # one SVG diagram from a DiagramShape

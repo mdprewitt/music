@@ -4,21 +4,16 @@ import { ChordProFormatter, HtmlTableFormatter, type Song } from 'chordsheetjs'
 import { PdfFormatter } from 'chordsheetjs/pdf'
 import { jsPDF } from 'jspdf'
 import { useSheetStore } from '@/stores/sheet'
-import { useThemeStore } from '@/stores/theme'
 import { buildDiagramIndex, findShape } from '@/chords/shapes'
 import { drawDiagramSheet, type PdfDoc } from '@/chords/pdf'
 import { markChordCells } from '@/sheet/interactive'
 import ViewSelector from './ViewSelector.vue'
-import InstrumentSelector from './InstrumentSelector.vue'
-import DiagramPositionSelector from './DiagramPositionSelector.vue'
-import ThemeSelector from './ThemeSelector.vue'
-import CustomColorEditor from './CustomColorEditor.vue'
+import DisplayPanel from './DisplayPanel.vue'
 import ChordDiagrams from './ChordDiagrams.vue'
 import InlineSheet from './InlineSheet.vue'
 import ChordPopover, { type AnchorRect } from './ChordPopover.vue'
 
 const store = useSheetStore()
-const theme = useThemeStore()
 // store.song is markRaw(Song), but Pinia's UnwrapRef loses class fidelity — cast back to Song
 const song = computed(() => (store.song ? (store.song as Song) : null))
 
@@ -171,29 +166,15 @@ watch([song, () => store.viewFormat, () => store.instrument], closePopover)
     <header class="viewer-header">
       <span class="filename">{{ store.filename }}</span>
       <div class="viewer-controls">
+        <ViewSelector v-model="store.viewFormat" />
         <label class="diagram-toggle">
           <input v-model="store.showDiagrams" type="checkbox" />
-          Chord diagrams
+          Diagrams
         </label>
-        <InstrumentSelector v-model="store.instrument" />
-        <template v-if="store.showDiagrams && store.viewFormat !== 'pdf'">
-          <DiagramPositionSelector v-model="store.diagramPosition" />
-          <label class="diagram-toggle">
-            <input v-model="store.pinDiagrams" type="checkbox" />
-            Pin
-          </label>
-        </template>
-        <ViewSelector v-model="store.viewFormat" />
-        <ThemeSelector
-          :model-value="theme.themeId"
-          :custom-colors="theme.customColors"
-          @update:model-value="theme.selectTheme"
-        />
+        <DisplayPanel />
       </div>
       <button @click="store.reset()">Load another</button>
     </header>
-
-    <CustomColorEditor v-if="theme.themeId === 'custom'" />
 
     <pre v-if="store.parseError" class="error">{{ store.parseError }}</pre>
 

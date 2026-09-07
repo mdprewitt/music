@@ -13,15 +13,25 @@ import {
 type SourceFormat = 'chordpro'
 export type ViewFormat = 'chordpro' | 'html' | 'html-inline' | 'pdf'
 
+export function isViewFormat(value: unknown): value is ViewFormat {
+  return (
+    value === 'chordpro' || value === 'html' || value === 'html-inline' || value === 'pdf'
+  )
+}
+
 const INSTRUMENT_STORAGE_KEY = 'sheet-view:instrument'
 const DIAGRAM_POSITION_STORAGE_KEY = 'sheet-view:diagramPosition'
 const PIN_DIAGRAMS_STORAGE_KEY = 'sheet-view:pinDiagrams'
+const VIEW_FORMAT_STORAGE_KEY = 'sheet-view:viewFormat'
+const DISPLAY_PANEL_STORAGE_KEY = 'sheet-view:displayPanel'
 const DEFAULT_INSTRUMENT: Instrument = 'guitar'
 const DEFAULT_DIAGRAM_POSITION: DiagramPosition = 'top'
+const DEFAULT_VIEW_FORMAT: ViewFormat = 'html'
 
 const asInstrument = (raw: string): Instrument | null => (isInstrument(raw) ? raw : null)
 const asDiagramPosition = (raw: string): DiagramPosition | null =>
   isDiagramPosition(raw) ? raw : null
+const asViewFormat = (raw: string): ViewFormat | null => (isViewFormat(raw) ? raw : null)
 const asBoolean = (raw: string): boolean => raw === 'true'
 
 /**
@@ -62,7 +72,9 @@ export const useSheetStore = defineStore('sheet', () => {
   const song = ref<Song | null>(null)
   const parseError = ref<string | null>(null)
   const sourceFormat = ref<SourceFormat>('chordpro')
-  const viewFormat = ref<ViewFormat>('html')
+  const viewFormat = ref<ViewFormat>(
+    readStored(VIEW_FORMAT_STORAGE_KEY, asViewFormat) ?? DEFAULT_VIEW_FORMAT,
+  )
   const instrument = ref<Instrument>(
     readStored(INSTRUMENT_STORAGE_KEY, asInstrument) ?? DEFAULT_INSTRUMENT,
   )
@@ -71,6 +83,8 @@ export const useSheetStore = defineStore('sheet', () => {
   )
   // When pinned, the diagram strip stays put (position: sticky) while the chart scrolls.
   const pinDiagrams = ref<boolean>(readStored(PIN_DIAGRAMS_STORAGE_KEY, asBoolean) ?? false)
+  // Whether the "Display" settings panel in the viewer header is expanded.
+  const displayPanelOpen = ref<boolean>(readStored(DISPLAY_PANEL_STORAGE_KEY, asBoolean) ?? false)
   const showDiagrams = ref(true)
   // A remembered choice is authoritative; auto-detection only fills the gap for
   // the first sheet loaded on a fresh browser. `autoDetecting` marks the one
@@ -95,6 +109,10 @@ export const useSheetStore = defineStore('sheet', () => {
     flush: 'sync',
   })
   watch(pinDiagrams, (value) => writeStored(PIN_DIAGRAMS_STORAGE_KEY, String(value)), {
+    flush: 'sync',
+  })
+  watch(viewFormat, (value) => writeStored(VIEW_FORMAT_STORAGE_KEY, value), { flush: 'sync' })
+  watch(displayPanelOpen, (value) => writeStored(DISPLAY_PANEL_STORAGE_KEY, String(value)), {
     flush: 'sync',
   })
 
@@ -180,10 +198,9 @@ export const useSheetStore = defineStore('sheet', () => {
     song.value = null
     parseError.value = null
     sourceFormat.value = 'chordpro'
-    viewFormat.value = 'html'
     showDiagrams.value = true
-    // keep `instrument`, `diagramPosition` and `pinDiagrams` — they are user
-    // preferences that outlive a single sheet
+    // keep `instrument`, `diagramPosition`, `pinDiagrams`, `viewFormat` and
+    // `displayPanelOpen` — they are user preferences that outlive a single sheet
   }
 
   return {
@@ -196,6 +213,7 @@ export const useSheetStore = defineStore('sheet', () => {
     instrument,
     diagramPosition,
     pinDiagrams,
+    displayPanelOpen,
     showDiagrams,
     loadFile,
     loadFromUrl,

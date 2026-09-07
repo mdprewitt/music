@@ -31,18 +31,30 @@ describe('useSheetStore', () => {
     expect(store.parseError).toBeNull()
   })
 
-  it('resets all state to defaults', async () => {
+  it('resets sheet state to defaults but keeps view preferences', async () => {
     const store = useSheetStore()
     await store.loadFile(fileOf(SAMPLE_CHORDPRO))
     store.showDiagrams = false
+    store.viewFormat = 'pdf'
     store.reset()
     expect(store.filename).toBeNull()
     expect(store.song).toBeNull()
     expect(store.rawText).toBeNull()
     expect(store.parseError).toBeNull()
     expect(store.sourceFormat).toBe('chordpro')
-    expect(store.viewFormat).toBe('html')
     expect(store.showDiagrams).toBe(true)
+    // viewFormat is a remembered preference — it survives a reset
+    expect(store.viewFormat).toBe('pdf')
+  })
+
+  it('defaults the view format to html', () => {
+    expect(useSheetStore().viewFormat).toBe('html')
+  })
+
+  it('persists the view format and restores it in a fresh store', () => {
+    useSheetStore().viewFormat = 'chordpro'
+    setActivePinia(createPinia())
+    expect(useSheetStore().viewFormat).toBe('chordpro')
   })
 
   it('auto-detects the instrument from a freshly loaded sheet', async () => {
@@ -104,6 +116,22 @@ describe('useSheetStore', () => {
     useSheetStore().pinDiagrams = true
     setActivePinia(createPinia())
     expect(useSheetStore().pinDiagrams).toBe(true)
+  })
+
+  it('defaults displayPanelOpen to false and persists it across a fresh store', () => {
+    const store = useSheetStore()
+    expect(store.displayPanelOpen).toBe(false)
+    store.displayPanelOpen = true
+    setActivePinia(createPinia())
+    expect(useSheetStore().displayPanelOpen).toBe(true)
+  })
+
+  it('keeps displayPanelOpen across a reset', async () => {
+    const store = useSheetStore()
+    store.displayPanelOpen = true
+    await store.loadFile(fileOf(SAMPLE_CHORDPRO))
+    store.reset()
+    expect(store.displayPanelOpen).toBe(true)
   })
 
   describe('loadFromUrl', () => {

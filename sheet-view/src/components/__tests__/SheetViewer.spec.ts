@@ -18,6 +18,13 @@ async function mountWithSong(view: ViewFormat) {
   return { store, wrapper }
 }
 
+// The instrument / diagram-position / theme controls now live in the "Display"
+// panel, which is collapsed by default — open it before querying them.
+async function openPanel(wrapper: Awaited<ReturnType<typeof mountWithSong>>['wrapper']) {
+  await wrapper.find('.panel-trigger').trigger('click')
+  await nextTick()
+}
+
 describe('SheetViewer', () => {
   beforeEach(() => {
     setActivePinia(createPinia())
@@ -101,6 +108,7 @@ describe('SheetViewer', () => {
 
     it('shows the position selector only with diagrams on and outside the PDF view', async () => {
       const { store, wrapper } = await mountWithSong('html')
+      await openPanel(wrapper)
       expect(wrapper.find('.position-selector').exists()).toBe(true)
       store.showDiagrams = false
       await nextTick()
@@ -127,12 +135,14 @@ describe('SheetViewer', () => {
 
     it('toggles store.pinDiagrams from the Pin checkbox', async () => {
       const { store, wrapper } = await mountWithSong('html')
+      await openPanel(wrapper)
       await pinToggle(wrapper)?.find('input').setValue(true)
       expect(store.pinDiagrams).toBe(true)
     })
 
     it('hides the Pin checkbox with diagrams off and in the PDF view', async () => {
       const { store, wrapper } = await mountWithSong('html')
+      await openPanel(wrapper)
       expect(pinToggle(wrapper)).toBeTruthy()
       store.showDiagrams = false
       await nextTick()
