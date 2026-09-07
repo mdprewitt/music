@@ -87,6 +87,36 @@ from that same index. The `html-inline` view emits `chord-click` from real spans
 the `html` view is `v-html`, so its chord cells are made focusable by
 `markChordCells()` (`src/sheet/interactive.ts`) and handled by event delegation.
 
+### Adding an instrument
+
+Everything that varies by instrument is a row in `INSTRUMENTS`
+(`src/chords/types.ts`) — the selector, the store's persistence, detection, the
+resolver and both diagram renderers read from it. Tenor guitar (CGDA and DGBE)
+was added this way, with no new `if (instrument === …)` branch. The recipe:
+
+1. **`src/chords/types.ts`** — widen the `Instrument` union and add an
+   `INSTRUMENTS` entry: `stringCount`, `tuning` (open-string pitch classes,
+   lowest string first, `0 = C`), `diagrams`, and any directive `aliases`.
+   `diagrams: 'chordsheetjs'` uses the bundled six-string library (guitar only);
+   `diagrams: 'builtin'` uses one of our generated tables.
+2. **Generate the shape dictionary** (skip for `'chordsheetjs'`): add a `TARGETS`
+   row to `scripts/generate-chord-shapes.mjs` — the same `tuning`, a `maxFret`
+   window, and `maxSpan`, a list of reach budgets tried widest-last. A fifths
+   tuning like CGDA needs a bigger `maxSpan` than GCEA; without the cap the
+   scorer picks an unplayable stretch over muting a string. Then
+   `bun run generate:chords <id>` and `bunx prettier --write src/chords/<file>.ts`.
+3. **`src/chords/definitions.ts`** — register the generated table in
+   `BUILTIN_SHAPES`. `resolveDiagramChords` and the `shapeLibraries.spec.ts`
+   sweep pick it up from there.
+4. **`src/chords/detectInstrument.ts`** — only if some `{define}` string count
+   *unambiguously* implies the new instrument, add a `DEFAULT_BY_STRING_COUNT`
+   row. Four strings is already ambiguous (ukulele vs. either tenor tuning), so
+   tenor relies on a `{meta: instrument …}` directive or the reader's pick.
+
+`ChordDiagram.vue`, `src/chords/pdf.ts`, `src/chords/diagram.ts` and
+`src/chords/shapes.ts` take geometry from `DiagramShape.stringCount` and need no
+changes for a new string count.
+
 ## Changing the key
 
 `store.song` is always the pristine parse. The key change is a **derived**

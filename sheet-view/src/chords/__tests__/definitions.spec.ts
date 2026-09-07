@@ -84,6 +84,16 @@ describe('resolveDiagramChords', () => {
     expect(resolved.every((r) => !r.definition || r.definition.frets.length === 4)).toBe(true)
   })
 
+  it('resolves through the built-in table for tenor guitar, never the guitar library', () => {
+    const song = parse('[C]a [G]b [Am7]c [Fmaj7]d')
+    const resolved = resolveDiagramChords(song, 'tenor')
+    expect(resolved.map((r) => r.name)).toEqual(['C', 'G', 'Am7', 'Fmaj7'])
+    expect(resolved.every((r) => r.definition && r.definition.frets.length === 4)).toBe(true)
+    expect(resolved.every((r) => r.source === 'library' || r.source === 'library-normalized')).toBe(
+      true,
+    )
+  })
+
   it('returns definition: null for a chord it cannot place', () => {
     const song = parse('[Fmag7]x') // a typo, not a real chord
     const [entry] = resolveDiagramChords(song, 'guitar')

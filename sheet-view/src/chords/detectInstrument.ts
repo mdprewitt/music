@@ -1,13 +1,15 @@
 import type { Song } from 'chordsheetjs'
 import type { Instrument } from './types'
-import { isInstrument } from './types'
+import { INSTRUMENT_IDS, INSTRUMENTS, isInstrument } from './types'
 
 /**
  * Best guess at the instrument a chart is written for:
  *
- * 1. an explicit `{instrument: ...}` / `{meta: instrument ...}` directive;
- * 2. otherwise the string count of the chart's own `{define}` shapes
- *    (4 → ukulele, 6 → guitar);
+ * 1. an explicit instrument in the metadata (`{meta: instrument ...}`, which is
+ *    where chordsheetjs records it), matched against every id and its `aliases`
+ *    (see `INSTRUMENTS`);
+ * 2. otherwise the string count of the chart's own `{define}` shapes, via
+ *    `DEFAULT_BY_STRING_COUNT`;
  * 3. otherwise guitar.
  *
  * None of this is authoritative — the viewer always lets the reader override it.
@@ -22,6 +24,21 @@ export function detectInstrument(song: Song): Instrument {
   return 'guitar'
 }
 
+/**
+ * `{instrument: N}` → id, N being any of the string counts that unambiguously
+ * pick one instrument. Four strings is ambiguous (ukulele and tenor guitar in
+ * either tuning all have four) and resolves to the most common four-string
+ * instrument; a chart for anything else needs an explicit `{instrument: …}`
+ * directive, or the reader picks it in the Display panel.
+ */
+const DEFAULT_BY_STRING_COUNT: Record<number, Instrument> = { 4: 'ukulele', 6: 'guitar' }
+
+/** `[id | alias, id]` pairs, longest phrase first so `tenor guitar` beats `guitar`. */
+const DIRECTIVE_ALIASES: Array<[needle: string, id: Instrument]> = INSTRUMENT_IDS.flatMap((id) => [
+  [id.toLowerCase(), id] as [string, Instrument],
+  ...INSTRUMENTS[id].aliases.map((alias) => [alias.toLowerCase(), id] as [string, Instrument]),
+]).sort((a, b) => b[0].length - a[0].length)
+
 function readInstrumentMetadata(song: Song): Instrument | null {
   let raw: unknown
   try {
@@ -33,8 +50,9 @@ function readInstrumentMetadata(song: Song): Instrument | null {
   if (typeof value !== 'string') return null
   const normalized = value.trim().toLowerCase()
   if (isInstrument(normalized)) return normalized
-  if (normalized.includes('ukulele') || normalized === 'uke') return 'ukulele'
-  if (normalized.includes('guitar')) return 'guitar'
+  // exact id / alias first, then a substring match (longest phrase wins).
+  for (const [needle, id] of DIRECTIVE_ALIASES) if (normalized === needle) return id
+  for (const [needle, id] of DIRECTIVE_ALIASES) if (normalized.includes(needle)) return id
   return null
 }
 
@@ -50,9 +68,15 @@ function instrumentFromDefinitionWidth(song: Song): Instrument | null {
     .filter((width) => width > 0)
   if (widths.length === 0) return null
 
-  const fourString = widths.filter((width) => width === 4).length
-  const sixString = widths.filter((width) => width === 6).length
-  if (fourString > sixString) return 'ukulele'
-  if (sixString > fourString) return 'guitar'
-  return null
+  const tally = new Map<number, number>()
+  for (const width of widths) tally.set(width, (tally.get(width) ?? 0) + 1)
+  let bestWidth = 0
+  let bestCount = 0
+  for (const [width, count] of tally) {
+    if (count > bestCount) {
+      bestWidth = width
+      bestCount = count
+    }
+  }
+  return DEFAULT_BY_STRING_COUNT[bestWidth] ?? null
 }

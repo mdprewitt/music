@@ -22,7 +22,9 @@ defineExpose({ isOpen })
         <h3>Features</h3>
         <ul>
           <li>Multiple view formats: ChordPro, HTML, HTML inline, and PDF</li>
-          <li>Chord diagrams for guitar and ukulele with auto-detection</li>
+          <li>
+            Chord diagrams for guitar, ukulele and tenor guitar (CGDA / DGBE) with auto-detection
+          </li>
           <li>Toggle chord diagram position (top, right, or bottom)</li>
           <li>Pin chord diagrams to keep them visible while scrolling</li>
         </ul>

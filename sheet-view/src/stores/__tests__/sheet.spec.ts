@@ -85,6 +85,12 @@ describe('useSheetStore', () => {
     expect(store.instrument).toBe('ukulele')
   })
 
+  it('persists a newer instrument id and restores it in a fresh store', () => {
+    useSheetStore().instrument = 'tenor'
+    setActivePinia(createPinia())
+    expect(useSheetStore().instrument).toBe('tenor')
+  })
+
   it('defaults the diagram position to top', () => {
     expect(useSheetStore().diagramPosition).toBe('top')
   })

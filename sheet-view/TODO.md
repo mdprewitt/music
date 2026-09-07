@@ -2,7 +2,10 @@
 
 - Add live scroll for music
 - Improve chord catalog
-- Support for other instruments (banjo, tenor guitar, mandolin)
+- Support for other instruments (banjo, mandolin)
+  - **Done:** tenor guitar in CGDA (standard) and DGBE (Chicago) tunings. Adding
+    another is a data entry in `INSTRUMENTS` + a generated dictionary — see the
+    "Adding an instrument" recipe in `CONTRIBUTING.md`.
 - Load files from github or other url
   - **Done:** DropZone takes a pasted URL, and a `?view=<chart-url>` query param
     on the app URL auto-loads a chart on startup (`App.vue`). `toFetchableUrl()`

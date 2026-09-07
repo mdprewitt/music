@@ -46,8 +46,9 @@ pick is remembered per song — identified by its `{title}` and `{artist}` — s
 brings it back in the key you last read it in; loading a different chart does not inherit it.
 
 **Display** opens a small panel with the set-once preferences, grouped and labelled:
-- **Instrument** — guitar or ukulele. Guessed from the file (an `{instrument}` directive, or the
-  string count of its own chord definitions) and remembered once you pick one.
+- **Instrument** — guitar, ukulele, or tenor guitar in either CGDA (standard) or DGBE (Chicago)
+  tuning. Guessed from the file (a `{meta: instrument …}` directive, or the string count of its
+  own chord definitions) and remembered once you pick one.
 - **Diagrams** — where the chord strip sits (top, right, bottom) and whether it stays pinned in
   place while the music scrolls. Shown only while diagrams are on and outside the PDF view.
 - **Theme** — the colour templates and custom pickers described below.

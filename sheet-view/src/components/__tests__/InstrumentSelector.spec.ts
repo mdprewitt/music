@@ -1,11 +1,14 @@
 import { describe, it, expect } from 'vitest'
 import { mount } from '@vue/test-utils'
 import InstrumentSelector from '../InstrumentSelector.vue'
+import { INSTRUMENT_IDS, INSTRUMENTS } from '@/chords/types'
 
 describe('InstrumentSelector', () => {
   it('renders one button per instrument', () => {
     const wrapper = mount(InstrumentSelector, { props: { modelValue: 'guitar' } })
-    expect(wrapper.findAll('button').map((b) => b.text())).toEqual(['Guitar', 'Ukulele'])
+    expect(wrapper.findAll('button').map((b) => b.text())).toEqual(
+      INSTRUMENT_IDS.map((id) => INSTRUMENTS[id].label),
+    )
   })
 
   it('marks the active instrument', () => {

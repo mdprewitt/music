@@ -51,9 +51,11 @@ function boxHeight(shape: DiagramShape): number {
 
 /**
  * Prepend a page of chord-fingering diagrams to an already-formatted PDF
- * document. Used for the ukulele view, where `chordsheetjs`' own diagram
- * renderer cannot be told the neck only has four strings and would draw
- * six-string shapes. No-op when there is nothing to draw.
+ * document. Used for every instrument `chordsheetjs`' own diagram renderer
+ * cannot draw — it hard-codes a six-string neck, so anything else (ukulele,
+ * tenor guitar) would come out with the wrong string count. Geometry is taken
+ * from each `DiagramShape`, so any string count renders. No-op when there is
+ * nothing to draw.
  */
 export function drawDiagramSheet(doc: PdfDoc, pageSize: PageSize, shapes: DiagramShape[]): void {
   if (shapes.length === 0) return

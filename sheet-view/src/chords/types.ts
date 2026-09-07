@@ -1,4 +1,4 @@
-export type Instrument = 'guitar' | 'ukulele'
+export type Instrument = 'guitar' | 'ukulele' | 'tenor' | 'tenor-chicago'
 
 export interface InstrumentSpec {
   id: Instrument
@@ -6,17 +6,78 @@ export interface InstrumentSpec {
   stringCount: number
   /** Open-string pitch classes, lowest-pitched string first (0 = C). */
   tuning: number[]
+  /**
+   * Where this instrument's fallback chord shapes come from:
+   *
+   * - `'chordsheetjs'` — the library's bundled set. Six-string only, and the
+   *   only case `PdfFormatter` can draw its own diagrams for (its neck builder
+   *   hard-codes 6 strings).
+   * - `'builtin'` — one of our own generated dictionaries, registered in
+   *   `BUILTIN_SHAPES` in `./definitions`. Diagrams are drawn by us, both on
+   *   screen (`ChordDiagram.vue`) and in the PDF (`drawDiagramSheet`).
+   */
+  diagrams: 'chordsheetjs' | 'builtin'
+  /** Extra lower-case spellings an `{instrument: …}` directive may use. */
+  aliases: string[]
 }
 
+/**
+ * Adding an instrument:
+ *
+ *   1. Add an entry here — `stringCount`, `tuning` (pitch classes, lowest
+ *      string first), `diagrams`, and any directive `aliases`. Widen the
+ *      `Instrument` union above with its id.
+ *   2. Unless `diagrams` is `'chordsheetjs'`, generate a shape dictionary:
+ *        node scripts/generate-chord-shapes.mjs <id>
+ *      after adding a matching row to `TARGETS` in that script.
+ *   3. Register the generated dictionary in `BUILTIN_SHAPES` (`./definitions`).
+ *   4. Only if a `{define}` of some string count unambiguously implies the new
+ *      instrument, add a row to `DEFAULT_BY_STRING_COUNT` in `./detectInstrument`
+ *      — otherwise it relies on an explicit `{instrument: …}` directive or the
+ *      reader's pick in the Display panel.
+ *
+ * Nothing else branches on the instrument: the selector, the store, the diagram
+ * geometry and the resolver are all driven by this table.
+ */
 export const INSTRUMENTS: Record<Instrument, InstrumentSpec> = {
-  guitar: { id: 'guitar', label: 'Guitar', stringCount: 6, tuning: [4, 9, 2, 7, 11, 4] },
-  ukulele: { id: 'ukulele', label: 'Ukulele', stringCount: 4, tuning: [7, 0, 4, 9] },
+  guitar: {
+    id: 'guitar',
+    label: 'Guitar',
+    stringCount: 6,
+    tuning: [4, 9, 2, 7, 11, 4],
+    diagrams: 'chordsheetjs',
+    aliases: [],
+  },
+  ukulele: {
+    id: 'ukulele',
+    label: 'Ukulele',
+    stringCount: 4,
+    tuning: [7, 0, 4, 9],
+    diagrams: 'builtin',
+    aliases: ['uke'],
+  },
+  tenor: {
+    id: 'tenor',
+    label: 'Tenor (CGDA)',
+    stringCount: 4,
+    tuning: [0, 7, 2, 9],
+    diagrams: 'builtin',
+    aliases: ['tenor guitar', 'tenor-cgda', 'cgda'],
+  },
+  'tenor-chicago': {
+    id: 'tenor-chicago',
+    label: 'Tenor (DGBE)',
+    stringCount: 4,
+    tuning: [2, 7, 11, 4],
+    diagrams: 'builtin',
+    aliases: ['chicago tenor', 'tenor chicago', 'tenor-dgbe', 'chicago', 'dgbe'],
+  },
 }
 
 export const INSTRUMENT_IDS = Object.keys(INSTRUMENTS) as Instrument[]
 
 export function isInstrument(value: unknown): value is Instrument {
-  return value === 'guitar' || value === 'ukulele'
+  return typeof value === 'string' && (INSTRUMENT_IDS as string[]).includes(value)
 }
 
 /** Where the chord-diagram strip sits relative to the chart. */

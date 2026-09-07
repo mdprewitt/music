@@ -5,6 +5,7 @@ import { PdfFormatter } from 'chordsheetjs/pdf'
 import { jsPDF } from 'jspdf'
 import { useSheetStore } from '@/stores/sheet'
 import { buildDiagramIndex, findShape } from '@/chords/shapes'
+import { INSTRUMENTS } from '@/chords/types'
 import { drawDiagramSheet, type PdfDoc } from '@/chords/pdf'
 import { markChordCells } from '@/sheet/interactive'
 import ViewSelector from './ViewSelector.vue'
@@ -60,13 +61,14 @@ watch(
       return
     }
     try {
-      // For guitar we let chordsheetjs draw its own (six-string) diagrams — it
-      // reserves layout space and paginates them correctly. For ukulele it has
-      // no way to know the neck has four strings, so we suppress its diagrams
-      // and prepend our own page below.
-      const drawOwnDiagrams = showDiagrams && instrument === 'ukulele'
+      // chordsheetjs' own diagram renderer hard-codes a six-string neck, so we
+      // only let it draw for instruments whose shapes come from its bundled
+      // library (guitar) — it reserves layout space and paginates them. For
+      // everything else we suppress its diagrams and prepend our own page below.
+      const drawsOwn = INSTRUMENTS[instrument].diagrams === 'builtin'
+      const drawOwnDiagrams = showDiagrams && drawsOwn
       const formatter = new PdfFormatter({
-        layout: { chordDiagrams: { enabled: showDiagrams && instrument === 'guitar' } },
+        layout: { chordDiagrams: { enabled: showDiagrams && !drawsOwn } },
       } as unknown as ConstructorParameters<typeof PdfFormatter>[0])
       // chordsheetjs/pdf ships its own nominal copies of the AST classes and (a bug in its
       // .d.ts) types generatePDF as returning node's buffer Blob — cast across both seams.
