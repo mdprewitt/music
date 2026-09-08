@@ -1,5 +1,6 @@
 # TODOs
 
+- Sort the chords in the chord diagrams.
 - Add live scroll for music
 - Improve chord catalog
 - Support for other instruments (banjo, mandolin)
