@@ -90,6 +90,45 @@ export function canonicalChordName(name: string): string {
   return `${root}${suffix}`
 }
 
+const ROOT_LETTERS = ['A', 'B', 'C', 'D', 'E', 'F', 'G']
+const CHORD_NAME = /^([A-G])([#b]?)(.*)$/
+
+/**
+ * Order two chord names for display: root letter A–G, then accidental in pitch
+ * order within the letter (`Ab` < `A` < `A#`), then quality — a plain triad
+ * before any suffixed form, and suffixes compared numerically so `A7` precedes
+ * `A9` precedes `A13`. Names that are not chord symbols sort after every real
+ * chord. The full-name compare is a final tie-break so the sort is total.
+ *
+ * Unlike {@link canonicalChordName} this keeps `F#`/`Gb` and `maj7`/`M7`
+ * distinct — collapsing them would make the ordering arbitrary.
+ */
+export function compareChordNames(a: string, b: string): number {
+  const ma = CHORD_NAME.exec(a.trim())
+  const mb = CHORD_NAME.exec(b.trim())
+  if (!ma || !mb) {
+    if (ma) return -1
+    if (mb) return 1
+    return a.localeCompare(b)
+  }
+
+  const letter = ROOT_LETTERS.indexOf(ma[1] as string) - ROOT_LETTERS.indexOf(mb[1] as string)
+  if (letter !== 0) return letter
+
+  const accidentalRank = (accidental: string) => (accidental === 'b' ? 0 : accidental === '#' ? 2 : 1)
+  const accidental = accidentalRank(ma[2] ?? '') - accidentalRank(mb[2] ?? '')
+  if (accidental !== 0) return accidental
+
+  const sa = ma[3] ?? ''
+  const sb = mb[3] ?? ''
+  if (sa === '' && sb !== '') return -1
+  if (sb === '' && sa !== '') return 1
+  const suffix = sa.localeCompare(sb, undefined, { numeric: true })
+  if (suffix !== 0) return suffix
+
+  return a.localeCompare(b)
+}
+
 function chordsheetjsNormalized(name: string): string | null {
   try {
     return Chord.parse(name)?.normalize()?.toString() ?? null

@@ -10,9 +10,14 @@ function parse(chordpro: string): Song {
 describe('buildDiagramIndex', () => {
   beforeEach(() => setActivePinia(createPinia()))
 
-  it('lists resolvable shapes once, in first-appearance order', () => {
+  it('lists resolvable shapes once, in musical alphabetical order', () => {
     const index = buildDiagramIndex(parse('[G]a [C]b [G]c [D]d'), 'guitar', null)
-    expect(index.shapes.map((s) => s.name)).toEqual(['G', 'C', 'D'])
+    expect(index.shapes.map((s) => s.name)).toEqual(['C', 'D', 'G'])
+  })
+
+  it('sorts the strip even when chords first appear out of order and repeat', () => {
+    const index = buildDiagramIndex(parse('[G]a [Am]b [C]c [G]d'), 'guitar', null)
+    expect(index.shapes.map((s) => s.name)).toEqual(['Am', 'C', 'G'])
   })
 
   it('drops chords with no known shape from the strip', () => {
@@ -30,7 +35,7 @@ describe('buildDiagramIndex', () => {
 
   it('shows one diagram when two enharmonic spellings resolve to the same shape', () => {
     const index = buildDiagramIndex(parse('[C]a [F#]b [Gb]c [Am]d'), 'guitar', null)
-    expect(index.shapes.map((s) => s.name)).toEqual(['C', 'F#', 'Am'])
+    expect(index.shapes.map((s) => s.name)).toEqual(['Am', 'C', 'F#'])
     expect(findShape(index, 'Gb')).not.toBeNull()
     expect(findShape(index, 'F#')).not.toBeNull()
   })

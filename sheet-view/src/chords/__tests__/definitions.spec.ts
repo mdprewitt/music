@@ -1,11 +1,43 @@
 import { describe, it, expect, beforeEach } from 'vitest'
 import { setActivePinia, createPinia } from 'pinia'
 import { ChordProParser, type Song } from 'chordsheetjs'
-import { canonicalChordName, recoverDroppedDefinitions, resolveDiagramChords } from '../definitions'
+import {
+  canonicalChordName,
+  compareChordNames,
+  recoverDroppedDefinitions,
+  resolveDiagramChords,
+} from '../definitions'
 
 function parse(chordpro: string): Song {
   return new ChordProParser().parse(chordpro)
 }
+
+describe('compareChordNames', () => {
+  const sort = (names: string[]) => [...names].sort(compareChordNames)
+
+  it('orders by root letter A–G', () => {
+    expect(sort(['G', 'C', 'Am', 'D'])).toEqual(['Am', 'C', 'D', 'G'])
+  })
+
+  it('orders accidentals in pitch order within a letter', () => {
+    expect(sort(['A#', 'Ab', 'A'])).toEqual(['Ab', 'A', 'A#'])
+  })
+
+  it('puts a plain triad before its suffixed forms and compares suffixes numerically', () => {
+    expect(sort(['Amaj7', 'Am7', 'A', 'A7', 'A13', 'A9'])).toEqual([
+      'A',
+      'A7',
+      'A9',
+      'A13',
+      'Am7',
+      'Amaj7',
+    ])
+  })
+
+  it('sorts non-chord names after every real chord', () => {
+    expect(sort(['N.C.', 'G', 'C'])).toEqual(['C', 'G', 'N.C.'])
+  })
+})
 
 describe('canonicalChordName', () => {
   it('normalises enharmonic roots to a flat spelling', () => {

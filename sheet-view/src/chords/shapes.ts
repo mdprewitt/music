@@ -6,14 +6,17 @@
  * Wraps {@link resolveDiagramChords} + {@link toDiagramShape} — no new
  * resolution logic. Building the index runs the (expensive, ~900-shape)
  * guitar merge once, so callers should memoise it per (song, instrument).
+ * The returned `shapes` are sorted into musical alphabetical order (see
+ * {@link compareChordNames}); `resolveDiagramChords` itself stays
+ * first-appearance.
  */
 import type { Song } from 'chordsheetjs'
-import { canonicalChordName, resolveDiagramChords } from './definitions'
+import { canonicalChordName, compareChordNames, resolveDiagramChords } from './definitions'
 import { toDiagramShape } from './diagram'
 import type { DiagramShape, Instrument } from './types'
 
 export interface DiagramIndex {
-  /** Resolvable shapes, in the order the chords first appear — the strip. */
+  /** Resolvable shapes for the strip, in musical alphabetical order (see {@link compareChordNames}). */
   shapes: DiagramShape[]
   /**
    * Shape by name, keyed on both the chart's spelling and its canonical
@@ -49,6 +52,8 @@ export function buildDiagramIndex(
     const canonical = canonicalChordName(resolved.name)
     if (!byName.has(canonical)) byName.set(canonical, shape)
   }
+
+  shapes.sort((a, b) => compareChordNames(a.name, b.name))
 
   return { shapes, byName }
 }

@@ -109,7 +109,7 @@ describe('SheetViewer', () => {
 
     store.targetKey = 'E'
     await nextTick()
-    expect(wrapper.findAll('.chord-diagrams .cd-title').map((t) => t.text())).toEqual(['E', 'B'])
+    expect(wrapper.findAll('.chord-diagrams .cd-title').map((t) => t.text())).toEqual(['B', 'E'])
 
     const transposed = wrapper.findAll('td.chord').find((c) => c.text() === 'E')
     await transposed?.trigger('click')
