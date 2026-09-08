@@ -30,12 +30,22 @@ export function buildDiagramIndex(
 ): DiagramIndex {
   const shapes: DiagramShape[] = []
   const byName = new Map<string, DiagramShape>()
+  // Emitted shapes keyed on the matched definition's name. Two chart spellings
+  // can resolve to one definition — `C` and `C/G`, `F#` and `Gb` — and the strip
+  // must show that diagram once, not once per spelling.
+  const emitted = new Map<string, DiagramShape>()
 
   for (const resolved of resolveDiagramChords(song, instrument, rawText)) {
     if (!resolved.definition) continue
-    const shape = toDiagramShape(resolved.definition)
-    shapes.push(shape)
-    byName.set(resolved.name, shape)
+    let shape = emitted.get(resolved.definition.name)
+    if (!shape) {
+      shape = toDiagramShape(resolved.definition)
+      emitted.set(shape.name, shape)
+      shapes.push(shape)
+    }
+    // byName still records every chart spelling, so a clicked label resolves
+    // whichever way the chart happens to spell the chord.
+    if (!byName.has(resolved.name)) byName.set(resolved.name, shape)
     const canonical = canonicalChordName(resolved.name)
     if (!byName.has(canonical)) byName.set(canonical, shape)
   }

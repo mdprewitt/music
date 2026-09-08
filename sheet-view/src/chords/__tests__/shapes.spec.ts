@@ -19,6 +19,21 @@ describe('buildDiagramIndex', () => {
     const index = buildDiagramIndex(parse('[C]a [Fmag7]b'), 'guitar', null)
     expect(index.shapes.map((s) => s.name)).toEqual(['C'])
   })
+
+  it('shows one diagram when a slash chord resolves to a base-chord shape', () => {
+    const index = buildDiagramIndex(parse('[C]a [C/G]b'), 'ukulele', null)
+    expect(index.shapes.map((s) => s.name)).toEqual(['C'])
+    // both spellings still resolve for the click-to-peek popover
+    expect(findShape(index, 'C/G')).not.toBeNull()
+    expect(findShape(index, 'C')).not.toBeNull()
+  })
+
+  it('shows one diagram when two enharmonic spellings resolve to the same shape', () => {
+    const index = buildDiagramIndex(parse('[C]a [F#]b [Gb]c [Am]d'), 'guitar', null)
+    expect(index.shapes.map((s) => s.name)).toEqual(['C', 'F#', 'Am'])
+    expect(findShape(index, 'Gb')).not.toBeNull()
+    expect(findShape(index, 'F#')).not.toBeNull()
+  })
 })
 
 describe('findShape', () => {

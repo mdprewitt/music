@@ -44,6 +44,12 @@ const text = computed(() =>
 
 const pdfUrl = ref<string | null>(null)
 const pdfError = ref<string | null>(null)
+// Guards the async PDF build: `pdfRunId` invalidates an earlier run when a
+// newer one starts (rapid instrument/key/view toggles), `disposed` stops a run
+// that resolves after the component has unmounted. Either way the stale run
+// must not revoke the live URL or install its own blob.
+let pdfRunId = 0
+let disposed = false
 
 const pdfFilename = computed(() => (store.filename ?? 'sheet').replace(/\.[^./]*$/, '') + '.pdf')
 
@@ -62,6 +68,7 @@ watch(
       pdfError.value = null
       return
     }
+    const runId = ++pdfRunId
     try {
       // chordsheetjs' own diagram renderer hard-codes a six-string neck, so we
       // only let it draw for instruments whose shapes come from its bundled
@@ -84,10 +91,13 @@ watch(
         drawDiagramSheet(wrapper.doc as unknown as PdfDoc, wrapper.pageSize, shapes)
       }
       const blob = (await formatter.generatePDF()) as unknown as Blob
+      // A newer run superseded this one, or we unmounted while it ran.
+      if (runId !== pdfRunId || disposed) return
       revokePdfUrl()
       pdfUrl.value = URL.createObjectURL(blob)
       pdfError.value = null
     } catch (err) {
+      if (runId !== pdfRunId || disposed) return
       revokePdfUrl()
       pdfError.value = err instanceof Error ? err.message : String(err)
     }
@@ -95,7 +105,10 @@ watch(
   { immediate: true },
 )
 
-onBeforeUnmount(revokePdfUrl)
+onBeforeUnmount(() => {
+  disposed = true
+  revokePdfUrl()
+})
 
 // --- Click a chord → show its diagram in a popover above it -------------------
 

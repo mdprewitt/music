@@ -84,6 +84,14 @@ describe('resolveDiagramChords', () => {
     expect(resolved.every((r) => !r.definition || r.definition.frets.length === 4)).toBe(true)
   })
 
+  it('ignores a sheet {define} whose string count does not match the instrument', () => {
+    // a six-string guitar define, but the reader has selected ukulele
+    const song = parse('{define: C frets x 3 2 0 1 0}\n[C]x')
+    const [entry] = resolveDiagramChords(song, 'ukulele')
+    expect(entry?.source).not.toBe('sheet')
+    expect(entry?.definition?.frets).toHaveLength(4) // fell through to the uke builtin
+  })
+
   it('resolves through the built-in table for tenor guitar, never the guitar library', () => {
     const song = parse('[C]a [G]b [Am7]c [Fmaj7]d')
     const resolved = resolveDiagramChords(song, 'tenor')

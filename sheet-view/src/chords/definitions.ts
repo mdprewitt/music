@@ -1,5 +1,6 @@
 import { Chord, ChordDefinition, type Song } from 'chordsheetjs'
 import type { Instrument, RawChordDefinition } from './types'
+import { INSTRUMENTS } from './types'
 import { UKULELE_CHORDS } from './ukulele'
 import { TENOR_CHORDS } from './tenor'
 import { TENOR_CHICAGO_CHORDS } from './tenorChicago'
@@ -198,6 +199,10 @@ function builtinShape(instrument: Instrument, key: string): RawChordDefinition |
  *   5. nothing — the chord is returned with `definition: null` and skipped by
  *      the renderer.
  *
+ * Steps 1-2 are used only when the definition's string count matches the chosen
+ * instrument; a chart's six-string guitar `{define}` viewed as a ukulele falls
+ * through to the built-in table rather than rendering a six-string neck.
+ *
  * Non-guitar instruments resolve steps 3-4 through {@link BUILTIN_SHAPES}; the
  * guitar library is `chordsheetjs`' bundled set (6-string). `withDefaults()`
  * silently injects guitar shapes, so it is only ever consulted for instruments
@@ -251,6 +256,10 @@ export function resolveDiagramChords(
     return null
   }
 
+  // A chart-supplied shape is only usable if it has the right number of strings
+  // for the chosen instrument — otherwise it draws the wrong neck.
+  const expectedStrings = INSTRUMENTS[instrument].stringCount
+
   const seen = new Set<string>()
   const result: ResolvedChord[] = []
   for (const name of song.getChords()) {
@@ -258,12 +267,12 @@ export function resolveDiagramChords(
     seen.add(name)
 
     const sheet = sheetDefs[name]
-    if (sheet) {
+    if (sheet && sheet.frets.length === expectedStrings) {
       result.push({ name, definition: toRaw(sheet), source: 'sheet' })
       continue
     }
     const fromRecovered = recovered.get(name)
-    if (fromRecovered) {
+    if (fromRecovered && fromRecovered.frets.length === expectedStrings) {
       result.push({ name, definition: fromRecovered, source: 'sheet-recovered' })
       continue
     }

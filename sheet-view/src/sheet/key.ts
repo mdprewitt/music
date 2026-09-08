@@ -7,26 +7,38 @@
  * (falling back to the filename), so the same chart loaded from a file one day
  * and a URL the next still recalls its key.
  *
- * The map lives in `localStorage` under one JSON key, read/written through the
- * shared `readStored`/`writeStored` helpers (no re-implemented try/catch).
+ * The list lives in `localStorage` under one JSON key as an array of
+ * `[songId, key]` pairs (newest last), read/written through the shared
+ * `readStored`/`writeStored` helpers (no re-implemented try/catch). A legacy
+ * `{ id: key }` object is migrated on read.
  */
 import type { Song } from 'chordsheetjs'
 import { readStored, writeStored } from '@/stores/storage'
 
 const SONG_KEYS_STORAGE_KEY = 'sheet-view:songKeys'
-/** Cap the map so it cannot grow without bound; oldest entries are evicted. */
+/** Cap the list so it cannot grow without bound; oldest entries are evicted. */
 const MAX_REMEMBERED = 100
 
-type KeyMap = Record<string, string>
+/** `[songId, key]`, newest last. An explicit array — not an object — because
+ *  object key order puts integer-like ids (`"1984"`) first regardless of
+ *  insertion, which would make them un-promotable and evicted first. */
+type KeyEntry = [id: string, key: string]
 
-function parseKeyMap(raw: string): KeyMap | null {
+function parseKeyEntries(raw: string): KeyEntry[] | null {
   const parsed: unknown = JSON.parse(raw)
-  if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) return null
-  const out: KeyMap = {}
-  for (const [id, key] of Object.entries(parsed)) {
-    if (typeof key === 'string') out[id] = key
+  if (Array.isArray(parsed)) {
+    return parsed.filter(
+      (entry): entry is KeyEntry =>
+        Array.isArray(entry) && typeof entry[0] === 'string' && typeof entry[1] === 'string',
+    )
   }
-  return out
+  // Legacy `{ id: key }` object — migrate on read; the next write stores an array.
+  if (parsed && typeof parsed === 'object') {
+    return Object.entries(parsed).filter(
+      (entry): entry is KeyEntry => typeof entry[1] === 'string',
+    )
+  }
+  return null
 }
 
 /** A metadata value can be a string, an array of strings, or absent. */
@@ -48,7 +60,8 @@ export function songIdentity(song: Song | null, filename: string | null): string
 /** The key this song was last read in, or `null` if none is remembered. */
 export function recallKey(id: string | null): string | null {
   if (!id) return null
-  return readStored(SONG_KEYS_STORAGE_KEY, parseKeyMap)?.[id] ?? null
+  const entries = readStored(SONG_KEYS_STORAGE_KEY, parseKeyEntries) ?? []
+  return entries.find(([entryId]) => entryId === id)?.[1] ?? null
 }
 
 /**
@@ -58,12 +71,9 @@ export function recallKey(id: string | null): string | null {
  */
 export function rememberKey(id: string | null, key: string | null): void {
   if (!id) return
-  const map = readStored(SONG_KEYS_STORAGE_KEY, parseKeyMap) ?? {}
-  delete map[id]
-  if (key !== null) map[id] = key
-  const ids = Object.keys(map)
-  for (const stale of ids.slice(0, Math.max(0, ids.length - MAX_REMEMBERED))) {
-    delete map[stale]
-  }
-  writeStored(SONG_KEYS_STORAGE_KEY, JSON.stringify(map))
+  const entries = (readStored(SONG_KEYS_STORAGE_KEY, parseKeyEntries) ?? []).filter(
+    ([entryId]) => entryId !== id,
+  )
+  if (key !== null) entries.push([id, key])
+  writeStored(SONG_KEYS_STORAGE_KEY, JSON.stringify(entries.slice(-MAX_REMEMBERED)))
 }

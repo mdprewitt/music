@@ -25,6 +25,7 @@ const shapes = computed(
     :class="[`pos-${position ?? 'top'}`, { pinned }]"
     aria-label="Chord diagrams"
   >
+    <!-- buildDiagramIndex dedups shapes by name, so shape.name is a unique, stable key. -->
     <ChordDiagram v-for="shape in shapes" :key="shape.name" :shape="shape" />
   </div>
 </template>

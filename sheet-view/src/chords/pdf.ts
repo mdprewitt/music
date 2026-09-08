@@ -11,6 +11,7 @@ export interface PdfDoc {
   setFontSize(size: number): void
   setDrawColor(r: number, g?: number, b?: number): void
   setFillColor(r: number, g?: number, b?: number): void
+  setTextColor(r: number, g?: number, b?: number): void
   setLineWidth(width: number): void
   line(x1: number, y1: number, x2: number, y2: number): void
   circle(x: number, y: number, r: number, style?: string): void
@@ -23,7 +24,7 @@ export interface PdfDoc {
     ry: number,
     style?: string,
   ): void
-  text(text: string, x: number, y: number, options?: { align?: string }): void
+  text(text: string, x: number, y: number, options?: { align?: string; baseline?: string }): void
 }
 
 export interface PageSize {
@@ -50,36 +51,44 @@ function boxHeight(shape: DiagramShape): number {
 }
 
 /**
- * Prepend a page of chord-fingering diagrams to an already-formatted PDF
- * document. Used for every instrument `chordsheetjs`' own diagram renderer
+ * Prepend one or more pages of chord-fingering diagrams to an already-formatted
+ * PDF document. Used for every instrument `chordsheetjs`' own diagram renderer
  * cannot draw — it hard-codes a six-string neck, so anything else (ukulele,
  * tenor guitar) would come out with the wrong string count. Geometry is taken
- * from each `DiagramShape`, so any string count renders. No-op when there is
- * nothing to draw.
+ * from each `DiagramShape`, so any string count renders. Diagrams that overflow
+ * a page continue on the next inserted page rather than being dropped. No-op
+ * when there is nothing to draw.
  */
 export function drawDiagramSheet(doc: PdfDoc, pageSize: PageSize, shapes: DiagramShape[]): void {
   if (shapes.length === 0) return
-
-  doc.insertPage(1)
-  doc.setPage(1)
 
   const margin = 42
   const scale = 1.15
   const cellWidth = BOX_WIDTH * scale + 16
   const cellHeight = Math.max(...shapes.map(boxHeight)) * scale + 14
   const columns = Math.max(1, Math.floor((pageSize.width - 2 * margin) / cellWidth))
+  const rowsPerPage = Math.max(1, Math.floor((pageSize.height - 2 * margin) / cellHeight))
+  const perPage = columns * rowsPerPage
 
-  doc.setFontSize(16)
-  doc.setDrawColor(INK)
-  doc.text('Chord diagrams', margin, margin - 12)
+  // Diagram pages are inserted at the front, before the chart pages: the first
+  // at position 1, each subsequent one immediately after the previous.
+  let pageNo = 0
+  const startPage = () => {
+    pageNo += 1
+    doc.insertPage(pageNo)
+    doc.setPage(pageNo)
+    doc.setFontSize(16)
+    doc.setTextColor(INK)
+    doc.text('Chord diagrams', margin, margin - 12)
+  }
+  startPage()
 
   shapes.forEach((shape, index) => {
-    const column = index % columns
-    const row = Math.floor(index / columns)
-    const originX = margin + column * cellWidth
-    const originY = margin + row * cellHeight
-    if (originY + cellHeight > pageSize.height - margin) return // ran off the page
-    drawOne(doc, shape, originX, originY, scale)
+    const slot = index % perPage
+    if (index > 0 && slot === 0) startPage()
+    const column = slot % columns
+    const row = Math.floor(slot / columns)
+    drawOne(doc, shape, margin + column * cellWidth, margin + row * cellHeight, scale)
   })
 }
 
@@ -99,7 +108,7 @@ function drawOne(doc: PdfDoc, shape: DiagramShape, ox: number, oy: number, scale
   const indicatorY = PAD_TOP - 9
 
   doc.setFontSize(11 * scale)
-  doc.setDrawColor(INK)
+  doc.setTextColor(INK)
   doc.text(shape.name, px(BOX_WIDTH / 2), py(12), { align: 'center' })
 
   // open / muted indicators
@@ -121,7 +130,7 @@ function drawOne(doc: PdfDoc, shape: DiagramShape, ox: number, oy: number, scale
     doc.line(px(left), py(PAD_TOP), px(right), py(PAD_TOP))
   } else {
     doc.setFontSize(8 * scale)
-    doc.setDrawColor(110)
+    doc.setTextColor(110)
     doc.text(`${shape.baseFret}fr`, px(PAD_LEFT - 6), py(markerY(shape.baseFret) + 2), {
       align: 'right',
     })
@@ -156,6 +165,13 @@ function drawOne(doc: PdfDoc, shape: DiagramShape, ox: number, oy: number, scale
     )
   }
   for (const marker of shape.markers) {
-    doc.circle(px(stringX(marker.string - 1)), py(markerY(marker.fret)), DOT_RADIUS * scale, 'F')
+    const cx = px(stringX(marker.string - 1))
+    const cy = py(markerY(marker.fret))
+    doc.circle(cx, cy, DOT_RADIUS * scale, 'F')
+    if (marker.finger > 0) {
+      doc.setFontSize(6 * scale)
+      doc.setTextColor(255)
+      doc.text(String(marker.finger), cx, cy, { align: 'center', baseline: 'middle' })
+    }
   }
 }

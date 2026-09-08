@@ -63,11 +63,15 @@ src/
   sheet/                  # chart-rendering helpers (no Vue imports)
     inline.ts             # toInlineSheet() — Song -> flat token model for the
                           #   "HTML inline" view (bracketed chords in the lyric flow)
-    interactive.ts        # markChordCells() — add tabindex/role to the chord cells
-                          #   in HtmlTableFormatter output (it's v-html, so no template)
+    interactive.ts        # markChordCells() — sanitize HtmlTableFormatter output to a
+                          #   safe element/attribute allowlist (it's untrusted chart
+                          #   text inserted via v-html) and add tabindex/role to its
+                          #   chord cells (no template — it's a string)
     key.ts                # songIdentity()/recallKey()/rememberKey() — per-song key
-                          #   memory (sheet-view:songKeys JSON map, id = title‖artist
-                          #   or filename). The transpose itself is Song#changeKey.
+                          #   memory (sheet-view:songKeys — JSON array of [id, key]
+                          #   pairs, newest last; legacy {id:key} object migrated on
+                          #   read; id = title‖artist or filename). The transpose
+                          #   itself is Song#changeKey.
   chords/                 # chord-diagram feature (no Vue imports except *.vue)
     types.ts              # Instrument union + INSTRUMENTS registry (stringCount/tuning/
                           #   diagrams/aliases — every per-instrument fact), InstrumentSpec,

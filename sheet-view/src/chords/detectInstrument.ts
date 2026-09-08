@@ -15,7 +15,7 @@ import { INSTRUMENT_IDS, INSTRUMENTS, isInstrument } from './types'
  * None of this is authoritative — the viewer always lets the reader override it.
  */
 export function detectInstrument(song: Song): Instrument {
-  const declared = readInstrumentMetadata(song)
+  const declared = declaredInstrument(song)
   if (declared) return declared
 
   const fromDefinitions = instrumentFromDefinitionWidth(song)
@@ -39,7 +39,14 @@ const DIRECTIVE_ALIASES: Array<[needle: string, id: Instrument]> = INSTRUMENT_ID
   ...INSTRUMENTS[id].aliases.map((alias) => [alias.toLowerCase(), id] as [string, Instrument]),
 ]).sort((a, b) => b[0].length - a[0].length)
 
-function readInstrumentMetadata(song: Song): Instrument | null {
+/**
+ * The instrument a chart explicitly declares via `{instrument: …}` / `{meta:
+ * instrument …}` — matched against every id and its aliases — or `null` when
+ * the chart says nothing. This is the author's statement about the chart, so
+ * the store lets it override a stored reader preference (the string-count
+ * heuristic in {@link detectInstrument} does not).
+ */
+export function declaredInstrument(song: Song): Instrument | null {
   let raw: unknown
   try {
     raw = song.metadata.get('instrument')

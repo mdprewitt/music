@@ -1,7 +1,7 @@
 import { ref, computed, markRaw, watch } from 'vue'
 import { defineStore } from 'pinia'
 import { ChordProParser, keyHelpers, type Song } from 'chordsheetjs'
-import { detectInstrument } from '@/chords/detectInstrument'
+import { declaredInstrument, detectInstrument } from '@/chords/detectInstrument'
 import { songIdentity, recallKey, rememberKey } from '@/sheet/key'
 import { readStored, writeStored } from '@/stores/storage'
 import {
@@ -90,11 +90,14 @@ export const useSheetStore = defineStore('sheet', () => {
   // `null` means "render in the sheet's own key". Only meaningful when the
   // ChordPro carries a `{key: …}` directive — see `canChangeKey`.
   const targetKey = ref<string | null>(null)
-  // A remembered choice is authoritative; auto-detection only fills the gap for
-  // the first sheet loaded on a fresh browser. `autoDetecting` marks the one
-  // assignment that came from detection rather than the user, so it is not
-  // mistaken for an explicit choice and persisted.
+  // A remembered choice is authoritative for the string-count heuristic; a
+  // chart's declared instrument (`{meta: instrument …}`) still wins over it.
+  // `autoDetecting` marks an assignment that came from a chart/detection rather
+  // than the user, so it is neither treated as an explicit choice nor persisted.
   let instrumentPinned = readStored(INSTRUMENT_STORAGE_KEY, asInstrument) !== null
+  // The reader's explicit choice, kept so a chart directive that moves the
+  // instrument this session can be undone for the next directive-less chart.
+  let pinnedInstrument: Instrument = instrument.value
   let autoDetecting = false
   // Marks the `targetKey` assignment in `parse()` that restores a remembered
   // choice, so the persistence watcher does not echo it straight back.
@@ -140,6 +143,7 @@ export const useSheetStore = defineStore('sheet', () => {
     (value) => {
       if (autoDetecting) return
       instrumentPinned = true
+      pinnedInstrument = value
       writeStored(INSTRUMENT_STORAGE_KEY, value)
     },
     { flush: 'sync' },
@@ -194,9 +198,23 @@ export const useSheetStore = defineStore('sheet', () => {
     }
     // Post-parse bookkeeping. A failure here (instrument guess, key recall) must
     // never discard a song that parsed cleanly, so it sits outside the catch.
-    if (!instrumentPinned && song.value) {
+    //
+    // Instrument selection, in priority order:
+    //   1. the chart's declared instrument (`{meta: instrument …}`) — always
+    //      wins, not persisted;
+    //   2. the reader's stored preference, if they have ever set one — restored
+    //      here so a previous chart's directive does not linger;
+    //   3. otherwise the string-count heuristic.
+    if (song.value) {
+      const declared = declaredInstrument(song.value as Song)
       autoDetecting = true
-      instrument.value = detectInstrument(song.value as Song)
+      if (declared) {
+        instrument.value = declared
+      } else if (instrumentPinned) {
+        instrument.value = pinnedInstrument
+      } else {
+        instrument.value = detectInstrument(song.value as Song)
+      }
       autoDetecting = false
     }
     // Reopen the sheet in the key it was last read in, if that key is still a

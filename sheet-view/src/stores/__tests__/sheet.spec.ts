@@ -113,6 +113,30 @@ describe('useSheetStore', () => {
     expect(store.instrument).toBe('guitar') // not re-detected
   })
 
+  it('lets a chart instrument directive override a stored preference', async () => {
+    const store = useSheetStore()
+    store.instrument = 'guitar' // explicit reader choice — pins + persists
+    await store.loadFile(fileOf('{title: Uke}\n{meta: instrument ukulele}\n[C]x'))
+    expect(store.instrument).toBe('ukulele')
+  })
+
+  it('restores the stored preference for the next chart with no directive', async () => {
+    const store = useSheetStore()
+    store.instrument = 'guitar'
+    await store.loadFile(fileOf('{title: Uke}\n{meta: instrument ukulele}\n[C]x'))
+    expect(store.instrument).toBe('ukulele')
+    await store.loadFile(fileOf('{title: Plain}\n[C]x', 'plain.cho'))
+    expect(store.instrument).toBe('guitar')
+  })
+
+  it('does not persist an instrument directive as the stored preference', async () => {
+    const store = useSheetStore()
+    store.instrument = 'guitar'
+    await store.loadFile(fileOf('{meta: instrument ukulele}\n[C]x'))
+    setActivePinia(createPinia())
+    expect(useSheetStore().instrument).toBe('guitar')
+  })
+
   it('keeps the instrument across a reset', async () => {
     const store = useSheetStore()
     store.instrument = 'ukulele'
