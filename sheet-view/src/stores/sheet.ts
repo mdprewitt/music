@@ -103,11 +103,20 @@ export const useSheetStore = defineStore('sheet', () => {
   /** The key the loaded sheet was written in — `null` without a `{key: …}` line. */
   const originalKey = computed<string | null>(() => (song.value as Song | null)?.key ?? null)
   /** Transpose targets for the current key (minor keys when the song is minor). */
-  const availableKeys = computed<string[]>(() =>
-    originalKey.value ? keyHelpers.getKeys(originalKey.value) : [],
-  )
-  /** Whether the key can be changed at all — needs an original key to move from. */
-  const canChangeKey = computed(() => originalKey.value !== null)
+  const availableKeys = computed<string[]>(() => {
+    const key = originalKey.value
+    if (!key) return []
+    try {
+      return keyHelpers.getKeys(key)
+    } catch {
+      // An unparseable `{key: …}` value (`{key: Bogus}`, `{key:}`) makes
+      // `getKeys` throw. Degrade to a disabled Key picker rather than letting
+      // the exception escape a template read and blank the whole viewer.
+      return []
+    }
+  })
+  /** Whether the key can be changed at all — needs a usable original key to move from. */
+  const canChangeKey = computed(() => availableKeys.value.length > 0)
   /**
    * The song as it should be rendered: the pristine parse, or a re-keyed copy
    * when a different `targetKey` is chosen. `store.song` always stays original so
@@ -160,35 +169,51 @@ export const useSheetStore = defineStore('sheet', () => {
   )
 
   function parse() {
-    if (!rawText.value) return
+    const text = rawText.value
+    if (!text) {
+      song.value = null
+      parseError.value = null
+      return
+    }
+    if (!text.trim()) {
+      song.value = null
+      parseError.value = 'That file is empty.'
+      return
+    }
     try {
       switch (sourceFormat.value) {
         case 'chordpro':
-          song.value = markRaw(new ChordProParser().parse(rawText.value))
+          song.value = markRaw(new ChordProParser().parse(text))
           break
       }
       parseError.value = null
-      if (!instrumentPinned && song.value) {
-        autoDetecting = true
-        instrument.value = detectInstrument(song.value as Song)
-        autoDetecting = false
-      }
-      // Reopen the sheet in the key it was last read in, if that key is still a
-      // valid target for its (possibly edited) original key.
-      restoringKey = true
-      const remembered = recallKey(songIdentity(song.value as Song | null, filename.value))
-      targetKey.value =
-        remembered && availableKeys.value.includes(remembered) ? remembered : null
-      restoringKey = false
     } catch (err) {
       song.value = null
       parseError.value = err instanceof Error ? err.message : String(err)
+      return
     }
+    // Post-parse bookkeeping. A failure here (instrument guess, key recall) must
+    // never discard a song that parsed cleanly, so it sits outside the catch.
+    if (!instrumentPinned && song.value) {
+      autoDetecting = true
+      instrument.value = detectInstrument(song.value as Song)
+      autoDetecting = false
+    }
+    // Reopen the sheet in the key it was last read in, if that key is still a
+    // valid target for its (possibly edited) original key.
+    restoringKey = true
+    const remembered = recallKey(songIdentity(song.value as Song | null, filename.value))
+    targetKey.value = remembered && availableKeys.value.includes(remembered) ? remembered : null
+    restoringKey = false
   }
 
   async function loadFile(file: File) {
+    // Read first, mutate after — a rejected read (file moved, permission
+    // revoked) then leaves the store untouched instead of stranding the new
+    // filename on top of the old chart. The caller surfaces the rejection.
+    const text = await file.text()
     filename.value = file.name
-    rawText.value = await file.text()
+    rawText.value = text
     parse()
   }
 

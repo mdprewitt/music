@@ -9,6 +9,7 @@ const UKULELE_CHORDPRO =
 const SAMPLE_WITH_KEY =
   '{title: Keyed Song}\n{artist: Some Artist}\n{key: C}\n\n[C]Hello [Am]world [F]now [G7]end'
 const NO_KEY_CHORDPRO = '{title: Keyless}\n{artist: Some Artist}\n\n[C]Hello [F]world'
+const BAD_KEY_CHORDPRO = '{title: Typo}\n{artist: X}\n{key: Bogus}\n\n[C]Hello [G]world'
 
 function fileOf(text: string, name = 'test.cho') {
   return new File([text], name, { type: 'text/plain' })
@@ -32,6 +33,41 @@ describe('useSheetStore', () => {
     expect(store.song).not.toBeNull()
     expect(store.song?.title).toBe('Test Song')
     expect(store.parseError).toBeNull()
+  })
+
+  it('reports an empty file instead of silently doing nothing', async () => {
+    const store = useSheetStore()
+    await store.loadFile(fileOf(SAMPLE_CHORDPRO))
+    expect(store.song).not.toBeNull()
+    await store.loadFile(fileOf('   \n\t\n', 'blank.cho'))
+    expect(store.song).toBeNull()
+    expect(store.parseError).toMatch(/empty/i)
+  })
+
+  it('survives an unparseable {key: …} directive with the key picker disabled', async () => {
+    const store = useSheetStore()
+    await store.loadFile(fileOf(BAD_KEY_CHORDPRO))
+    // the sheet still parses and renders
+    expect(store.song).not.toBeNull()
+    expect(store.parseError).toBeNull()
+    // …but the key feature degrades rather than throwing
+    expect(store.originalKey).toBe('Bogus')
+    expect(store.availableKeys).toEqual([])
+    expect(store.canChangeKey).toBe(false)
+  })
+
+  it('does not turn a remembered bad key into a parse error', async () => {
+    const store = useSheetStore()
+    // remember a key under this song's identity first
+    await store.loadFile(fileOf('{title: Typo}\n{artist: X}\n{key: C}\n\n[C]a [G]b'))
+    store.targetKey = 'E'
+    // now the same song comes back with a broken key directive
+    setActivePinia(createPinia())
+    const fresh = useSheetStore()
+    await fresh.loadFile(fileOf(BAD_KEY_CHORDPRO))
+    expect(fresh.song).not.toBeNull()
+    expect(fresh.parseError).toBeNull()
+    expect(fresh.targetKey).toBeNull()
   })
 
   it('resets sheet state to defaults but keeps view preferences', async () => {

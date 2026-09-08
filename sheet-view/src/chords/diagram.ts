@@ -71,12 +71,17 @@ export function toDiagramShape(
 
   const { markers, barres } = deriveMarkersAndBarres(absoluteFrets, fingers)
 
-  // A marker covered by a barre at the same fret is redundant.
+  // A marker is redundant only when the *same finger*'s barre already covers it
+  // at the same fret. A note pressed by a different finger at that fret (a sus
+  // note under a barre, say) is real information and must survive.
   const visibleMarkers = markers.filter(
     (marker) =>
       !barres.some(
         (barre) =>
-          marker.fret === barre.fret && marker.string >= barre.from && marker.string <= barre.to,
+          marker.fret === barre.fret &&
+          marker.finger === barre.finger &&
+          marker.string >= barre.from &&
+          marker.string <= barre.to,
       ),
   )
 
@@ -107,8 +112,11 @@ function deriveMarkersAndBarres(
     return { markers, barres }
   }
 
-  // Group same-finger, same-fret strings: a group spanning more than one string
-  // is a barre, anything else is a single marker.
+  // Group same-finger, same-fret strings, then split each group into runs of
+  // *consecutive* strings: a run of two or more is a barre, a lone string is a
+  // marker. (chordsheetjs upstream draws one bar across the whole min–max span,
+  // which paints a barre over strings the definition never assigns to that
+  // finger — e.g. a differently-fretted note it steps over.)
   const groups = new Map<string, { fret: number; finger: number; strings: number[] }>()
   absoluteFrets.forEach((fret, index) => {
     if (fret === null) return
@@ -125,18 +133,24 @@ function deriveMarkersAndBarres(
 
   for (const group of groups.values()) {
     const strings = group.strings.sort((a, b) => a - b)
-    const first = strings[0]
-    if (first === undefined) continue
-    if (strings.length > 1) {
-      barres.push({
-        from: first,
-        to: strings[strings.length - 1] ?? first,
-        fret: group.fret,
-        finger: group.finger,
-      })
-    } else {
-      markers.push({ string: first, fret: group.fret, finger: group.finger })
+    let run: number[] = []
+    const flushRun = () => {
+      const first = run[0]
+      const last = run[run.length - 1]
+      if (first === undefined || last === undefined) return
+      if (run.length > 1) {
+        barres.push({ from: first, to: last, fret: group.fret, finger: group.finger })
+      } else {
+        markers.push({ string: first, fret: group.fret, finger: group.finger })
+      }
+      run = []
     }
+    for (const stringNumber of strings) {
+      const prev = run[run.length - 1]
+      if (prev !== undefined && stringNumber !== prev + 1) flushRun()
+      run.push(stringNumber)
+    }
+    flushRun()
   }
 
   return { markers, barres }

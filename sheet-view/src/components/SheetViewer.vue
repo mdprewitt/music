@@ -20,8 +20,10 @@ const store = useSheetStore()
 // It is markRaw(Song), but Pinia's UnwrapRef loses class fidelity — cast back.
 const song = computed(() => (store.displaySong ? (store.displaySong as Song) : null))
 
-// The formatter output is inserted via v-html; markChordCells adds tabindex/role
-// to its chord cells so they can be focused and activated from the keyboard.
+// The formatter output is untrusted markup (HtmlTableFormatter does not escape
+// chart text). markChordCells sanitizes it to a safe element/attribute set
+// before it is inserted via v-html, and adds tabindex/role to the chord cells
+// so they can be focused and activated from the keyboard.
 const html = computed(() =>
   song.value ? markChordCells(new HtmlTableFormatter().format(song.value)) : '',
 )
@@ -214,8 +216,8 @@ watch([song, () => store.viewFormat, () => store.instrument], closePopover)
         :position="store.diagramPosition"
         :pinned="store.pinDiagrams"
       />
-      <!-- v-html is safe: content comes from chordsheetjs formatter, not user-injected markup.
-           Chord cells inside it are focusable (markChordCells) and handled by delegation. -->
+      <!-- v-html input is sanitized by markChordCells (formatter output is untrusted
+           chart text). Chord cells inside it are focusable and handled by delegation. -->
       <div
         v-if="store.viewFormat === 'html'"
         class="sheet"

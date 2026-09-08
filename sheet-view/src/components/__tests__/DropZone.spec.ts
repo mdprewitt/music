@@ -39,6 +39,20 @@ describe('DropZone', () => {
     expect(store.song).toBeNull()
   })
 
+  it('shows an error when the file read rejects', async () => {
+    const wrapper = mount(DropZone)
+    const store = useSheetStore()
+    const file = new File(['x'], 'a.cho', { type: 'text/plain' })
+    vi.spyOn(file, 'text').mockRejectedValue(new DOMException('NotReadableError'))
+    const input = wrapper.find('input[type=file]')
+    Object.defineProperty(input.element, 'files', { value: [file], configurable: true })
+    await input.trigger('change')
+    await flushPromises()
+    expect(wrapper.find('.error').exists()).toBe(true)
+    expect(store.song).toBeNull()
+    expect(store.filename).toBeNull()
+  })
+
   it('fetches and loads a chart from a pasted URL', async () => {
     vi.stubGlobal(
       'fetch',

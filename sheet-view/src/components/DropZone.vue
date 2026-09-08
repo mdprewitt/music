@@ -22,7 +22,11 @@ async function handleFile(file: File | undefined) {
     return
   }
   loadError.value = null
-  await store.loadFile(file)
+  try {
+    await store.loadFile(file)
+  } catch {
+    loadError.value = 'Could not read that file. Try again, or pick it with the button.'
+  }
 }
 
 async function fetchUrl() {
