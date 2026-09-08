@@ -99,6 +99,25 @@ describe('SheetViewer', () => {
     expect(text).not.toContain('G')
   })
 
+  it('re-keys the diagram strip and the click-to-peek popover with the target key', async () => {
+    const store = useSheetStore()
+    await store.loadFile(new File([KEYED_CHORDPRO], 'keyed.cho', { type: 'text/plain' }))
+    const wrapper = mount(SheetViewer)
+    await flushPromises()
+    await nextTick()
+    expect(wrapper.findAll('.chord-diagrams .cd-title').map((t) => t.text())).toEqual(['C', 'G'])
+
+    store.targetKey = 'E'
+    await nextTick()
+    expect(wrapper.findAll('.chord-diagrams .cd-title').map((t) => t.text())).toEqual(['E', 'B'])
+
+    const transposed = wrapper.findAll('td.chord').find((c) => c.text() === 'E')
+    await transposed?.trigger('click')
+    await nextTick()
+    expect(wrapper.find('.chord-popover svg.chord-diagram').exists()).toBe(true)
+    expect(wrapper.find('.chord-popover .no-diagram').exists()).toBe(false)
+  })
+
   describe('chord-diagram position', () => {
     it('defaults the sheet body to the top position', async () => {
       const { wrapper } = await mountWithSong('html')
@@ -178,6 +197,16 @@ describe('SheetViewer', () => {
       const popover = wrapper.find('.chord-popover')
       expect(popover.exists()).toBe(true)
       expect(popover.find('svg.chord-diagram').exists()).toBe(true)
+    })
+
+    it('makes real formatter chord cells focusable and keyboard-activatable', async () => {
+      const { wrapper } = await mountWithSong('html')
+      const cell = wrapper.find('td.chord')
+      expect(cell.attributes('tabindex')).toBe('0')
+      expect(cell.attributes('role')).toBe('button')
+      await cell.trigger('keydown', { key: 'Enter' })
+      await nextTick()
+      expect(wrapper.find('.chord-popover svg.chord-diagram').exists()).toBe(true)
     })
 
     it('toggles the popover shut when the same chord is clicked again', async () => {

@@ -34,4 +34,12 @@ describe('ChordDiagram', () => {
     const wrapper = mount(ChordDiagram, { props: { shape } })
     expect(wrapper.findAll('.cd-barre')).toHaveLength(1)
   })
+
+  it('draws an open ring per open string and a cross per muted string', () => {
+    // string 1 muted, strings 2 & 4 open, string 3 fretted
+    const shape = toDiagramShape({ name: 'Am7', baseFret: 1, frets: ['x', 0, 2, 0] })
+    const wrapper = mount(ChordDiagram, { props: { shape } })
+    expect(wrapper.findAll('.cd-indicators circle')).toHaveLength(2) // two open strings
+    expect(wrapper.findAll('.cd-indicators line')).toHaveLength(2) // one cross = two lines
+  })
 })

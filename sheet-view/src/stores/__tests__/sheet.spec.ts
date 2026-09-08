@@ -255,6 +255,17 @@ describe('useSheetStore', () => {
       expect(fresh.displaySong?.key).toBe('E')
     })
 
+    it('keeps the remembered key through reset and a reload of the same song', async () => {
+      const store = useSheetStore()
+      await store.loadFile(fileOf(SAMPLE_WITH_KEY))
+      store.targetKey = 'E'
+      store.reset()
+      expect(store.targetKey).toBeNull()
+      // reopening the same chart (the "Load another" flow) brings the key back
+      await store.loadFile(fileOf(SAMPLE_WITH_KEY))
+      expect(store.targetKey).toBe('E')
+    })
+
     it('does not carry a remembered key onto a different song', async () => {
       const store = useSheetStore()
       await store.loadFile(fileOf(SAMPLE_WITH_KEY))

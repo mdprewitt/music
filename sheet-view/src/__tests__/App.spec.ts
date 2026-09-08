@@ -1,10 +1,14 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
 import { flushPromises, mount } from '@vue/test-utils'
 import { setActivePinia, createPinia } from 'pinia'
+import { nextTick } from 'vue'
 import App from '../App.vue'
 import SheetViewer from '../components/SheetViewer.vue'
 import DropZone from '../components/DropZone.vue'
 import { useSheetStore } from '@/stores/sheet'
+import { useThemeStore } from '@/stores/theme'
+import { THEME_PRESETS } from '@/theme/presets'
+import { installMemoryStorage } from '@/__tests__/memoryStorage'
 
 const SAMPLE_CHORDPRO = '{title: Param Song}\n[C]hello'
 
@@ -60,5 +64,34 @@ describe('App — ?view= URL parameter', () => {
 
     expect(store.parseError).toMatch(/CORS/)
     expect(wrapper.find('.error').text()).toMatch(/CORS/)
+  })
+})
+
+describe('App — theme wiring', () => {
+  beforeEach(() => {
+    installMemoryStorage()
+    setActivePinia(createPinia())
+  })
+
+  afterEach(() => {
+    vi.unstubAllGlobals()
+    for (const prop of ['background', 'lyrics', 'chord', 'comment', 'meta']) {
+      document.documentElement.style.removeProperty(`--sv-${prop}`)
+    }
+  })
+
+  it('writes the active palette to :root and follows a theme change', async () => {
+    mount(App)
+    const theme = useThemeStore()
+    const root = document.documentElement.style
+
+    theme.selectTheme('dark')
+    await nextTick()
+    expect(root.getPropertyValue('--sv-background')).toBe(THEME_PRESETS.dark.colors.background)
+    expect(root.getPropertyValue('--sv-chord')).toBe(THEME_PRESETS.dark.colors.chord)
+
+    theme.selectTheme('stage')
+    await nextTick()
+    expect(root.getPropertyValue('--sv-background')).toBe(THEME_PRESETS.stage.colors.background)
   })
 })

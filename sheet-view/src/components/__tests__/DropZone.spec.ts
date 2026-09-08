@@ -53,6 +53,24 @@ describe('DropZone', () => {
     expect(store.filename).toBeNull()
   })
 
+  it('loads a file dropped onto the zone', async () => {
+    const wrapper = mount(DropZone)
+    const store = useSheetStore()
+    const file = new File([SAMPLE_CHORDPRO], 'dropped.cho', { type: 'text/plain' })
+    await wrapper.trigger('drop', { dataTransfer: { files: [file] } })
+    await flushPromises()
+    expect(store.filename).toBe('dropped.cho')
+    expect(store.song).not.toBeNull()
+  })
+
+  it('toggles the drag highlight on dragenter / dragleave', async () => {
+    const wrapper = mount(DropZone)
+    await wrapper.trigger('dragenter')
+    expect(wrapper.classes()).toContain('dragging')
+    await wrapper.trigger('dragleave')
+    expect(wrapper.classes()).not.toContain('dragging')
+  })
+
   it('fetches and loads a chart from a pasted URL', async () => {
     vi.stubGlobal(
       'fetch',
