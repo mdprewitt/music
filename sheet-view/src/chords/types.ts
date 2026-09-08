@@ -4,7 +4,11 @@ export interface InstrumentSpec {
   id: Instrument
   label: string
   stringCount: number
-  /** Open-string pitch classes, lowest-pitched string first (0 = C). */
+  /**
+   * Open-string pitch classes in string order — string 1 first (0 = C). For an
+   * ascending tuning that is also lowest-pitched first; the GCEA ukulele is
+   * re-entrant, so its string 1 (G) is not its lowest note.
+   */
   tuning: number[]
   /**
    * Where this instrument's fallback chord shapes come from:

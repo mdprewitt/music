@@ -174,14 +174,28 @@ function onDocumentKeydown(event: KeyboardEvent) {
 onMounted(() => {
   document.addEventListener('pointerdown', onDocumentPointerDown)
   document.addEventListener('keydown', onDocumentKeydown)
+  // The anchor is a snapshot of getBoundingClientRect at click time; any reflow
+  // strands it, so drop the popover rather than let it float over other lyrics.
+  window.addEventListener('resize', closePopover)
 })
 onBeforeUnmount(() => {
   document.removeEventListener('pointerdown', onDocumentPointerDown)
   document.removeEventListener('keydown', onDocumentKeydown)
+  window.removeEventListener('resize', closePopover)
 })
 
-// A new song, view or instrument invalidates the anchored element / shape.
-watch([song, () => store.viewFormat, () => store.instrument], closePopover)
+// Anything that re-lays out the chart under the popover invalidates its anchor:
+// a new song/view/instrument, and toggling or repositioning the diagram strip.
+watch(
+  [
+    song,
+    () => store.viewFormat,
+    () => store.instrument,
+    () => store.showDiagrams,
+    () => store.diagramPosition,
+  ],
+  closePopover,
+)
 </script>
 
 <template>
@@ -223,9 +237,7 @@ watch([song, () => store.viewFormat, () => store.instrument], closePopover)
     >
       <ChordDiagrams
         v-if="song && store.showDiagrams"
-        :song="song"
-        :instrument="store.instrument"
-        :raw-text="store.rawText"
+        :shapes="diagramIndex?.shapes ?? []"
         :position="store.diagramPosition"
         :pinned="store.pinDiagrams"
       />

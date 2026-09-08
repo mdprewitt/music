@@ -1,21 +1,14 @@
 <script setup lang="ts">
-import { computed } from 'vue'
-import type { Song } from 'chordsheetjs'
-import type { DiagramPosition, Instrument } from '@/chords/types'
-import { buildDiagramIndex } from '@/chords/shapes'
+import type { DiagramPosition, DiagramShape } from '@/chords/types'
 import ChordDiagram from './ChordDiagram.vue'
 
-const props = defineProps<{
-  song: Song
-  instrument: Instrument
-  rawText?: string | null
+// Shapes are resolved once by the parent (SheetViewer's memoised diagramIndex)
+// and passed in — this component does not rebuild the index.
+defineProps<{
+  shapes: DiagramShape[]
   position?: DiagramPosition
   pinned?: boolean
 }>()
-
-const shapes = computed(
-  () => buildDiagramIndex(props.song, props.instrument, props.rawText ?? null).shapes,
-)
 </script>
 
 <template>
@@ -73,12 +66,12 @@ const shapes = computed(
 
 .chord-diagrams.pinned.pos-top {
   top: 0;
-  background: var(--color-background);
+  background: var(--sv-background);
 }
 
 .chord-diagrams.pinned.pos-bottom {
   bottom: 0;
-  background: var(--color-background);
+  background: var(--sv-background);
 }
 
 .chord-diagrams.pinned.pos-right {

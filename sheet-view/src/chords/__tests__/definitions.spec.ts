@@ -66,6 +66,14 @@ describe('resolveDiagramChords', () => {
     expect(entry?.definition?.frets).toEqual([4, 4, 5, 4])
   })
 
+  it('matches a recovered define through an enharmonic spelling', () => {
+    // the define is named Gb (and dropped for its add: clause); the chart writes F#
+    const raw = '{define: Gb frets 2 1 1 2 fingers 2 1 1 3 add: string 2 fret 1 finger 1}\n[F#]x'
+    const entry = resolveDiagramChords(parse(raw), 'ukulele', raw)[0]
+    expect(entry?.source).toBe('sheet-recovered')
+    expect(entry?.definition?.frets).toEqual([2, 1, 1, 2])
+  })
+
   it('resolves a guitar chord through the bundled library by exact then normalised name', () => {
     const song = parse('[Am7]a [Fmaj7]b')
     const resolved = resolveDiagramChords(song, 'guitar')

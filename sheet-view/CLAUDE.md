@@ -114,9 +114,10 @@ src/
                           #   store.loadFromUrl() (errors → store.parseError)
   main.ts                 # createApp + createPinia + mount
 scripts/
-  generate-chord-shapes.mjs   # `node scripts/generate-chord-shapes.mjs <ukulele|tenor|
-                              #   tenor-chicago>` regenerates one src/chords/*.ts table
-                              #   (run by hand; `bun run generate:chords <id>`)
+  generate-chord-shapes.mjs   # `bun run generate:chords <ukulele|tenor|tenor-chicago>`
+                              #   regenerates one src/chords/*.ts table, Prettier-formatted
+                              #   (run by hand; bun, not node — it imports types.ts for
+                              #   the tuning; exits non-zero on a missing/empty result)
 ```
 
 ## Coding conventions

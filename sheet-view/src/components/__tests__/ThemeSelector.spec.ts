@@ -55,11 +55,14 @@ describe('CustomColorEditor', () => {
     expect(inputs).toHaveLength(5)
   })
 
-  it('writes a picked colour back to the store', async () => {
+  it('writes a picked colour back to the store on change (not on every input)', async () => {
     const store = useThemeStore()
     const wrapper = mount(CustomColorEditor)
     const chordInput = wrapper.get('input[aria-label="Chords"]')
-    await chordInput.setValue('#abcdef')
+    ;(chordInput.element as HTMLInputElement).value = '#abcdef'
+    await chordInput.trigger('input')
+    expect(store.customColors.chord).not.toBe('#abcdef') // input alone does nothing
+    await chordInput.trigger('change')
     expect(store.customColors.chord).toBe('#abcdef')
   })
 

@@ -100,11 +100,11 @@ was added this way, with no new `if (instrument === …)` branch. The recipe:
    `diagrams: 'chordsheetjs'` uses the bundled six-string library (guitar only);
    `diagrams: 'builtin'` uses one of our generated tables.
 2. **Generate the shape dictionary** (skip for `'chordsheetjs'`): add a `TARGETS`
-   row to `scripts/generate-chord-shapes.mjs` — the same `tuning`, a `maxFret`
-   window, and `maxSpan`, a list of reach budgets tried widest-last. A fifths
-   tuning like CGDA needs a bigger `maxSpan` than GCEA; without the cap the
-   scorer picks an unplayable stretch over muting a string. Then
-   `bun run generate:chords <id>` and `bunx prettier --write src/chords/<file>.ts`.
+   row to `scripts/generate-chord-shapes.mjs` — a `maxFret` window and `maxSpan`,
+   a list of reach budgets tried widest-last (the tuning is read from
+   `INSTRUMENTS[id]`). A fifths tuning like CGDA needs a bigger `maxSpan` than
+   GCEA; without the cap the scorer picks an unplayable stretch over muting a
+   string. Then `bun run generate:chords <id>` (it runs Prettier itself).
 3. **`src/chords/definitions.ts`** — register the generated table in
    `BUILTIN_SHAPES`. `resolveDiagramChords` and the `shapeLibraries.spec.ts`
    sweep pick it up from there.

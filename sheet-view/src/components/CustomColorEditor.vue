@@ -16,7 +16,14 @@ const SLOTS: readonly { key: keyof ThemeColors; label: string }[] = [
 <template>
   <div class="custom-color-editor">
     <label v-for="slot in SLOTS" :key="slot.key" class="slot">
-      <input v-model="theme.customColors[slot.key]" type="color" :aria-label="slot.label" />
+      <!-- @change, not v-model: a native colour picker fires `input` continuously
+           while dragging, and each one trips a synchronous localStorage write. -->
+      <input
+        :value="theme.customColors[slot.key]"
+        type="color"
+        :aria-label="slot.label"
+        @change="theme.customColors[slot.key] = ($event.target as HTMLInputElement).value"
+      />
       {{ slot.label }}
     </label>
     <button type="button" @click="theme.resetCustom()">Reset to Light</button>

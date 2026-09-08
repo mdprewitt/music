@@ -159,7 +159,14 @@ export function recoverDroppedDefinitions(rawText: string | null): Map<string, R
     const stripped = body.slice(0, body.search(/\s*\badd:/i)).trim()
     try {
       const parsed = ChordDefinition.parse(stripped)
-      if (parsed?.name) recovered.set(parsed.name, toRaw(parsed))
+      if (parsed?.name) {
+        const raw = toRaw(parsed)
+        recovered.set(parsed.name, raw)
+        // also key it canonically so a chart that spells the chord differently
+        // (F# vs Gb, maj7 vs M7) still finds the recovered shape
+        const canonical = canonicalChordName(parsed.name)
+        if (!recovered.has(canonical)) recovered.set(canonical, raw)
+      }
     } catch {
       // give up on this one line, keep scanning
     }
@@ -271,7 +278,7 @@ export function resolveDiagramChords(
       result.push({ name, definition: toRaw(sheet), source: 'sheet' })
       continue
     }
-    const fromRecovered = recovered.get(name)
+    const fromRecovered = recovered.get(name) ?? recovered.get(canonicalChordName(name))
     if (fromRecovered && fromRecovered.frets.length === expectedStrings) {
       result.push({ name, definition: fromRecovered, source: 'sheet-recovered' })
       continue

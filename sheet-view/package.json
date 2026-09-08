@@ -14,7 +14,7 @@
     "lint:oxlint": "oxlint . --fix",
     "lint:eslint": "eslint . --fix --cache",
     "format": "prettier --write --experimental-cli src/",
-    "generate:chords": "node scripts/generate-chord-shapes.mjs"
+    "generate:chords": "bun scripts/generate-chord-shapes.mjs"
   },
   "dependencies": {
     "chordsheetjs": "^16.2.2",
