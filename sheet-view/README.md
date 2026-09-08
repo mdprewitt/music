@@ -6,9 +6,7 @@ Use it for free here: https://mdprewitt.github.io/music/
 
 File Support:
 
-- chord pro
-- chords over words (regular chord sheets)
-- Ultimate Guitar sheets
+- ChordPro (`.cho`, `.chopro`, `.chordpro`, `.pro`) and plain-text `.txt` chord sheets
 
 ## Usage
 

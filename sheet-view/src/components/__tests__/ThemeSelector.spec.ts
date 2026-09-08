@@ -10,28 +10,31 @@ import { installMemoryStorage } from '@/__tests__/memoryStorage'
 const customColors = { ...THEME_PRESETS.light.colors }
 
 describe('ThemeSelector', () => {
-  it('renders one button per theme, custom last', () => {
+  it('renders one radio per theme, custom last', () => {
     const wrapper = mount(ThemeSelector, { props: { modelValue: 'light', customColors } })
-    expect(wrapper.findAll('button').map((b) => b.text())).toEqual([
+    expect(wrapper.findAll('label').map((l) => l.text())).toEqual([
       'Light',
       'Dark',
       'Sepia',
       'Stage',
       'Custom',
     ])
+    // each option still carries its colour swatch
+    expect(wrapper.findAll('label .swatch')).toHaveLength(5)
   })
 
-  it('marks exactly the active theme', () => {
+  it('checks exactly the active theme', () => {
     const wrapper = mount(ThemeSelector, { props: { modelValue: 'sepia', customColors } })
-    const active = wrapper.findAll('button').filter((b) => b.classes('active'))
-    expect(active).toHaveLength(1)
-    expect(active[0]?.text()).toBe('Sepia')
-    expect(active[0]?.attributes('aria-checked')).toBe('true')
+    const checked = wrapper
+      .findAll('input[type="radio"]')
+      .filter((i) => (i.element as HTMLInputElement).checked)
+    expect(checked).toHaveLength(1)
+    expect(checked[0]?.attributes('value')).toBe('sepia')
   })
 
-  it('emits update:modelValue with the clicked theme id', async () => {
+  it('emits update:modelValue with the chosen theme id', async () => {
     const wrapper = mount(ThemeSelector, { props: { modelValue: 'light', customColors } })
-    await wrapper.findAll('button')[4]?.trigger('click')
+    await wrapper.findAll('input[type="radio"]')[4]?.setValue()
     expect(wrapper.emitted('update:modelValue')?.[0]).toEqual(['custom'])
   })
 })

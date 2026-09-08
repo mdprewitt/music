@@ -1,16 +1,42 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { nextTick, ref, watch } from 'vue'
 
+const dialog = ref<HTMLDialogElement | null>(null)
 const isOpen = ref(false)
+let lastFocused: HTMLElement | null = null
+
+// See AboutDialog.vue — native <dialog>.showModal() with a jsdom fallback.
+watch(isOpen, async (open) => {
+  await nextTick()
+  const el = dialog.value
+  if (!el) return
+  if (open) {
+    lastFocused = document.activeElement as HTMLElement | null
+    if (typeof el.showModal === 'function') el.showModal()
+    else el.setAttribute('open', '')
+  } else {
+    if (typeof el.close === 'function' && el.open) el.close()
+    else el.removeAttribute('open')
+    lastFocused?.focus?.()
+    lastFocused = null
+  }
+})
 
 defineExpose({ isOpen })
 </script>
 
 <template>
-  <div v-if="isOpen" class="dialog-overlay" @click.self="isOpen = false">
-    <div class="dialog">
+  <dialog
+    ref="dialog"
+    class="dialog"
+    aria-labelledby="license-title"
+    @close="isOpen = false"
+    @keydown.esc="isOpen = false"
+    @click.self="isOpen = false"
+  >
+    <div class="dialog-body">
       <button class="close-btn" aria-label="Close" @click="isOpen = false">×</button>
-      <h2>License</h2>
+      <h2 id="license-title">License</h2>
       <div class="content">
         <p>
           Sheet-View is free software licensed under the
@@ -27,36 +53,38 @@ defineExpose({ isOpen })
             >https://www.gnu.org/licenses/agpl-3.0.html</a
           >
         </p>
-        <p style="font-size: 0.9rem; margin-top: 2rem; color: var(--sv-comment)">
+        <p class="disclaimer">
           THE SOFTWARE IS PROVIDED "AS IS" WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED,
           INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A
           PARTICULAR PURPOSE AND NONINFRINGEMENT.
         </p>
       </div>
     </div>
-  </div>
+  </dialog>
 </template>
 
 <style scoped>
-.dialog-overlay {
-  position: fixed;
-  inset: 0;
-  background: var(--sv-overlay);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 1000;
+.dialog {
+  margin: auto;
+  max-width: 500px;
+  padding: 0;
+  border: 0;
+  background: transparent;
 }
 
-.dialog {
-  background: var(--color-background);
-  border: 1px solid var(--sv-border);
-  border-radius: 8px;
-  padding: 2rem;
-  max-width: 500px;
+.dialog::backdrop {
+  background: var(--sv-overlay);
+}
+
+.dialog-body {
+  position: relative;
   max-height: 80vh;
   overflow-y: auto;
-  position: relative;
+  padding: 2rem;
+  border: 1px solid var(--sv-border);
+  border-radius: 8px;
+  background: var(--sv-background);
+  color: var(--sv-lyrics);
 }
 
 .close-btn {
@@ -87,7 +115,12 @@ h2 {
 
 p {
   line-height: 1.6;
-  color: var(--color-text);
+}
+
+.disclaimer {
+  font-size: 0.9rem;
+  margin-top: 2rem;
+  color: var(--sv-comment);
 }
 
 a {

@@ -54,7 +54,7 @@ describe('DisplayPanel', () => {
     store.displayPanelOpen = true
     const wrapper = mount(DisplayPanel, { attachTo: document.body })
 
-    wrapper.find('.instrument-selector button').element.dispatchEvent(
+    wrapper.find('.instrument-selector input[type="radio"]').element.dispatchEvent(
       new MouseEvent('pointerdown', { bubbles: true }),
     )
     await nextTick()

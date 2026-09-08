@@ -1,23 +1,49 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { nextTick, ref, watch } from 'vue'
 
+const dialog = ref<HTMLDialogElement | null>(null)
 const isOpen = ref(false)
+let lastFocused: HTMLElement | null = null
+
+// Drive the native <dialog>: showModal() gives Escape-to-close, a focus trap,
+// the ::backdrop and focus restore for free. jsdom has none of it, so fall back
+// to the `open` attribute there and restore focus by hand.
+watch(isOpen, async (open) => {
+  await nextTick()
+  const el = dialog.value
+  if (!el) return
+  if (open) {
+    lastFocused = document.activeElement as HTMLElement | null
+    if (typeof el.showModal === 'function') el.showModal()
+    else el.setAttribute('open', '')
+  } else {
+    if (typeof el.close === 'function' && el.open) el.close()
+    else el.removeAttribute('open')
+    lastFocused?.focus?.()
+    lastFocused = null
+  }
+})
 
 defineExpose({ isOpen })
 </script>
 
 <template>
-  <div v-if="isOpen" class="dialog-overlay" @click.self="isOpen = false">
-    <div class="dialog">
+  <dialog
+    ref="dialog"
+    class="dialog"
+    aria-labelledby="about-title"
+    @close="isOpen = false"
+    @keydown.esc="isOpen = false"
+    @click.self="isOpen = false"
+  >
+    <div class="dialog-body">
       <button class="close-btn" aria-label="Close" @click="isOpen = false">×</button>
-      <h2>About Sheet-View</h2>
+      <h2 id="about-title">About Sheet-View</h2>
       <div class="content">
         <p>Sheet-View is a web app that lets people view chordpro and other chord sheets.</p>
         <h3>File Support</h3>
         <ul>
           <li>Chord Pro</li>
-          <li>Chords over words (regular chord sheets)</li>
-          <li>Ultimate Guitar sheets</li>
         </ul>
         <h3>Features</h3>
         <ul>
@@ -30,29 +56,31 @@ defineExpose({ isOpen })
         </ul>
       </div>
     </div>
-  </div>
+  </dialog>
 </template>
 
 <style scoped>
-.dialog-overlay {
-  position: fixed;
-  inset: 0;
-  background: var(--sv-overlay);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 1000;
+.dialog {
+  margin: auto;
+  max-width: 500px;
+  padding: 0;
+  border: 0;
+  background: transparent;
 }
 
-.dialog {
-  background: var(--color-background);
-  border: 1px solid var(--sv-border);
-  border-radius: 8px;
-  padding: 2rem;
-  max-width: 500px;
+.dialog::backdrop {
+  background: var(--sv-overlay);
+}
+
+.dialog-body {
+  position: relative;
   max-height: 80vh;
   overflow-y: auto;
-  position: relative;
+  padding: 2rem;
+  border: 1px solid var(--sv-border);
+  border-radius: 8px;
+  background: var(--sv-background);
+  color: var(--sv-lyrics);
 }
 
 .close-btn {
@@ -98,9 +126,5 @@ ul {
 
 li {
   margin: 0.25rem 0;
-}
-
-.content {
-  color: var(--color-text);
 }
 </style>
