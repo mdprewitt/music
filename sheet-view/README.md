@@ -44,9 +44,16 @@ pick is remembered per song — identified by its `{title}` and `{artist}` — s
 brings it back in the key you last read it in; loading a different chart does not inherit it.
 
 **Display** opens a small panel with the set-once preferences, grouped and labelled:
-- **Instrument** — guitar, ukulele, or tenor guitar in either CGDA (standard) or DGBE (Chicago)
-  tuning. Guessed from the file (a `{meta: instrument …}` directive, or the string count of its
-  own chord definitions) and remembered once you pick one.
+- **Instrument** — thirteen tunings, grouped into ukulele, guitar and other:
+  - *Ukulele* — Usual (GCEA), Baritone (DGBE), D 'Formby' (ADF#B), B-Flat (FBbDG)
+  - *Guitar* — Standard (EADGBE), Celtic / DADGAD, Open D (DADF#AD), Open G (DGDGBD),
+    Guitalele (ADGCEA)
+  - *Other* — Mandolin (GDAE), Tenor Guitar (CGDA), Banjo (DGBD), Banjo C (CGBD)
+
+  Guessed from the file (a `{meta: instrument …}` directive, or the string count of its own
+  chord definitions — which only distinguishes the four- and six-string families, so anything
+  beyond the usual ukulele or standard guitar needs the directive or a manual pick) and
+  remembered once you pick one.
 - **Diagrams** — where the chord strip sits (top, right, bottom) and whether it stays pinned in
   place while the music scrolls. Shown only while diagrams are on and outside the PDF view.
 - **Theme** — the colour templates and custom pickers described below.

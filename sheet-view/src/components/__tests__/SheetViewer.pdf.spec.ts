@@ -30,7 +30,7 @@ vi.mock('@/chords/pdf', () => ({ drawDiagramSheet: vi.fn<() => void>() }))
 
 const SAMPLE = '{title: Test}\n{artist: Artist}\n\n[C]Hello [G]world'
 
-async function mountPdf(instrument: 'guitar' | 'ukulele') {
+async function mountPdf(instrument: 'guitar' | 'ukulele' | 'celtic') {
   const store = useSheetStore()
   await store.loadFile(new File([SAMPLE], 'song.cho', { type: 'text/plain' }))
   store.instrument = instrument
@@ -69,6 +69,15 @@ describe('SheetViewer — PDF diagram routing', () => {
 
   it('suppresses chordsheetjs diagrams for ukulele and prepends its own page', async () => {
     const { wrapper } = await mountPdf('ukulele')
+    expect(wrapper.find('.error').exists()).toBe(false)
+    expect(lastFormatterConfig().layout.chordDiagrams.enabled).toBe(false)
+    expect(drawDiagramSheet).toHaveBeenCalledTimes(1)
+  })
+
+  it('also prepends its own page for a six-string builtin tuning (Celtic/DADGAD)', async () => {
+    // The one genuinely new combination: six strings but NOT chordsheetjs-drawn,
+    // because the bundled library is standard-tuning shapes.
+    const { wrapper } = await mountPdf('celtic')
     expect(wrapper.find('.error').exists()).toBe(false)
     expect(lastFormatterConfig().layout.chordDiagrams.enabled).toBe(false)
     expect(drawDiagramSheet).toHaveBeenCalledTimes(1)

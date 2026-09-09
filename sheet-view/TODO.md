@@ -3,10 +3,19 @@
 - Sort the chords in the chord diagrams.
 - Add live scroll for music
 - Improve chord catalog
-- Support for other instruments (banjo, mandolin)
-  - **Done:** tenor guitar in CGDA (standard) and DGBE (Chicago) tunings. Adding
-    another is a data entry in `INSTRUMENTS` + a generated dictionary — see the
-    "Adding an instrument" recipe in `CONTRIBUTING.md`.
+- Support for other instruments
+  - **Done:** 13 tunings, grouped in the picker (ukulele / guitar / other):
+    ukulele GCEA, baritone/Chicago-tenor DGBE, D 'Formby' ADF#B, B-flat FBbDG,
+    standard guitar EADGBE, Celtic DADGAD, Open D DADF#AD, Open G DGDGBD,
+    guitalele ADGCEA, mandolin GDAE, tenor guitar CGDA, banjo DGBD, banjo C CGBD.
+  - Adding another is still a data entry in `INSTRUMENTS` + a generated
+    dictionary — see the "Adding an instrument" recipe in `CONTRIBUTING.md`.
+  - Baritone ukulele reuses the id `tenor-chicago` (same DGBE tuning). Open G is
+    DGDGBD (the earlier note said `DBDGBD` — a typo).
+  - `banjo` (DGBD) has 4 unvoiced dense chords (C7b9, Db13, Bbm9, Bmaj9) — only
+    three distinct open pitch classes, so a few 5-note shapes don't fit the
+    window. Hand-fix in `banjo.ts` if a chart needs one.
+
 - Load files from github or other url
   - **Done:** DropZone takes a pasted URL, and a `?view=<chart-url>` query param
     on the app URL auto-loads a chart on startup (`App.vue`). `toFetchableUrl()`

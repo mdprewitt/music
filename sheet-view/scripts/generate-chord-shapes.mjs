@@ -52,7 +52,76 @@ const TARGETS = {
     maxSpan: [4, 5, 7],
     out: 'tenorChicago.ts',
     exportName: 'TENOR_CHICAGO_CHORDS',
-    title: 'Chicago (DGBE) tenor-guitar',
+    title: 'Chicago (DGBE) tenor-guitar / DGBE baritone ukulele',
+  },
+  // GCEA transposed ±2 semitones — same shapes, same reach budget as the uke.
+  formby: {
+    maxFret: 7,
+    maxSpan: [7],
+    out: 'formby.ts',
+    exportName: 'FORMBY_CHORDS',
+    title: "D 'Formby' (ADF#B) ukulele",
+  },
+  bflat: {
+    maxFret: 7,
+    maxSpan: [7],
+    out: 'bflat.ts',
+    exportName: 'BFLAT_CHORDS',
+    title: 'B-flat (FBbDG) ukulele',
+  },
+  // Four-string fifths / open tunings — wider stretches, tried widest-last.
+  mandolin: {
+    maxFret: 7,
+    maxSpan: [4, 5, 7],
+    out: 'mandolin.ts',
+    exportName: 'MANDOLIN_CHORDS',
+    title: 'Mandolin (GDAE)',
+  },
+  banjo: {
+    maxFret: 7,
+    maxSpan: [4, 5, 7],
+    out: 'banjo.ts',
+    exportName: 'BANJO_CHORDS',
+    title: 'Tenor banjo (DGBD)',
+  },
+  'banjo-c': {
+    maxFret: 7,
+    maxSpan: [4, 5, 7],
+    out: 'banjoC.ts',
+    exportName: 'BANJO_C_CHORDS',
+    title: 'Banjo C (CGBD)',
+  },
+  // Six-string alternate tunings. A hand rarely spans past four frets across
+  // six strings, and the all-strings-ringing bonus pulls toward compact grips
+  // before the search reaches for a stretch. `maxFret` runs higher because an
+  // open tuning parks some chords further up the neck.
+  celtic: {
+    maxFret: 9,
+    maxSpan: [3, 4, 5],
+    out: 'celtic.ts',
+    exportName: 'CELTIC_CHORDS',
+    title: 'Celtic guitar (DADGAD)',
+  },
+  'open-d': {
+    maxFret: 9,
+    maxSpan: [3, 4, 5],
+    out: 'openD.ts',
+    exportName: 'OPEN_D_CHORDS',
+    title: 'Open D guitar (DADF#AD)',
+  },
+  'open-g': {
+    maxFret: 9,
+    maxSpan: [3, 4, 5],
+    out: 'openG.ts',
+    exportName: 'OPEN_G_CHORDS',
+    title: 'Open G guitar (DGDGBD)',
+  },
+  guitalele: {
+    maxFret: 9,
+    maxSpan: [3, 4, 5],
+    out: 'guitalele.ts',
+    exportName: 'GUITALELE_CHORDS',
+    title: 'Guitalele (ADGCEA)',
   },
 }
 
@@ -134,21 +203,36 @@ const MANDATORY = {
   '7#5': [0, 4, 8, 10],
 }
 
-// Every fret combination on `STRINGS` strings; -1 means the string is not
-// played. Yields with the first string varying slowest, matching the old
-// nested-loop order so tie-breaking is unchanged for the ukulele table.
-function* voicings() {
+// Depth-first walk over the fret combinations on `STRINGS` strings; -1 means the
+// string is not played. Two branches are pruned because `scoreVoicing` would
+// reject them anyway: a sounded string whose pitch class is not in the chord,
+// and a reach across the already-fixed strings wider than `maxSpan` (the span
+// only ever grows as more strings are pinned). The muted branch (-1) is visited
+// first and frets ascend, and the first string varies slowest, so candidates
+// come out in exactly the order the old exhaustive nested-loop generator used —
+// tie-breaking, and therefore the committed tables, are unchanged. The pruning
+// is what makes a six-string neck tractable: ~5e5 raw combinations per chord
+// collapse to a few thousand.
+function* voicings(chordPcs, maxSpan) {
   const state = Array.from({ length: STRINGS }, () => -1)
-  for (;;) {
-    yield state
-    let i = STRINGS - 1
-    for (; i >= 0; i--) {
-      state[i]++
-      if (state[i] <= MAX_FRET) break
-      state[i] = -1
+  function* walk(i, lo, hi) {
+    if (i === STRINGS) {
+      yield state
+      return
     }
-    if (i < 0) return
+    state[i] = -1
+    yield* walk(i + 1, lo, hi)
+    for (let fret = 0; fret <= MAX_FRET; fret += 1) {
+      if (!chordPcs.has((TUNING[i] + fret) % 12)) continue
+      const nextLo = fret < lo ? fret : lo
+      const nextHi = fret > hi ? fret : hi
+      if (nextHi - nextLo > maxSpan) continue
+      state[i] = fret
+      yield* walk(i + 1, nextLo, nextHi)
+    }
+    state[i] = -1
   }
+  yield* walk(0, Infinity, -Infinity)
 }
 
 function scoreVoicing(frets, rootPc, chordPcs, mandatoryPcs, maxSpan) {
@@ -196,7 +280,7 @@ function bestShape(rootIndex, quality, intervals, maxSpan) {
   const chordPcs = new Set(intervals.map((i) => (rootIndex + i) % 12))
   const mandatoryPcs = new Set((MANDATORY[quality] ?? [0, 4]).map((i) => (rootIndex + i) % 12))
   let best = null
-  for (const v of voicings()) {
+  for (const v of voicings(chordPcs, maxSpan)) {
     const scored = scoreVoicing(v, rootIndex % 12, chordPcs, mandatoryPcs, maxSpan)
     if (!scored) continue
     if (!best || scored.score < best.score) best = scored

@@ -91,31 +91,56 @@ the `html` view is `v-html`, so its chord cells are made focusable by
 
 Everything that varies by instrument is a row in `INSTRUMENTS`
 (`src/chords/types.ts`) — the selector, the store's persistence, detection, the
-resolver and both diagram renderers read from it. Tenor guitar (CGDA and DGBE)
-was added this way, with no new `if (instrument === …)` branch. The recipe:
+resolver and both diagram renderers read from it. Thirteen tunings were added
+this way, with no new `if (instrument === …)` branch. The recipe:
 
 1. **`src/chords/types.ts`** — widen the `Instrument` union and add an
-   `INSTRUMENTS` entry: `stringCount`, `tuning` (open-string pitch classes,
-   lowest string first, `0 = C`), `diagrams`, and any directive `aliases`.
-   `diagrams: 'chordsheetjs'` uses the bundled six-string library (guitar only);
-   `diagrams: 'builtin'` uses one of our generated tables.
+   `INSTRUMENTS` entry: `family` (`'ukulele' | 'guitar' | 'other'` — picker
+   grouping only, no effect on resolution), `stringCount`, `tuning` (open-string
+   pitch classes, lowest string first, `0 = C`), `diagrams`, and any directive
+   `aliases`. Keep the object **grouped by family** — `INSTRUMENT_IDS` is
+   rendered in order and `InstrumentSelector.vue` does not re-sort.
+   `diagrams: 'chordsheetjs'` uses the bundled library and is **standard-tuning
+   guitar only** — its shapes assume EADGBE, so an alternate six-string tuning
+   (DADGAD, Open G, …) must be `diagrams: 'builtin'` even though it has six
+   strings.
 2. **Generate the shape dictionary** (skip for `'chordsheetjs'`): add a `TARGETS`
    row to `scripts/generate-chord-shapes.mjs` — a `maxFret` window and `maxSpan`,
    a list of reach budgets tried widest-last (the tuning is read from
    `INSTRUMENTS[id]`). A fifths tuning like CGDA needs a bigger `maxSpan` than
    GCEA; without the cap the scorer picks an unplayable stretch over muting a
-   string. Then `bun run generate:chords <id>` (it runs Prettier itself).
-3. **`src/chords/definitions.ts`** — register the generated table in
-   `BUILTIN_SHAPES`. `resolveDiagramChords` and the `shapeLibraries.spec.ts`
+   string. Six-string necks want a *tighter* span (`[3, 4, 5]`) and often a
+   higher `maxFret` (an open tuning parks some chords up the neck). Then
+   `bun run generate:chords <id>` (it runs Prettier itself). The search is a
+   DFS that prunes any partial voicing `scoreVoicing` would reject anyway
+   (a non-chord tone on a sounded string, a span already over budget); it emits
+   candidates in the same order as the old exhaustive nested loop, so
+   regenerating an existing table is a no-op diff. Read the
+   `no playable shape found for: …` line it prints — a handful of genuine gaps
+   is fine (`shapeLibraries.spec.ts` allows up to ~60), more means the budgets
+   are too tight.
+3. **`src/chords/definitions.ts`** — import the generated table and register it
+   in `BUILTIN_SHAPES`. `resolveDiagramChords` and the `shapeLibraries.spec.ts`
    sweep pick it up from there.
 4. **`src/chords/detectInstrument.ts`** — only if some `{define}` string count
    *unambiguously* implies the new instrument, add a `DEFAULT_BY_STRING_COUNT`
-   row. Four strings is already ambiguous (ukulele vs. either tenor tuning), so
-   tenor relies on a `{meta: instrument …}` directive or the reader's pick.
+   row. Both four and six strings are now shared by several tunings, so
+   `DEFAULT_BY_STRING_COUNT` stays `{ 4: 'ukulele', 6: 'guitar' }` and every
+   other instrument relies on a `{meta: instrument …}` directive or the reader's
+   pick. Directive `aliases` are matched longest-phrase-first and then by
+   substring, so a longer phrase that contains a shorter alias (`celtic guitar`
+   vs. `guitar`) resolves correctly.
 
 `ChordDiagram.vue`, `src/chords/pdf.ts`, `src/chords/diagram.ts` and
 `src/chords/shapes.ts` take geometry from `DiagramShape.stringCount` and need no
 changes for a new string count.
+
+**Known limitation.** `resolveDiagramChords` trusts a chart's own `{define}`
+whenever its fret count equals the selected instrument's `stringCount` — it does
+not check the tuning. So a standard-tuning guitar `{define}` in a chart is drawn
+as-is when the reader has DADGAD (or Open G, …) selected, and a GCEA ukulele
+`{define}` is drawn under a DGBE baritone. The built-in tables are always
+tuning-correct; only chart-supplied shapes are affected.
 
 ## Changing the key
 

@@ -73,9 +73,11 @@ src/
                           #   read; id = title‖artist or filename). The transpose
                           #   itself is Song#changeKey.
   chords/                 # chord-diagram feature (no Vue imports except *.vue)
-    types.ts              # Instrument union + INSTRUMENTS registry (stringCount/tuning/
+    types.ts              # Instrument union + INSTRUMENTS registry (family/stringCount/tuning/
                           #   diagrams/aliases — every per-instrument fact), InstrumentSpec,
-                          #   RawChordDefinition, DiagramShape. Adding an instrument = a row here.
+                          #   INSTRUMENT_FAMILIES (picker grouping only), RawChordDefinition,
+                          #   DiagramShape. Adding an instrument = a row here. 13 tunings; the
+                          #   registry is ordered by family so INSTRUMENT_IDS is pre-grouped.
     diagram.ts            # toDiagramShape() — definition -> renderer-agnostic geometry
     definitions.ts        # resolveDiagramChords(), canonicalChordName(), add: recovery,
                           #   BUILTIN_SHAPES (instrument -> our generated shape table)
@@ -83,8 +85,12 @@ src/
                           #   chord -> DiagramShape: {shapes[] for the strip, byName lookup}
     detectInstrument.ts   # guess the instrument from a Song ({meta: instrument …} alias
                           #   match, else define string-count via DEFAULT_BY_STRING_COUNT)
-    ukulele.ts / tenor.ts / tenorChicago.ts   # GENERATED shape dictionaries (built-in
-                          #   instruments); keyed by canonical chord name
+    ukulele.ts / tenor.ts / tenorChicago.ts / formby.ts / bflat.ts / celtic.ts /
+    openD.ts / openG.ts / guitalele.ts / mandolin.ts / banjo.ts / banjoC.ts
+                          #   GENERATED shape dictionaries, one per diagrams:'builtin'
+                          #   instrument; keyed by canonical chord name. The six-string
+                          #   alternate tunings (Celtic/Open D/Open G/Guitalele) are 'builtin'
+                          #   too — chordsheetjs' bundled library is standard-tuning-only.
     pdf.ts                # drawDiagramSheet() — prepend a diagram page to a jsPDF doc
   components/
     DropZone.vue          # drag-drop + file picker + paste-a-URL; calls store.loadFile() / store.loadFromUrl()
@@ -114,10 +120,16 @@ src/
                           #   store.loadFromUrl() (errors → store.parseError)
   main.ts                 # createApp + createPinia + mount
 scripts/
-  generate-chord-shapes.mjs   # `bun run generate:chords <ukulele|tenor|tenor-chicago>`
-                              #   regenerates one src/chords/*.ts table, Prettier-formatted
-                              #   (run by hand; bun, not node — it imports types.ts for
-                              #   the tuning; exits non-zero on a missing/empty result)
+  generate-chord-shapes.mjs   # `bun run generate:chords <id>` (id ∈ TARGETS: ukulele,
+                              #   tenor, tenor-chicago, formby, bflat, celtic, open-d,
+                              #   open-g, guitalele, mandolin, banjo, banjo-c). Regenerates
+                              #   one src/chords/*.ts table, Prettier-formatted (run by
+                              #   hand; bun, not node — it imports types.ts for the tuning;
+                              #   exits non-zero on a missing/empty result). `voicings()` is
+                              #   a pruned DFS — needed to keep the six-string necks
+                              #   tractable — that still emits candidates in the old
+                              #   exhaustive order, so regenerating the pre-existing tables
+                              #   is a no-op diff.
 ```
 
 ## Coding conventions

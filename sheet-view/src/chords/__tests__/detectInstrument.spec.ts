@@ -19,6 +19,21 @@ describe('detectInstrument', () => {
     expect(detectInstrument(parse('{meta: instrument tenor-chicago}\n[C]x'))).toBe('tenor-chicago')
   })
 
+  it('resolves the added tunings by alias, longest phrase first', () => {
+    expect(detectInstrument(parse('{meta: instrument DADGAD}\n[C]x'))).toBe('celtic')
+    // "celtic guitar" must not fall through to the bare "guitar" substring.
+    expect(detectInstrument(parse('{meta: instrument Celtic Guitar}\n[C]x'))).toBe('celtic')
+    expect(detectInstrument(parse('{meta: instrument open g}\n[C]x'))).toBe('open-g')
+    expect(detectInstrument(parse('{meta: instrument Guitalele}\n[C]x'))).toBe('guitalele')
+    expect(detectInstrument(parse('{meta: instrument mandolin}\n[C]x'))).toBe('mandolin')
+    // "banjo c" must not fall through to the bare "banjo" substring.
+    expect(detectInstrument(parse('{meta: instrument Banjo C}\n[C]x'))).toBe('banjo-c')
+    expect(detectInstrument(parse('{meta: instrument banjo}\n[C]x'))).toBe('banjo')
+    // DGBE baritone ukulele shares the id of the Chicago-tuned tenor guitar.
+    expect(detectInstrument(parse('{meta: instrument Baritone Uke}\n[C]x'))).toBe('tenor-chicago')
+    expect(detectInstrument(parse("{meta: instrument D 'Formby'}\n[C]x"))).toBe('formby')
+  })
+
   it('infers ukulele from 4-string chord definitions', () => {
     const song = parse('{define: C frets 0 0 0 3}\n{define: G frets 0 2 3 2}\n[C]x [G]y')
     expect(detectInstrument(song)).toBe('ukulele')
