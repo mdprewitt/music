@@ -1,10 +1,11 @@
-import { describe, it, expect, beforeEach, vi } from 'vitest'
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
 import { flushPromises, mount } from '@vue/test-utils'
 import { setActivePinia, createPinia } from 'pinia'
 import { nextTick } from 'vue'
 import SheetViewer from '../SheetViewer.vue'
 import { useSheetStore } from '@/stores/sheet'
 import type { ViewFormat } from '@/stores/sheet'
+import { installMemoryStorage } from '@/__tests__/memoryStorage'
 
 const SAMPLE_CHORDPRO = '{title: Test}\n{artist: Artist}\n\n[C]Hello [G]world'
 const KEYED_CHORDPRO = '{title: Keyed}\n{artist: Artist}\n{key: C}\n\n[C]Hello [G]world'
@@ -28,7 +29,15 @@ async function openPanel(wrapper: Awaited<ReturnType<typeof mountWithSong>>['wra
 
 describe('SheetViewer', () => {
   beforeEach(() => {
+    // A fresh in-memory Storage per test so the per-song key memory
+    // (sheet-view:songKeys) written by one test does not make the next one
+    // open its sheet pre-transposed.
+    installMemoryStorage()
     setActivePinia(createPinia())
+  })
+
+  afterEach(() => {
+    vi.unstubAllGlobals()
   })
 
   it('renders HTML output containing chord classes', async () => {
