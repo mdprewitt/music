@@ -99,7 +99,8 @@ this way, with no new `if (instrument === …)` branch. The recipe:
    grouping only, no effect on resolution), `stringCount`, `tuning` (open-string
    pitch classes, lowest string first, `0 = C`), `diagrams`, and any directive
    `aliases`. Keep the object **grouped by family** — `INSTRUMENT_IDS` is
-   rendered in order and `InstrumentSelector.vue` does not re-sort.
+   rendered in order and `InstrumentSelector.vue` does not re-sort; it emits one
+   `<optgroup>` per family straight from that order.
    `diagrams: 'chordsheetjs'` uses the bundled library and is **standard-tuning
    guitar only** — its shapes assume EADGBE, so an alternate six-string tuning
    (DADGAD, Open G, …) must be `diagrams: 'builtin'` even though it has six

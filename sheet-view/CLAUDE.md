@@ -94,15 +94,18 @@ src/
     pdf.ts                # drawDiagramSheet() — prepend a diagram page to a jsPDF doc
   components/
     DropZone.vue          # drag-drop + file picker + paste-a-URL; calls store.loadFile() / store.loadFromUrl()
-    SheetViewer.vue       # renders store.song; header = filename + ViewSelector + Diagrams
-                          #   toggle + DisplayPanel + "Load another" (the sole direct-child
+    SheetViewer.vue       # renders store.song; header = filename + ViewSelector +
+                          #   InstrumentSelector + KeySelector + Diagrams toggle +
+                          #   DisplayPanel + "Load another" (the sole direct-child
                           #   <button> of .viewer-header — a spec depends on that);
                           #   owns the click-a-chord -> ChordPopover interaction (both HTML views)
     DisplayPanel.vue      # "Display" disclosure button + anchored panel holding the set-once
-                          #   prefs (Instrument / Diagrams position+pin / Theme+CustomColorEditor),
-                          #   each captioned; open state = store.displayPanelOpen; dismiss on
+                          #   prefs (Diagrams position+pin / Theme+CustomColorEditor), each
+                          #   captioned; open state = store.displayPanelOpen; dismiss on
                           #   Esc / outside pointerdown (same idiom as SheetViewer's popover)
-    ViewSelector.vue / InstrumentSelector.vue / DiagramPositionSelector.vue   # radiogroup, v-model on the store
+    ViewSelector.vue / DiagramPositionSelector.vue   # radiogroup, v-model on the store
+    InstrumentSelector.vue # header <select> (thirteen tunings, one <optgroup> per family from
+                          #   INSTRUMENT_FAMILIES), v-model on store.instrument
     KeySelector.vue       # header <select> of transpose targets, v-model on store.targetKey;
                           #   disabled with a hint when store.originalKey is null (no {key})
     ThemeSelector.vue     # radiogroup of 4 presets + Custom; :model-value/@update -> theme.selectTheme

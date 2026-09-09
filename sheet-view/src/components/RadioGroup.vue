@@ -5,22 +5,13 @@
  * checked-state semantics come from the platform rather than hand-rolled ARIA.
  * The visible pill styling is kept; the radios are visually hidden but focusable.
  */
-withDefaults(
-  defineProps<{
-    /** Accessible name for the group — the legend text. */
-    label: string
-    /** `name` shared by the group's radios (must be unique on the page). */
-    name: string
-    options: readonly O[]
-    /**
-     * Show the legend as a small visible caption instead of hiding it for
-     * screen readers only. Used when several groups share one control and each
-     * needs a heading (the instrument picker's families).
-     */
-    captioned?: boolean
-  }>(),
-  { captioned: false },
-)
+defineProps<{
+  /** Accessible name for the group — the legend text. */
+  label: string
+  /** `name` shared by the group's radios (must be unique on the page). */
+  name: string
+  options: readonly O[]
+}>()
 
 const model = defineModel<O['value']>({ required: true })
 
@@ -32,7 +23,7 @@ defineSlots<{
 
 <template>
   <fieldset class="radio-group">
-    <legend :class="captioned ? 'caption' : 'sr-only'">{{ label }}</legend>
+    <legend class="sr-only">{{ label }}</legend>
     <label
       v-for="opt in options"
       :key="opt.value"
@@ -74,20 +65,6 @@ defineSlots<{
   clip: rect(0, 0, 0, 0);
   white-space: nowrap;
   border: 0;
-}
-
-/* A visible group heading. `float` takes the legend out of the flex flow so the
-   pills wrap beneath it rather than beside it. */
-.caption {
-  float: left;
-  width: 100%;
-  margin-bottom: 0.25rem;
-  padding: 0;
-  font-size: 0.7rem;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-  color: var(--sv-meta);
 }
 
 .option {

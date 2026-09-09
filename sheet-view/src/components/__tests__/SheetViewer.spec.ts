@@ -20,8 +20,9 @@ async function mountWithSong(view: ViewFormat) {
   return { store, wrapper }
 }
 
-// The instrument / diagram-position / theme controls now live in the "Display"
-// panel, which is collapsed by default — open it before querying them.
+// The instrument select lives in the header; the diagram-position / theme
+// controls live in the "Display" panel, which is collapsed by default — open it
+// before querying them.
 async function openPanel(wrapper: Awaited<ReturnType<typeof mountWithSong>>['wrapper']) {
   await wrapper.find('.panel-trigger').trigger('click')
   await nextTick()

@@ -2,7 +2,6 @@
 import { onMounted, onBeforeUnmount } from 'vue'
 import { useSheetStore } from '@/stores/sheet'
 import { useThemeStore } from '@/stores/theme'
-import InstrumentSelector from './InstrumentSelector.vue'
 import DiagramPositionSelector from './DiagramPositionSelector.vue'
 import ThemeSelector from './ThemeSelector.vue'
 import CustomColorEditor from './CustomColorEditor.vue'
@@ -51,11 +50,6 @@ onBeforeUnmount(() => {
     </button>
 
     <div v-if="store.displayPanelOpen" class="panel" role="group" aria-label="Display settings">
-      <section>
-        <h3 class="panel-heading">Instrument</h3>
-        <InstrumentSelector v-model="store.instrument" />
-      </section>
-
       <section>
         <h3 class="panel-heading">Diagrams</h3>
         <template v-if="store.showDiagrams && store.viewFormat !== 'pdf'">

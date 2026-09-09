@@ -9,6 +9,7 @@ import { INSTRUMENTS } from '@/chords/types'
 import { drawDiagramSheet, type PdfDoc } from '@/chords/pdf'
 import { markChordCells } from '@/sheet/interactive'
 import ViewSelector from './ViewSelector.vue'
+import InstrumentSelector from './InstrumentSelector.vue'
 import KeySelector from './KeySelector.vue'
 import DisplayPanel from './DisplayPanel.vue'
 import ChordDiagrams from './ChordDiagrams.vue'
@@ -204,6 +205,7 @@ watch(
       <span class="filename">{{ store.filename }}</span>
       <div class="viewer-controls">
         <ViewSelector v-model="store.viewFormat" />
+        <InstrumentSelector v-model="store.instrument" />
         <KeySelector
           v-model="store.targetKey"
           :keys="store.availableKeys"
