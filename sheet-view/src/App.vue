@@ -7,6 +7,8 @@ import DropZone from './components/DropZone.vue'
 import SheetViewer from './components/SheetViewer.vue'
 import AboutDialog from './components/AboutDialog.vue'
 import LicenseDialog from './components/LicenseDialog.vue'
+// Same drawing as public/favicon.svg — keep the two in sync.
+import ukuleleLogo from '@/assets/ukulele.svg'
 
 const store = useSheetStore()
 const theme = useThemeStore()
@@ -40,6 +42,7 @@ function openLicense() {
 <template>
   <div class="app-container">
     <header>
+      <img :src="ukuleleLogo" alt="" class="logo" width="32" height="32" />
       <h1>Sheet-View</h1>
     </header>
     <main>
@@ -68,6 +71,15 @@ function openLicense() {
 
 header {
   margin-bottom: 2rem;
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.logo {
+  width: 2rem;
+  height: 2rem;
+  flex-shrink: 0;
 }
 
 h1 {
