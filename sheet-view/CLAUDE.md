@@ -15,6 +15,12 @@ bun run build    # type-check + vite build in parallel
 
 Run `bun lint` before committing. `bun run build` catches type errors that vitest misses.
 
+`vue-tsc` runs under Bun here (no Node on the box), and Bun's `require()` bypasses the
+`fs.readFileSync` hook Volar uses to patch `tsc`, so `vue-tsc` silently degrades to plain `tsc`
+— it does **not** type-check `.vue` internals and would flag every `*.vue` import from a `.ts`
+file as TS2307. `env.d.ts` carries a `declare module '*.vue'` shim to keep `bun run type-check`
+green; real `.vue` checking only happens with a Node runtime.
+
 ## Stack
 
 | Layer | Library |
