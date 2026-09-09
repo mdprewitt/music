@@ -13,6 +13,10 @@ bun run format   # prettier over src/
 bun run build    # type-check + vite build in parallel
 ```
 
+The `Makefile` wraps these (`make help` lists them): `make dev`, `make build`, `make test`
+(one-shot), `make test-watch`, `make lint`, `make type-check`, `make check` (type-check + lint +
+test), `make clean`.
+
 Run `bun lint` before committing. `bun run build` catches type errors that vitest misses.
 
 `vue-tsc` runs under Bun here (no Node on the box), and Bun's `require()` bypasses the

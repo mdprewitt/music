@@ -52,6 +52,15 @@ bun test:unit
 ```sh
 bun lint
 ```
+
+### Makefile shortcuts
+
+The `Makefile` wraps these scripts. `make` (or `make help`) lists every target;
+the common ones are `make dev`, `make build`, `make test` (one-shot),
+`make test-watch`, `make lint`, `make type-check`, and `make check` — the full
+type-check + lint + test gate to run before committing. `make clean` removes
+`dist/` and the tool caches.
+
 ## Theming
 
 Colours live in one place. `src/assets/base.css` declares five authored custom
