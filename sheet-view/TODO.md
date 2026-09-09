@@ -1,8 +1,8 @@
 # TODOs
 
-- Sort the chords in the chord diagrams.
 - Add live scroll for music
 - Improve chord catalog
+
 - Support for other instruments
   - **Done:** 13 tunings, grouped in the picker (ukulele / guitar / other):
     ukulele GCEA, baritone/Chicago-tenor DGBE, D 'Formby' ADF#B, B-flat FBbDG,
@@ -34,3 +34,4 @@
     directly. Gate the client on `import.meta.env.VITE_FETCH_PROXY` (added to the
     CI build step's `env:` next to `BASE_PATH`) so dev and tests run without it.
     It still can't defeat bot challenges.
+- **Done:** Sort the chords in the chord diagrams.
