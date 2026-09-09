@@ -2,11 +2,11 @@
 # Run `make` or `make help` for the list.
 
 .DEFAULT_GOAL := help
-.PHONY: help install dev build preview test test-watch type-check lint format check clean
+.PHONY: help install dev build preview test test-watch test-e2e test-e2e-ui type-check lint format check clean
 
 help: ## List the available targets
-	@grep -E '^[a-zA-Z_-]+:.*## ' $(MAKEFILE_LIST) \
-		| awk -F':.*## ' '{ printf "  %-12s %s\n", $$1, $$2 }'
+	@grep -E '^[a-zA-Z0-9_-]+:.*## ' $(MAKEFILE_LIST) \
+		| awk -F':.*## ' '{ printf "  %-13s %s\n", $$1, $$2 }'
 
 install: ## Install dependencies
 	bun install
@@ -25,6 +25,12 @@ test: ## Run the unit tests once
 
 test-watch: ## Run the unit tests in watch mode
 	bun test:unit
+
+test-e2e: ## Run the Playwright end-to-end tests (builds + previews first)
+	bun run test:e2e
+
+test-e2e-ui: ## Open the Playwright UI runner
+	bun run test:e2e --ui
 
 type-check: ## Type-check with vue-tsc
 	bun run type-check

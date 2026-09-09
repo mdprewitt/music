@@ -47,6 +47,22 @@ bun run build
 bun test:unit
 ```
 
+### Run End-to-End Tests with [Playwright](https://playwright.dev/)
+
+```sh
+# once, to fetch the browser (cached under ~/.cache/ms-playwright)
+bunx playwright install chromium
+
+bun test:e2e            # build, preview on :4173, run the suite in Chromium
+bun run test:e2e --ui   # interactive runner
+```
+
+The specs live in `e2e/` and drive a real Chromium against a production build.
+Reach for them when a change needs verifying in ways jsdom can't manage — real
+layout, `<select>` and pointer interaction, SVG chord diagrams, the `?view=`
+deep-link. Load a chart by feeding `e2e/fixtures/sample.cho` to the hidden file
+input, and select elements by role or label rather than by CSS class.
+
 ### Lint with [ESLint](https://eslint.org/)
 
 ```sh
@@ -56,10 +72,10 @@ bun lint
 ### Makefile shortcuts
 
 The `Makefile` wraps these scripts. `make` (or `make help`) lists every target;
-the common ones are `make dev`, `make build`, `make test` (one-shot),
-`make test-watch`, `make lint`, `make type-check`, and `make check` — the full
-type-check + lint + test gate to run before committing. `make clean` removes
-`dist/` and the tool caches.
+the common ones are `make dev`, `make build`, `make test` (one-shot unit),
+`make test-watch`, `make test-e2e`, `make lint`, `make type-check`, and
+`make check` — the type-check + lint + unit-test gate to run before committing.
+`make clean` removes `dist/` and the tool caches.
 
 ## Theming
 

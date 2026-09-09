@@ -1,0 +1,9 @@
+{
+  "extends": "@vue/tsconfig/tsconfig.dom.json",
+  "include": ["./**/*"],
+  "compilerOptions": {
+    "composite": true,
+    "types": ["node", "@playwright/test"],
+    "tsBuildInfoFile": "../node_modules/.tmp/tsconfig.e2e.tsbuildinfo"
+  }
+}

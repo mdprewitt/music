@@ -1,0 +1,12 @@
+{title: E2E Sample Song}
+{artist: Playwright}
+{key: C}
+
+{start_of_verse}
+[C]This is a [G]line for the [Am]end-to-end [F]test
+[C]Chords above the [G]words, exact a[F]lignment
+{end_of_verse}
+
+{start_of_chorus}
+[F]Verify the [C]viewer [G]renders [C]it
+{end_of_chorus}

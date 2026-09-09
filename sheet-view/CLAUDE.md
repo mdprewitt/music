@@ -7,6 +7,7 @@ ChordPro / chord-sheet viewer built with Vue 3 + Pinia + Vite. Accepts ChordPro 
 ```bash
 bun dev          # dev server (http://localhost:5173)
 bun test:unit    # vitest (watch mode)
+bun test:e2e     # playwright — builds, previews on :4173, drives Chromium
 bun run type-check   # vue-tsc — run before committing
 bun lint         # oxlint --fix then eslint --fix --cache (sequential)
 bun run format   # prettier over src/
@@ -14,8 +15,12 @@ bun run build    # type-check + vite build in parallel
 ```
 
 The `Makefile` wraps these (`make help` lists them): `make dev`, `make build`, `make test`
-(one-shot), `make test-watch`, `make lint`, `make type-check`, `make check` (type-check + lint +
-test), `make clean`.
+(one-shot unit), `make test-watch`, `make test-e2e` (+ `make test-e2e-ui`), `make lint`,
+`make type-check`, `make check` (type-check + lint + unit test), `make clean`.
+
+Playwright runs fine under Bun here. `bunx playwright install chromium` fetches the browser
+(cached in `~/.cache/ms-playwright`, not the repo). The e2e config self-serves via
+`bun run build && bun run preview`, reusing an already-running server when one is up.
 
 Run `bun lint` before committing. `bun run build` catches type errors that vitest misses.
 
@@ -143,6 +148,14 @@ scripts/
                               #   tractable — that still emits candidates in the old
                               #   exhaustive order, so regenerating the pre-existing tables
                               #   is a no-op diff.
+e2e/
+  app.spec.ts                 # Playwright smoke suite — drop zone, picking a chart, the
+                              #   header instrument <select> redrawing diagrams, the Display
+                              #   panel's contents. Runs against `vite preview` of a real build.
+  fixtures/sample.cho         # tiny self-contained ChordPro chart the specs upload
+  tsconfig.json               # composite project (types: node + @playwright/test),
+                              #   referenced from the root tsconfig
+playwright.config.ts          # testDir e2e/, chromium only, webServer = build + preview :4173
 ```
 
 ## Coding conventions
@@ -175,6 +188,7 @@ scripts/
 - Use `@vue/test-utils` `mount` + `flushPromises` for async component interactions.
 - Test files are excluded from `tsconfig.app.json` but included in `tsconfig.vitest.json`.
 - jsdom ships no working `Storage` — store tests that touch persistence call `installMemoryStorage()` from `@/__tests__/memoryStorage` in `beforeEach` and `vi.unstubAllGlobals()` in `afterEach`. jsdom also lacks `matchMedia`.
+- **End-to-end** specs live in `e2e/*.spec.ts` and run under Playwright (`bun test:e2e` / `make test-e2e`), not Vitest — keep the two apart. Use them for what jsdom can't do: real layout, `<select>`/pointer events, SVG rendering, the `?view=` query-param path. Drive chart loading via `page.locator('input[type="file"]').setInputFiles(...)` with `e2e/fixtures/sample.cho`; prefer role/label selectors (`getByRole`, `getByLabel`) over CSS. First run needs `bunx playwright install chromium`.
 
 ## chordsheetjs notes
 
