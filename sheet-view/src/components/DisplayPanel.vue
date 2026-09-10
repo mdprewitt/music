@@ -1,13 +1,58 @@
 <script setup lang="ts">
-import { onMounted, onBeforeUnmount } from 'vue'
+import { nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useSheetStore } from '@/stores/sheet'
 import { useThemeStore } from '@/stores/theme'
+import { panelShift } from './displayPanel'
 import DiagramPositionSelector from './DiagramPositionSelector.vue'
 import ThemeSelector from './ThemeSelector.vue'
 import CustomColorEditor from './CustomColorEditor.vue'
 
 const store = useSheetStore()
 const theme = useThemeStore()
+
+const trigger = ref<HTMLElement | null>(null)
+const panel = ref<HTMLElement | null>(null)
+// Positive px: how far to push the right-anchored panel back onto the screen
+// when the wrapping toolbar drops its trigger near the left edge.
+const shift = ref(0)
+
+let panelResizeObserver: ResizeObserver | null = null
+
+async function reposition() {
+  await nextTick()
+  const t = trigger.value
+  const p = panel.value
+  if (!t || !p) {
+    shift.value = 0
+    return
+  }
+  shift.value = panelShift(
+    t.getBoundingClientRect().right,
+    p.offsetWidth,
+    document.documentElement.clientWidth,
+  )
+}
+
+// `immediate`: displayPanelOpen persists to localStorage, so the panel can
+// already be open on mount.
+watch(
+  () => store.displayPanelOpen,
+  (open) => {
+    if (!open) {
+      panelResizeObserver?.disconnect()
+      return
+    }
+    void reposition().then(() => {
+      // Revealing the custom-colour editor can widen the panel toward its
+      // max-width; re-clamp when it does. jsdom lacks ResizeObserver (as it
+      // lacks matchMedia) — guard it.
+      if (typeof ResizeObserver === 'undefined' || !panel.value) return
+      panelResizeObserver ??= new ResizeObserver(() => void reposition())
+      panelResizeObserver.observe(panel.value)
+    })
+  },
+  { immediate: true },
+)
 
 function toggle() {
   store.displayPanelOpen = !store.displayPanelOpen
@@ -29,16 +74,20 @@ function onDocumentKeydown(event: KeyboardEvent) {
 onMounted(() => {
   document.addEventListener('pointerdown', onDocumentPointerDown)
   document.addEventListener('keydown', onDocumentKeydown)
+  window.addEventListener('resize', reposition)
 })
 onBeforeUnmount(() => {
   document.removeEventListener('pointerdown', onDocumentPointerDown)
   document.removeEventListener('keydown', onDocumentKeydown)
+  window.removeEventListener('resize', reposition)
+  panelResizeObserver?.disconnect()
 })
 </script>
 
 <template>
   <div class="display-panel">
     <button
+      ref="trigger"
       type="button"
       class="panel-trigger"
       :class="{ active: store.displayPanelOpen }"
@@ -49,7 +98,14 @@ onBeforeUnmount(() => {
       Display
     </button>
 
-    <div v-if="store.displayPanelOpen" class="panel" role="group" aria-label="Display settings">
+    <div
+      v-if="store.displayPanelOpen"
+      ref="panel"
+      class="panel"
+      role="group"
+      aria-label="Display settings"
+      :style="{ right: `${-shift}px` }"
+    >
       <section>
         <h3 class="panel-heading">Diagrams</h3>
         <template v-if="store.showDiagrams && store.viewFormat !== 'pdf'">

@@ -3,6 +3,7 @@ import { mount } from '@vue/test-utils'
 import { setActivePinia, createPinia } from 'pinia'
 import { nextTick } from 'vue'
 import DisplayPanel from '../DisplayPanel.vue'
+import { PANEL_GUTTER, panelShift } from '../displayPanel'
 import CustomColorEditor from '../CustomColorEditor.vue'
 import { useSheetStore } from '@/stores/sheet'
 import { useThemeStore } from '@/stores/theme'
@@ -84,5 +85,29 @@ describe('DisplayPanel', () => {
     const wrapper = mount(DisplayPanel)
     expect(wrapper.find('.position-selector').exists()).toBe(false)
     expect(wrapper.find('.panel-note').text()).toMatch(/PDF/)
+  })
+
+  it('carries an inline right offset so it can be clamped to the viewport', () => {
+    useSheetStore().displayPanelOpen = true
+    const wrapper = mount(DisplayPanel)
+    expect(wrapper.find('.panel').attributes('style')).toContain('right:')
+  })
+
+  describe('panelShift', () => {
+    it('does not move a panel that already fits under its trigger', () => {
+      // trigger right edge at 900, 240px panel, 1000px viewport → left edge 660, fits.
+      expect(panelShift(900, 240, 1000)).toBe(0)
+    })
+
+    it('nudges a panel right until its left edge clears the gutter', () => {
+      // trigger right edge at 120, 240px panel → anchored left edge is -120.
+      const shift = panelShift(120, 240, 390)
+      expect(shift).toBe(PANEL_GUTTER - (120 - 240))
+      expect(120 - 240 + shift).toBe(PANEL_GUTTER)
+    })
+
+    it('returns 0 when the panel cannot be measured', () => {
+      expect(panelShift(120, 0, 390)).toBe(0)
+    })
   })
 })

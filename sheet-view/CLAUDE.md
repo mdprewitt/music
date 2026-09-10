@@ -119,7 +119,13 @@ src/
     DisplayPanel.vue      # "Display" disclosure button + anchored panel holding the set-once
                           #   prefs (Diagrams position+pin / Theme+CustomColorEditor), each
                           #   captioned; open state = store.displayPanelOpen; dismiss on
-                          #   Esc / outside pointerdown (same idiom as SheetViewer's popover)
+                          #   Esc / outside pointerdown (same idiom as SheetViewer's popover).
+                          #   The wrapping toolbar can drop the trigger anywhere on the
+                          #   line, so the right-anchored panel measures on open (+ on
+                          #   resize / ResizeObserver) and nudges itself back inside the
+                          #   viewport via panelShift() (displayPanel.ts — a plain-.ts
+                          #   sidecar so the degraded vue-tsc can see it from tests) —
+                          #   same measure-and-clamp idiom as ChordPopover.vue.
     ViewSelector.vue / DiagramPositionSelector.vue   # radiogroup, v-model on the store
     InstrumentSelector.vue # header <select> (thirteen tunings, one <optgroup> per family from
                           #   INSTRUMENT_FAMILIES), v-model on store.instrument

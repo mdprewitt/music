@@ -61,6 +61,19 @@ test.describe('narrow viewport', () => {
     )
     expect(overflows).toBe(false)
   })
+
+  test('the Display panel stays on screen when its trigger wraps near the left edge', async ({
+    page,
+  }) => {
+    await page.goto('/')
+    await page.locator('input[type="file"]').setInputFiles(SAMPLE_CHART)
+    await page.getByRole('button', { name: 'Display' }).click()
+
+    const box = await page.locator('.panel').boundingBox()
+    expect(box).not.toBeNull()
+    expect(box!.x).toBeGreaterThanOrEqual(0)
+    expect(box!.x + box!.width).toBeLessThanOrEqual(390)
+  })
 })
 
 test('the Display panel no longer carries the instrument picker', async ({ page }) => {
