@@ -219,6 +219,8 @@ playwright.config.ts          # testDir e2e/, chromium only, webServer = build +
 
 ## Commits
 
+For each new feature request, create a new branch and when done, push the branch and create a PR. 
+
 Use **Conventional Commits** with scope `sheet-view/<feature>`:
 
 ```
