@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, ref, watch, onMounted, onBeforeUnmount } from 'vue'
-import { ChordProFormatter, HtmlTableFormatter, type Song } from 'chordsheetjs'
+import { ChordProFormatter, HtmlDivFormatter, type Song } from 'chordsheetjs'
 import { PdfFormatter } from 'chordsheetjs/pdf'
 import { jsPDF } from 'jspdf'
 import { useSheetStore } from '@/stores/sheet'
@@ -21,12 +21,17 @@ const store = useSheetStore()
 // It is markRaw(Song), but Pinia's UnwrapRef loses class fidelity — cast back.
 const song = computed(() => (store.displaySong ? (store.displaySong as Song) : null))
 
-// The formatter output is untrusted markup (HtmlTableFormatter does not escape
+// The formatter output is untrusted markup (HtmlDivFormatter does not escape
 // chart text). markChordCells sanitizes it to a safe element/attribute set
 // before it is inserted via v-html, and adds tabindex/role to the chord cells
 // so they can be focused and activated from the keyboard.
+//
+// HtmlDivFormatter (not HtmlTableFormatter): each line is a `.row` of
+// self-contained `.column` (chord-over-lyric) units, so `flex-wrap` lets a long
+// line fold on a narrow screen with every chord still above its own word. The
+// table formatter emits one un-wrappable `<table>` per line and overflows.
 const html = computed(() =>
-  song.value ? markChordCells(new HtmlTableFormatter().format(song.value)) : '',
+  song.value ? markChordCells(new HtmlDivFormatter().format(song.value)) : '',
 )
 
 // One resolution pass per (song, instrument) — feeds both the click-to-peek
@@ -151,10 +156,10 @@ function openFor(el: HTMLElement, rawName: string) {
   activeChord.value = { name, shape, anchor, el }
 }
 
-// The HTML table view is v-html, so its chord cells get a delegated handler.
+// The HTML div view is v-html, so its chord cells get a delegated handler.
 function onSheetActivate(event: MouseEvent | KeyboardEvent) {
   if (event instanceof KeyboardEvent && event.key !== 'Enter' && event.key !== ' ') return
-  const cell = (event.target as HTMLElement).closest('td.chord') as HTMLElement | null
+  const cell = (event.target as HTMLElement).closest('.chord') as HTMLElement | null
   if (!cell) return
   if (event instanceof KeyboardEvent) event.preventDefault()
   openFor(cell, cell.textContent ?? '')
@@ -164,7 +169,8 @@ function onDocumentPointerDown(event: MouseEvent) {
   if (!activeChord.value) return
   const t = event.target as HTMLElement
   // The chord's own handler manages toggling; the popover is interactive.
-  if (t.closest('.chord-popover') || t.closest('td.chord') || t.closest('.chord.clickable')) return
+  // `.chord` covers both the div view's cells and InlineSheet's clickable spans.
+  if (t.closest('.chord-popover') || t.closest('.chord')) return
   closePopover()
 }
 
@@ -410,41 +416,72 @@ button:hover {
   margin-bottom: 1.5rem;
 }
 
-.sheet :deep(table.row) {
-  border-collapse: collapse;
+/* HtmlDivFormatter: `.row` = one chart line, a flex track of `.column`
+   (chord-over-lyric) units. `flex-wrap` folds a line too wide for the viewport
+   while each chord stays glued to its own word. */
+.sheet :deep(.row) {
+  display: flex;
+  flex-wrap: wrap;
+  /* flex-start, not flex-end: a column whose lyric wraps internally hangs down
+     without dragging its neighbours off the line. */
+  align-items: flex-start;
 }
 
-.sheet :deep(td) {
-  padding: 0;
-  vertical-align: bottom;
-  white-space: pre;
+.sheet :deep(.row) > * {
+  flex: 0 1 auto;
+  min-width: 0;
 }
 
-.sheet :deep(td.chord) {
+.sheet :deep(.column) {
+  display: flex;
+  flex-direction: column;
+}
+
+.sheet :deep(.chord) {
   color: var(--chord-accent);
   font-weight: bold;
   padding-right: 0.25em;
+  white-space: nowrap;
 }
 
-.sheet :deep(td.chord[tabindex]) {
+/* The formatter emits chord-less columns as an empty `.chord` div. Without a
+   line box of its own the lyric below it rides up out of line with its row. */
+.sheet :deep(.chord:empty)::after {
+  content: '\200b';
+}
+
+.sheet :deep(.chord[tabindex]) {
   cursor: pointer;
   border-radius: 3px;
 }
 
-.sheet :deep(td.chord[tabindex]:hover),
-.sheet :deep(td.chord[tabindex]:focus-visible),
-.sheet :deep(td.chord.chord-open) {
+.sheet :deep(.chord[tabindex]:hover),
+.sheet :deep(.chord[tabindex]:focus-visible),
+.sheet :deep(.chord.chord-open) {
   background: var(--sv-surface-hover);
   outline: none;
 }
 
-.sheet :deep(td.lyrics) {
+.sheet :deep(.annotation) {
+  color: var(--chord-accent);
+  font-style: italic;
+  padding-right: 0.25em;
+  white-space: nowrap;
+}
+
+.sheet :deep(.lyrics) {
   color: var(--sv-lyrics);
   padding-right: 0.25em;
+  /* Keep the chart's own spacing but let a long chord-less chunk wrap;
+     `anywhere` is the backstop for one unbroken run — as in InlineSheet.vue. */
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
 }
 
 .sheet :deep(.comment) {
   color: var(--sv-comment);
   font-style: italic;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
 }
 </style>

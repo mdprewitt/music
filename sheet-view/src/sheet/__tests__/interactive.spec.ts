@@ -2,35 +2,38 @@ import { describe, it, expect } from 'vitest'
 import { markChordCells } from '../interactive'
 
 describe('markChordCells', () => {
+  // HtmlDivFormatter shape: `.row` of `.column` (chord-over-lyric) units, with
+  // a chord-less column rendered as `<div class="chord">` holding only a newline.
   const html =
-    '<table class="row"><tr>' +
-    '<td class="chord">C</td><td class="chord"></td><td class="chord">G7</td>' +
-    '</tr><tr>' +
-    '<td class="lyrics">Amazing </td><td class="lyrics">grace</td>' +
-    '</tr></table>'
+    '<div class="row">' +
+    '<div class="column"><div class="chord">C</div><div class="lyrics">Amazing </div></div>' +
+    '<div class="column"><div class="chord">\n</div><div class="lyrics">grace </div></div>' +
+    '<div class="column"><div class="chord">G7</div><div class="lyrics">how</div></div>' +
+    '</div>'
 
   it('makes every non-empty chord cell focusable and a button', () => {
     const out = markChordCells(html)
     const doc = new DOMParser().parseFromString(out, 'text/html')
-    const marked = doc.querySelectorAll('td.chord[tabindex="0"][role="button"]')
+    const marked = doc.querySelectorAll('.chord[tabindex="0"][role="button"]')
     expect([...marked].map((c) => c.textContent)).toEqual(['C', 'G7'])
   })
 
-  it('leaves the empty spacer chord cell inert', () => {
+  it('empties the chord-less spacer cell and leaves it inert', () => {
     const doc = new DOMParser().parseFromString(markChordCells(html), 'text/html')
-    const empty = [...doc.querySelectorAll('td.chord')].find((c) => !c.textContent?.trim())
+    const empty = [...doc.querySelectorAll('.chord')].find((c) => !c.textContent?.trim())
+    expect(empty?.textContent).toBe('')
     expect(empty?.hasAttribute('tabindex')).toBe(false)
   })
 
   it('does not touch lyric cells', () => {
     const doc = new DOMParser().parseFromString(markChordCells(html), 'text/html')
-    expect(doc.querySelector('td.lyrics')?.hasAttribute('role')).toBe(false)
+    expect(doc.querySelector('.lyrics')?.hasAttribute('role')).toBe(false)
   })
 
   it('strips injected elements the formatter would otherwise pass through raw', () => {
     const dirty =
-      '<table class="row"><tr><td class="lyrics">hi ' +
-      '<img src=x onerror="alert(1)"> <script>alert(2)</script>there</td></tr></table>'
+      '<div class="row"><div class="column"><div class="lyrics">hi ' +
+      '<img src=x onerror="alert(1)"> <script>alert(2)</script>there</div></div></div>'
     const out = markChordCells(dirty)
     expect(out).not.toContain('<img')
     expect(out).not.toContain('onerror')

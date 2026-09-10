@@ -121,7 +121,7 @@ describe('SheetViewer', () => {
     await nextTick()
     expect(wrapper.findAll('.chord-diagrams .cd-title').map((t) => t.text())).toEqual(['B', 'E'])
 
-    const transposed = wrapper.findAll('td.chord').find((c) => c.text() === 'E')
+    const transposed = wrapper.findAll('.sheet .chord').find((c) => c.text() === 'E')
     await transposed?.trigger('click')
     await nextTick()
     expect(wrapper.find('.chord-popover svg.chord-diagram').exists()).toBe(true)
@@ -202,7 +202,7 @@ describe('SheetViewer', () => {
   describe('click a chord to peek its diagram', () => {
     it('opens a popover with a diagram when a chord is clicked in the HTML view', async () => {
       const { wrapper } = await mountWithSong('html')
-      await wrapper.find('td.chord').trigger('click')
+      await wrapper.find('.sheet .chord[role="button"]').trigger('click')
       await nextTick()
       const popover = wrapper.find('.chord-popover')
       expect(popover.exists()).toBe(true)
@@ -211,7 +211,7 @@ describe('SheetViewer', () => {
 
     it('makes real formatter chord cells focusable and keyboard-activatable', async () => {
       const { wrapper } = await mountWithSong('html')
-      const cell = wrapper.find('td.chord')
+      const cell = wrapper.find('.sheet .chord[role="button"]')
       expect(cell.attributes('tabindex')).toBe('0')
       expect(cell.attributes('role')).toBe('button')
       await cell.trigger('keydown', { key: 'Enter' })
@@ -221,7 +221,7 @@ describe('SheetViewer', () => {
 
     it('toggles the popover shut when the same chord is clicked again', async () => {
       const { wrapper } = await mountWithSong('html')
-      const chord = wrapper.find('td.chord')
+      const chord = wrapper.find('.sheet .chord[role="button"]')
       await chord.trigger('click')
       await nextTick()
       expect(wrapper.find('.chord-popover').exists()).toBe(true)
@@ -239,7 +239,7 @@ describe('SheetViewer', () => {
 
     it('closes the popover on Escape', async () => {
       const { wrapper } = await mountWithSong('html')
-      await wrapper.find('td.chord').trigger('click')
+      await wrapper.find('.sheet .chord[role="button"]').trigger('click')
       await nextTick()
       expect(wrapper.find('.chord-popover').exists()).toBe(true)
       document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }))
@@ -252,7 +252,7 @@ describe('SheetViewer', () => {
       store.showDiagrams = false
       await nextTick()
       expect(wrapper.find('.chord-diagrams').exists()).toBe(false)
-      await wrapper.find('td.chord').trigger('click')
+      await wrapper.find('.sheet .chord[role="button"]').trigger('click')
       await nextTick()
       expect(wrapper.find('.chord-popover svg.chord-diagram').exists()).toBe(true)
     })

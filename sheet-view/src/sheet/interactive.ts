@@ -1,9 +1,9 @@
 /**
- * Post-process `HtmlTableFormatter` output before it is inserted with `v-html`.
+ * Post-process `HtmlDivFormatter` output before it is inserted with `v-html`.
  *
- * Two jobs:
+ * Three jobs:
  *
- *  1. **Sanitize.** `HtmlTableFormatter` does no HTML escaping — lyric,
+ *  1. **Sanitize.** `HtmlDivFormatter` does no HTML escaping — lyric,
  *     annotation, title and comment text is interpolated raw, and
  *     `pangoToHtml` passes any markup it does not recognise straight through.
  *     A chart is entirely attacker-controlled (drag-drop, a pasted URL, or the
@@ -13,6 +13,10 @@
  *  2. **Mark chord cells.** The formatter emits inert markup, so `tabindex` /
  *     `role` cannot be set from a Vue template — we set them on the parsed
  *     document once, before it is serialised back out.
+ *  3. **Normalise empty chord cells.** The formatter writes a chord-less column
+ *     as `<div class="chord">\n</div>` (a lone whitespace text node). Emptying
+ *     it lets the `.chord:empty` CSS rule give it a zero-width line box so the
+ *     lyric beneath stays aligned with the rest of its row.
  */
 
 /** Elements the formatter (and pango) legitimately produce. Everything else is dropped. */
@@ -89,15 +93,19 @@ function sanitizeElement(el: Element): void {
 
 /**
  * Reduce untrusted formatter markup to a safe element/attribute set, then add
- * `tabindex="0"` and `role="button"` to every `td.chord` that holds a chord
- * name. The formatter also emits empty `td.chord` spacer cells; those are left
- * inert.
+ * `tabindex="0"` and `role="button"` to every `.chord` cell that holds a chord
+ * name. The formatter also emits chord-less `.chord` spacer cells; those are
+ * emptied (so `.chord:empty` styling applies) and left inert.
  */
 export function markChordCells(html: string): string {
   const doc = new DOMParser().parseFromString(html, 'text/html')
   sanitizeElement(doc.body)
-  for (const cell of doc.querySelectorAll('td.chord')) {
-    if (!cell.textContent?.trim()) continue
+  for (const cell of doc.querySelectorAll('.chord')) {
+    if (!cell.textContent?.trim()) {
+      // Drop the lone whitespace text node so the :empty rule matches.
+      cell.textContent = ''
+      continue
+    }
     cell.setAttribute('tabindex', '0')
     cell.setAttribute('role', 'button')
   }

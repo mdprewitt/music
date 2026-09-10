@@ -6,3 +6,12 @@
   padding: 2rem;
   font-weight: normal;
 }
+
+/* On a phone the 2rem gutter costs ~64px of a ~390px screen — width the chord
+   chart needs. (This is a viewport-width query; the "no @media" note in
+   base.css is specifically about prefers-color-scheme / theming.) */
+@media (max-width: 640px) {
+  #app {
+    padding: 0.75rem;
+  }
+}

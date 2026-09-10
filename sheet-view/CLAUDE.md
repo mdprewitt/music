@@ -40,7 +40,7 @@ green; real `.vue` checking only happens with a Node runtime.
 | Types | TypeScript 6, `vue-tsc` |
 | Tests | Vitest 4, `@vue/test-utils`, jsdom |
 | Lint | oxlint (correctness errors) + ESLint flat config + Prettier |
-| Chord parsing | `chordsheetjs` — `ChordProParser`, `HtmlTableFormatter` |
+| Chord parsing | `chordsheetjs` — `ChordProParser`, `HtmlDivFormatter` |
 | Path alias | `@/` → `src/` |
 
 ## Project structure
@@ -78,10 +78,12 @@ src/
   sheet/                  # chart-rendering helpers (no Vue imports)
     inline.ts             # toInlineSheet() — Song -> flat token model for the
                           #   "HTML inline" view (bracketed chords in the lyric flow)
-    interactive.ts        # markChordCells() — sanitize HtmlTableFormatter output to a
+    interactive.ts        # markChordCells() — sanitize HtmlDivFormatter output to a
                           #   safe element/attribute allowlist (it's untrusted chart
-                          #   text inserted via v-html) and add tabindex/role to its
-                          #   chord cells (no template — it's a string)
+                          #   text inserted via v-html), add tabindex/role to its
+                          #   chord cells, and empty the chord-less `.chord` spacer
+                          #   divs so `.chord:empty` styling applies (no template —
+                          #   it's a string)
     key.ts                # songIdentity()/recallKey()/rememberKey() — per-song key
                           #   memory (sheet-view:songKeys — JSON array of [id, key]
                           #   pairs, newest last; legacy {id:key} object migrated on
@@ -193,21 +195,21 @@ playwright.config.ts          # testDir e2e/, chromium only, webServer = build +
 ## chordsheetjs notes
 
 - **Parsing**: `new ChordProParser().parse(rawText)` → `Song`
-- **Rendering**: use `HtmlTableFormatter` (not `HtmlDivFormatter`). The table structure (`<tr>` for chords, `<tr>` for lyrics, `<td>` per column) gives reliable chord-over-lyric alignment out of the box. `HtmlDivFormatter` requires non-trivial flex CSS to avoid column-height misalignment.
-- Style the formatter output via `SheetViewer`'s scoped `:deep()` selectors. Key classes: `.chord-sheet`, `.paragraph`, `table.row`, `td.chord`, `td.lyrics`, `.comment`.
-- **The "HTML inline" view is ours, not a library formatter.** chordsheetjs has no inline-chord HTML output, so `src/sheet/inline.ts` walks the `Song` AST (`song.bodyParagraphs` → `line.items`, branching on `instanceof ChordLyricsPair` / `Tag` / `SoftLineBreak`, chord text via `templateHelpers.renderChord`) into a flat token model that `InlineSheet.vue` renders as real nodes. Its own scoped styles — it does **not** share the `.sheet :deep()` table rules.
+- **Rendering**: use `HtmlDivFormatter` (not `HtmlTableFormatter`). Each line is a `.row` of self-contained `.column` (chord `<div>` above lyric `<div>`) units, so `flex-wrap: wrap` on `.row` folds a line too wide for the viewport onto the next line with every chord still above its own word — the mobile-wrapping requirement. `HtmlTableFormatter` emits one un-wrappable `<table>` per line and simply overflows a narrow screen. The one gotcha the table formatter didn't have: a chord-less column renders as `<div class="chord">\n</div>`, whose stray text node throws the lyric below it out of vertical alignment — `markChordCells()` empties those divs and `.sheet :deep(.chord:empty)::after { content: '\200b' }` gives them a zero-width line box. Consequence: chord text now sits inline with the lyric fragments in DOM order (visually above via flex-column), so text selection / `toContainText` over a line interleaves chords.
+- Style the formatter output via `SheetViewer`'s scoped `:deep()` selectors. Key classes: `.chord-sheet`, `.paragraph`, `.row`, `.column`, `.chord`, `.lyrics`, `.annotation`, `.comment`.
+- **The "HTML inline" view is ours, not a library formatter.** chordsheetjs has no inline-chord HTML output, so `src/sheet/inline.ts` walks the `Song` AST (`song.bodyParagraphs` → `line.items`, branching on `instanceof ChordLyricsPair` / `Tag` / `SoftLineBreak`, chord text via `templateHelpers.renderChord`) into a flat token model that `InlineSheet.vue` renders as real nodes. Its own scoped styles — it does **not** share the `.sheet :deep()` rules.
 - Future formatters: `ChordProFormatter`, `ChordsOverWordsFormatter` (plain text), `TextFormatter`. PDF via `jspdf` (already installed).
 - **Changing the key = `Song#changeKey(target)`.** Returns a **new** Song (original untouched), rewrites the `{key}` tag and every chord. **Throws** ("original key is unknown") when the sheet has no `{key: …}` directive — `song.key` is `null`, which is the feature gate (`store.canChangeKey`). It does **not** touch `{define}` tags, so a user-defined shape for an original-key chord won't match after a transpose and falls through to the library resolver. `keyHelpers.getKeys(key)` gives the target list (mode-matched). The store's `displaySong` computed applies it once and feeds every view + the diagram index; `store.song` stays pristine so the transform is idempotent.
 
 ### Chord-diagram gotchas (learned the hard way — see `src/chords/`)
 
-- **HTML diagram rendering is a stub.** Only `PdfFormatter` draws chord diagrams; the measured-HTML path just `console.log`s "stubbed out", and `HtmlTableFormatter` has no `chordDiagrams` config. The on-screen diagrams (`ChordDiagram.vue`) are drawn by us from `DiagramShape` geometry (`src/chords/diagram.ts`).
+- **HTML diagram rendering is a stub.** Only `PdfFormatter` draws chord diagrams; the measured-HTML path just `console.log`s "stubbed out", and the HTML formatters have no `chordDiagrams` config. The on-screen diagrams (`ChordDiagram.vue`) are drawn by us from `DiagramShape` geometry (`src/chords/diagram.ts`).
 - **The bundled chord library is guitar-only.** `song.chordDefinitions.withDefaults()` merges ~900 six-string shapes. Never call it for a non-guitar instrument — it silently injects guitar shapes. Every other instrument has its own generated table registered in `BUILTIN_SHAPES` (`src/chords/definitions.ts`): `ukulele.ts`, `tenor.ts` (CGDA), `tenorChicago.ts` (DGBE), all built by `scripts/generate-chord-shapes.mjs <id>`. `resolveDiagramChords` picks the bundled library *only* when `BUILTIN_SHAPES[instrument]` is undefined.
 - **`PdfFormatter` can't be told the neck has ≠6 strings.** `chordDiagrams.renderingConfig` has no `stringCount` / `fretCount`; the internal builder hard-codes 6/4. So for any `diagrams: 'builtin'` instrument (`INSTRUMENTS` in `types.ts`) we set `chordDiagrams.enabled: false` and prepend our own page via `drawDiagramSheet` (`src/chords/pdf.ts`) using the raw jsPDF from `formatter.getDocumentWrapper().doc`. Pass `jsPDF` as the 2nd arg to `formatter.format(song, jsPDF)`. `SheetViewer.vue` keys both decisions off `INSTRUMENTS[instrument].diagrams`, never an id literal.
 - **`{define}` lines with an `add: string N fret N finger N` clause are dropped without a warning.** `recoverDroppedDefinitions()` in `src/chords/definitions.ts` re-parses them from `rawText` after stripping the `add:` clauses.
 - **Chord-name spelling varies wildly** (`maj7`/`M7`, `7-9`/`7b9`, `F#`/`Gb`). `resolveDiagramChords()` layers: sheet define → recovered define → library exact → library by normalised name (`canonicalChordName` for the `BUILTIN_SHAPES` tables, which are canonically keyed; `Chord.normalize()` + enharmonic flip for the guitar lib, which keys sharps only) → `null`.
 - **Resolve once, look up many.** `buildDiagramIndex(song, instrument, rawText)` in `src/chords/shapes.ts` runs `resolveDiagramChords` + `toDiagramShape` a single time (the guitar merge is ~900 shapes) and returns `{ shapes[], byName }` — `shapes[]` sorted into musical alphabetical order by `compareChordNames` (root A–G → accidental → suffix), so the on-screen strip and the prepended PDF diagram page share one order; `resolveDiagramChords` itself stays first-appearance. `ChordDiagrams.vue`, `SheetViewer.vue`'s PDF path, and the click-to-peek popover all go through it; memoise it in a `computed` keyed on (song, instrument). `findShape(index, label)` strips brackets and falls back to `canonicalChordName` — the *displayed* chord name (from `templateHelpers.renderChord` / the formatter) diverges from `song.getChords()` under transpose/capo, so never match by string equality.
-- **Click-a-chord popover.** `SheetViewer.vue` opens `ChordPopover.vue` above a clicked chord in both HTML views. The `html-inline` view emits `chord-click` from real `<span>` nodes; the `html` view is `v-html`, so chord cells are reached by a delegated `@click`/`@keydown` on the `.sheet` wrapper (`event.target.closest('td.chord')`) and made focusable by `markChordCells()` (`src/sheet/interactive.ts`) before insertion. The popover works even when the diagram strip (`store.showDiagrams`) is off; an unresolvable chord still opens it with a "no diagram" note.
+- **Click-a-chord popover.** `SheetViewer.vue` opens `ChordPopover.vue` above a clicked chord in both HTML views. The `html-inline` view emits `chord-click` from real `<span>` nodes; the `html` view is `v-html`, so chord cells are reached by a delegated `@click`/`@keydown` on the `.sheet` wrapper (`event.target.closest('.chord')`) and made focusable by `markChordCells()` (`src/sheet/interactive.ts`) before insertion. The popover works even when the diagram strip (`store.showDiagrams`) is off; an unresolvable chord still opens it with a "no diagram" note.
 
 ## Commits
 

@@ -21,8 +21,10 @@ test('renders a picked chart with its header controls', async ({ page }) => {
   await expect(page.locator('.drop-zone')).toBeHidden()
   await expect(page.locator('.viewer-header')).toBeVisible()
 
-  // Lyrics from the fixture made it through the parser/formatter.
-  await expect(page.locator('.sheet-body')).toContainText('This is a line for the end-to-end test')
+  // Lyrics from the fixture made it through the parser/formatter. HtmlDivFormatter
+  // interleaves each chord with its lyric fragment in DOM order, so assert on a
+  // single fragment rather than the whole line.
+  await expect(page.locator('.sheet-body')).toContainText('line for the')
 
   // The instrument picker is a header <select> (moved out of the Display panel).
   const instrument = page.getByLabel('Instrument')
@@ -43,6 +45,22 @@ test('switching instrument redraws the chord diagrams', async ({ page }) => {
 
   await page.getByLabel('Instrument').selectOption({ label: 'Usual (GCEA)' })
   await expect(page.locator('.chord-diagrams svg').first()).toBeVisible()
+})
+
+test.describe('narrow viewport', () => {
+  test.use({ viewport: { width: 390, height: 844 } })
+
+  test('the HTML chart wraps instead of overflowing the screen', async ({ page }) => {
+    await page.goto('/')
+    await page.locator('input[type="file"]').setInputFiles(SAMPLE_CHART)
+    await expect(page.locator('.viewer-header')).toBeVisible()
+    await expect(page.locator('.sheet .row').first()).toBeVisible()
+
+    const overflows = await page.evaluate(
+      () => document.documentElement.scrollWidth > document.documentElement.clientWidth,
+    )
+    expect(overflows).toBe(false)
+  })
 })
 
 test('the Display panel no longer carries the instrument picker', async ({ page }) => {
