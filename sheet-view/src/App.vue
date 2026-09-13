@@ -1,8 +1,10 @@
 <script setup lang="ts">
 import { onMounted, ref, watchEffect } from 'vue'
+import type { Song } from 'chordsheetjs'
 import { useSheetStore } from '@/stores/sheet'
 import { useThemeStore } from '@/stores/theme'
 import { applyTheme } from '@/theme/apply'
+import { pageTitle } from '@/sheet/title'
 import DropZone from './components/DropZone.vue'
 import SheetViewer from './components/SheetViewer.vue'
 import AboutDialog from './components/AboutDialog.vue'
@@ -16,6 +18,15 @@ const theme = useThemeStore()
 // Push the active palette onto :root as inline custom properties whenever it
 // changes — this is what makes an explicit theme choice outrank the OS setting.
 watchEffect(() => applyTheme(theme.colors))
+
+// The tab title names the song being viewed (its {title}, or the filename it
+// was loaded from) and falls back to the bare app name otherwise — drop zone,
+// parse error, or after "Load another". store.song is markRaw'd so Pinia's
+// UnwrapRef loses class fidelity; cast back like SheetViewer.vue does.
+watchEffect(() => {
+  document.title = pageTitle(store.song as Song | null, store.filename)
+})
+
 const aboutDialog = ref<InstanceType<typeof AboutDialog>>()
 const licenseDialog = ref<InstanceType<typeof LicenseDialog>>()
 
