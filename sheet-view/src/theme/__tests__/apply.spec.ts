@@ -19,8 +19,8 @@ describe('applyTheme', () => {
     applyTheme(THEME_PRESETS.dark.colors, el)
     applyTheme(THEME_PRESETS.sepia.colors, el)
 
-    expect(el.style.getPropertyValue('--sv-background')).toBe('#f4ecd8')
-    expect(el.style.getPropertyValue('--sv-chord')).toBe('#a0522d')
+    expect(el.style.getPropertyValue('--sv-background')).toBe(THEME_PRESETS.sepia.colors.background)
+    expect(el.style.getPropertyValue('--sv-chord')).toBe(THEME_PRESETS.sepia.colors.chord)
   })
 
   it('defaults to document.documentElement', () => {

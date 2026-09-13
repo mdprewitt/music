@@ -135,7 +135,9 @@ const baseFretLabel = computed(() =>
   /* Sourced from the active theme: ink is the lyric colour, the grid/indicator
      greys are lyric-into-background blends, dots take the chord accent. */
   --cd-ink: var(--sv-lyrics);
-  --cd-grid: color-mix(in srgb, var(--sv-lyrics) 45%, var(--sv-background));
+  /* 60% (not 45%) is the lowest blend that clears the WCAG 1.4.11 3:1 non-text
+     minimum against the background in every preset (Sepia was 2.45:1). */
+  --cd-grid: color-mix(in srgb, var(--sv-lyrics) 60%, var(--sv-background));
   --cd-muted-ink: color-mix(in srgb, var(--sv-lyrics) 65%, var(--sv-background));
   --cd-indicator: color-mix(in srgb, var(--sv-lyrics) 70%, var(--sv-background));
   --cd-accent: var(--chord-accent, var(--sv-chord));

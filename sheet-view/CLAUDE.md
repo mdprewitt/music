@@ -195,7 +195,15 @@ playwright.config.ts          # testDir e2e/, chromium only, webServer = build +
 - `applyTheme(colors)` (`src/theme/apply.ts`) writes the five vars as **inline** styles on `document.documentElement`, which outranks any stylesheet rule including a `prefers-color-scheme` media query. `App.vue` calls it in a `watchEffect` on `theme.colors`.
 - OS scheme is honoured **once**: `theme.ts` seeds `themeId` from `matchMedia('(prefers-color-scheme: dark)')` only when nothing is stored. Guard `matchMedia` — jsdom lacks it.
 - To add a preset: widen the `ThemeId` union and `THEME_IDS` array in `src/theme/types.ts`, then add the matching entry (id + label + five colours) to `THEME_PRESETS` in `src/theme/presets.ts`. The selector and store enumerate `THEME_PRESETS` — no component changes.
+  Every preset must clear WCAG 2.2 AA contrast — `src/theme/__tests__/contrast.spec.ts` asserts each of the five colours (and everything `color-mix()` derives from them) against the real thresholds, so tune a new preset's hex values against that spec rather than by eye. `src/theme/contrast.ts` has the `contrastRatio`/`mixSrgb` helpers it's built on.
 - The PDF view is **not** themed — `PdfFormatter` / `src/chords/pdf.ts` carry their own ink constants. Stays black-on-white.
+
+## Accessibility
+
+- `--sv-focus` (`base.css`, aliased to `--sv-chord`) is the one focus-ring colour for the whole app, applied by a single global `:focus-visible { outline: 2px solid var(--sv-focus); outline-offset: 2px }` rule. Don't add per-component `outline: none` — if a component's default outline looks wrong against its own background, fix the component's background/padding, not the ring.
+- `.sr-only` lives in `base.css` (not per-component) — reuse it for anything that must reach screen readers but not the page (a `<legend>`, a live-region host). It sets both the legacy `clip` and modern `clip-path` for older AT.
+- The chord "buttons" in `SheetViewer.vue`'s `html` view and `InlineSheet.vue` share one convention for hover/focus/"diagram open": hover and open both paint `--sv-surface-hover`, but only `open` adds a persistent underline — the three states must stay visually distinguishable without relying on the (removed) `outline: none` + colour-only hack.
+- `prefers-reduced-motion` is respected for the one global animation (`body`'s theme-change colour transition in `base.css`); wrap any new transition/animation the same way.
 
 ## Testing conventions
 
