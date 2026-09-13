@@ -16,12 +16,25 @@
 
   --sv-surface: color-mix(in srgb, var(--sv-lyrics) 6%, var(--sv-background));
   --sv-surface-hover: color-mix(in srgb, var(--sv-lyrics) 12%, var(--sv-background));
-  --sv-border: color-mix(in srgb, var(--sv-lyrics) 25%, var(--sv-background));
+  /* 60% (not the old 25%) is the lowest blend that clears the WCAG 1.4.11 3:1
+     non-text minimum against both the background and --sv-surface in every
+     preset (worst case is Sepia, at ~3.5:1 / ~3.2:1) — see
+     src/theme/__tests__/contrast.spec.ts. */
+  --sv-border: color-mix(in srgb, var(--sv-lyrics) 60%, var(--sv-background));
   --sv-divider: color-mix(in srgb, var(--sv-lyrics) 12%, var(--sv-background));
   --sv-on-accent: var(--sv-background);
-  --sv-error: #c0392b;
+  /* Derived from --sv-lyrics (not a fixed hex) so it adapts per theme; a flat
+     #c0392b measured as low as 2.9:1 against --sv-error-bg on Dark. 60% of the
+     accent colour blended with the theme's ink clears 4.5:1 against both the
+     background and --sv-error-bg in every preset. */
+  --sv-error: color-mix(in srgb, #c0392b 60%, var(--sv-lyrics));
   --sv-error-bg: color-mix(in srgb, var(--sv-error) 12%, var(--sv-background));
   --sv-overlay: color-mix(in srgb, var(--sv-lyrics) 55%, transparent);
+  /* Focus ring colour. --sv-chord (not --sv-lyrics) is the only one of the
+     five authored colours that stays >=3:1 against the *filled* active-pill
+     background (RadioGroup's .active state) in every preset — see
+     src/theme/__tests__/contrast.spec.ts. */
+  --sv-focus: var(--sv-chord);
 }
 
 *,
@@ -32,13 +45,35 @@
   font-weight: normal;
 }
 
+/* The single authored focus indicator for the whole app (WCAG 2.4.7 / 2.4.11).
+   Components that need a different shape (e.g. RadioGroup's clipped native
+   radios) target `--sv-focus` directly rather than redefining the ring. */
+:focus-visible {
+  outline: 2px solid var(--sv-focus);
+  outline-offset: 2px;
+}
+
+/* Visually hide content while keeping it in the accessibility tree. Shared by
+   any sr-only text (RadioGroup's <legend>, live-region announcements, etc.).
+   Both the legacy `clip` and modern `clip-path` are set — some AT/browser
+   combinations still only honour the older property. */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
+
 body {
   min-height: 100vh;
   color: var(--sv-lyrics);
   background: var(--sv-background);
-  transition:
-    color 0.5s,
-    background-color 0.5s;
   line-height: 1.6;
   font-family:
     Inter,
@@ -53,8 +88,19 @@ body {
     'Droid Sans',
     'Helvetica Neue',
     sans-serif;
-  font-size: 15px;
+  /* rem, not a fixed px, so this still honours a user's browser font-size
+     preference (WCAG 1.4.4) — 0.9375rem renders identically to the old 15px
+     at the default 16px root. */
+  font-size: 0.9375rem;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  body {
+    transition:
+      color 0.5s,
+      background-color 0.5s;
+  }
 }

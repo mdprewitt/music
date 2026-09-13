@@ -455,11 +455,20 @@ button:hover {
   border-radius: 3px;
 }
 
+/* Hover, keyboard focus and "diagram open" are three distinct states and must
+   stay visually distinguishable (WCAG 1.4.1) — none of them suppresses the
+   shared `:focus-visible` ring from base.css. Hover and open share the same
+   background tint but "open" also gets a persistent underline so it doesn't
+   read as colour-only once focus moves elsewhere. */
 .sheet :deep(.chord[tabindex]:hover),
-.sheet :deep(.chord[tabindex]:focus-visible),
 .sheet :deep(.chord.chord-open) {
   background: var(--sv-surface-hover);
-  outline: none;
+}
+
+.sheet :deep(.chord.chord-open) {
+  text-decoration: underline;
+  text-decoration-thickness: 2px;
+  text-underline-offset: 2px;
 }
 
 .sheet :deep(.annotation) {

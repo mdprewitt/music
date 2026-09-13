@@ -14,7 +14,10 @@ export const THEME_PRESETS: Record<PresetId, ThemePreset> = {
     colors: {
       background: '#ffffff',
       lyrics: '#1a1a1a',
-      chord: '#0066cc',
+      // #0066cc measured 4.38:1 against --sv-surface-hover (a chord's own
+      // hover/focus/open background) — below the 4.5:1 text minimum. #005fbf
+      // clears it (4.87:1) while staying visually the same blue.
+      chord: '#005fbf',
       comment: '#767676',
       meta: '#1a1a1a',
     },
@@ -36,8 +39,12 @@ export const THEME_PRESETS: Record<PresetId, ThemePreset> = {
     colors: {
       background: '#f4ecd8',
       lyrics: '#3b2f22',
-      chord: '#a0522d',
-      comment: '#7a6a55',
+      // #a0522d measured 3.85:1 against --sv-surface-hover (below 4.5:1); #8b4513
+      // clears it (4.87:1) at the same warm-brown hue.
+      chord: '#8b4513',
+      // #7a6a55 measured 4.44:1 against the background — just under 4.5:1.
+      // #6f5f4a clears it (5.23:1).
+      comment: '#6f5f4a',
       meta: '#3b2f22',
     },
   },

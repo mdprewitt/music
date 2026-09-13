@@ -55,18 +55,6 @@ defineSlots<{
   min-inline-size: 0;
 }
 
-.sr-only {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  padding: 0;
-  margin: -1px;
-  overflow: hidden;
-  clip: rect(0, 0, 0, 0);
-  white-space: nowrap;
-  border: 0;
-}
-
 .option {
   display: flex;
   align-items: center;
@@ -91,7 +79,7 @@ defineSlots<{
 }
 
 .option:has(input:focus-visible) {
-  outline: 2px solid var(--sv-chord);
+  outline: 2px solid var(--sv-focus);
   outline-offset: 2px;
 }
 </style>

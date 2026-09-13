@@ -124,10 +124,8 @@ nav {
   cursor: pointer;
   font-size: inherit;
   padding: 0;
-  text-decoration: none;
-}
-
-.link-btn:hover {
+  /* Always underlined, not just on hover — colour alone doesn't reliably
+     distinguish these from surrounding footer text (WCAG 1.4.1). */
   text-decoration: underline;
 }
 </style>
