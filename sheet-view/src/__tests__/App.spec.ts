@@ -67,6 +67,32 @@ describe('App — ?view= URL parameter', () => {
   })
 })
 
+describe('App — page title', () => {
+  beforeEach(() => {
+    setActivePinia(createPinia())
+    document.title = 'Sheet-View'
+  })
+
+  it('is the bare app name with nothing loaded', () => {
+    mount(App)
+    expect(document.title).toBe('Sheet-View')
+  })
+
+  it('names the loaded song and reverts to the bare app name on reset', async () => {
+    mount(App)
+    const store = useSheetStore()
+    const file = new File([SAMPLE_CHORDPRO], 'param-song.cho', { type: 'text/plain' })
+    await store.loadFile(file)
+    await nextTick()
+
+    expect(document.title).toBe('Param Song - Sheet-View')
+
+    store.reset()
+    await nextTick()
+    expect(document.title).toBe('Sheet-View')
+  })
+})
+
 describe('App — theme wiring', () => {
   beforeEach(() => {
     installMemoryStorage()

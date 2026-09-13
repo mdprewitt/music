@@ -35,6 +35,10 @@ selector lets the user switch between:
 The first sheet opens in the HTML view; after that the viewer remembers the last view you chose
 and reopens each sheet in it.
 
+The browser tab title follows along too: it shows the song's name (its `{title}`, or the
+filename it was loaded from) while you're viewing a chart, and reverts to plain "Sheet-View"
+back on the drop zone — handy for telling several open tabs apart.
+
 **Key** transposes the whole chart — every chord, in all four views, and the chord diagrams —
 into a key that fits your voice or instrument. It only works for ChordPro files that carry a
 `{key: …}` line; without one the picker is disabled and says so. The dropdown lists the twelve

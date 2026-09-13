@@ -88,7 +88,15 @@ src/
                           #   memory (sheet-view:songKeys — JSON array of [id, key]
                           #   pairs, newest last; legacy {id:key} object migrated on
                           #   read; id = title‖artist or filename). The transpose
-                          #   itself is Song#changeKey.
+                          #   itself is Song#changeKey. metaText() (string |
+                          #   string[] | null|undefined -> string) is exported for
+                          #   title.ts to share.
+    title.ts              # pageTitle(song, filename) — the browser tab title:
+                          #   "<name> - Sheet-View", name = the song's {title} (via
+                          #   key.ts's metaText) or else the loaded filename with its
+                          #   extension stripped; "Sheet-View" alone with no song
+                          #   (drop zone / parse error). App.vue writes it to
+                          #   document.title in a watchEffect alongside applyTheme.
   chords/                 # chord-diagram feature (no Vue imports except *.vue)
     types.ts              # Instrument union + INSTRUMENTS registry (family/stringCount/tuning/
                           #   diagrams/aliases — every per-instrument fact), InstrumentSpec,

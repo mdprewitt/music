@@ -9,6 +9,7 @@ test('opens on the drop zone', async ({ page }) => {
   await expect(page.getByRole('heading', { name: 'Sheet-View', level: 1 })).toBeVisible()
   await expect(page.locator('.drop-zone')).toBeVisible()
   await expect(page.getByText('Drop a ChordPro file here')).toBeVisible()
+  await expect(page).toHaveTitle('Sheet-View')
 })
 
 test('renders a picked chart with its header controls', async ({ page }) => {
@@ -20,6 +21,9 @@ test('renders a picked chart with its header controls', async ({ page }) => {
   // DropZone gives way to SheetViewer.
   await expect(page.locator('.drop-zone')).toBeHidden()
   await expect(page.locator('.viewer-header')).toBeVisible()
+
+  // Tab title picks up the chart's {title: E2E Sample Song} directive.
+  await expect(page).toHaveTitle('E2E Sample Song - Sheet-View')
 
   // Lyrics from the fixture made it through the parser/formatter. HtmlDivFormatter
   // interleaves each chord with its lyric fragment in DOM order, so assert on a

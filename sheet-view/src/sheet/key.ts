@@ -42,7 +42,7 @@ function parseKeyEntries(raw: string): KeyEntry[] | null {
 }
 
 /** A metadata value can be a string, an array of strings, or absent. */
-function metaText(value: string | string[] | null | undefined): string {
+export function metaText(value: string | string[] | null | undefined): string {
   return (Array.isArray(value) ? value.join(' ') : (value ?? '')).trim()
 }
 
