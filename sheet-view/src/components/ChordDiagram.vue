@@ -1,8 +1,20 @@
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, useId } from 'vue'
+import { describeShape } from '@/chords/diagram'
 import type { DiagramShape } from '@/chords/types'
 
 const props = defineProps<{ shape: DiagramShape }>()
+
+// role="img" collapses the SVG's own <text> nodes from the accessibility
+// tree, so the fingering (not just the chord's name) reaches a screen reader
+// only through this label (WCAG 1.1.1). <title>/<desc> are included too for
+// SVG consumers that read those directly instead of aria-label.
+const description = computed(() => describeShape(props.shape))
+// The same shape can be on screen twice at once (the strip + a popover for
+// the chord the reader just clicked) — useId() (not a name-derived id) keeps
+// each instance's <title>/<desc> ids unique per the DOM's id contract.
+const titleId = useId()
+const descId = useId()
 
 // All numbers are SVG user units; the whole diagram is scaled via font-size on
 // the host element (width/height are in `em`).
@@ -66,8 +78,13 @@ const baseFretLabel = computed(() =>
     class="chord-diagram"
     :viewBox="viewBox"
     role="img"
-    :aria-label="`${shape.name} chord diagram`"
+    :aria-label="`${shape.name} chord diagram. ${description}`"
   >
+    <!-- Redundant with aria-label (which wins the accessible name/description
+         computation) for any SVG consumer that reads <title>/<desc> directly
+         instead — a bare <img>/object embed, an SVG editor, etc. -->
+    <title :id="titleId">{{ shape.name }} chord diagram</title>
+    <desc :id="descId">{{ description }}</desc>
     <text class="cd-title" :x="WIDTH / 2" :y="12">{{ shape.name }}</text>
 
     <g class="cd-indicators">

@@ -16,6 +16,7 @@ defineProps<{
     v-if="shapes.length"
     class="chord-diagrams"
     :class="[`pos-${position ?? 'top'}`, { pinned }]"
+    role="group"
     aria-label="Chord diagrams"
   >
     <!-- buildDiagramIndex dedups shapes by name, so shape.name is a unique, stable key. -->

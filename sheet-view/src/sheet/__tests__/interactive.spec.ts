@@ -18,6 +18,12 @@ describe('markChordCells', () => {
     expect([...marked].map((c) => c.textContent)).toEqual(['C', 'G7'])
   })
 
+  it('starts every chord button collapsed (SheetViewer.vue flips this on open/close)', () => {
+    const doc = new DOMParser().parseFromString(markChordCells(html), 'text/html')
+    const marked = doc.querySelectorAll('.chord[role="button"]')
+    expect([...marked].every((c) => c.getAttribute('aria-expanded') === 'false')).toBe(true)
+  })
+
   it('empties the chord-less spacer cell and leaves it inert', () => {
     const doc = new DOMParser().parseFromString(markChordCells(html), 'text/html')
     const empty = [...doc.querySelectorAll('.chord')].find((c) => !c.textContent?.trim())

@@ -72,6 +72,7 @@ function activateChord(event: Event, name: string) {
           :class="[seg.cls, { clickable: seg.chord }]"
           :role="seg.chord ? 'button' : undefined"
           :tabindex="seg.chord ? 0 : undefined"
+          :aria-expanded="seg.chord ? 'false' : undefined"
           @click="seg.chord && activateChord($event, seg.chord)"
           @keydown.enter.prevent="seg.chord && activateChord($event, seg.chord)"
           @keydown.space.prevent="seg.chord && activateChord($event, seg.chord)"

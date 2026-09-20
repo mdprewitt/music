@@ -30,4 +30,9 @@ describe('ChordDiagrams', () => {
     const wrapper = mount(ChordDiagrams, { props: { shapes } })
     expect(wrapper.find('.chord-diagrams').classes()).toContain('pos-top')
   })
+
+  it('carries role="group" so its aria-label is exposed (a role-less div ignores aria-label)', () => {
+    const wrapper = mount(ChordDiagrams, { props: { shapes } })
+    expect(wrapper.find('.chord-diagrams').attributes('role')).toBe('group')
+  })
 })

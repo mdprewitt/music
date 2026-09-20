@@ -207,6 +207,26 @@ describe('SheetViewer', () => {
       const popover = wrapper.find('.chord-popover')
       expect(popover.exists()).toBe(true)
       expect(popover.find('svg.chord-diagram').exists()).toBe(true)
+      // role="group", not "dialog" — it's a disclosure, not a modal (4.1.2).
+      expect(popover.attributes('role')).toBe('group')
+    })
+
+    it('reflects the open popover on the triggering chord (aria-expanded/aria-controls, 4.1.2)', async () => {
+      const { wrapper } = await mountWithSong('html')
+      const chord = wrapper.find('.sheet .chord[role="button"]')
+      expect(chord.attributes('aria-expanded')).toBe('false')
+      expect(chord.attributes('aria-controls')).toBeUndefined()
+
+      await chord.trigger('click')
+      await nextTick()
+      const popoverId = wrapper.find('.chord-popover').attributes('id')
+      expect(chord.attributes('aria-expanded')).toBe('true')
+      expect(chord.attributes('aria-controls')).toBe(popoverId)
+
+      await chord.trigger('click') // toggles shut
+      await nextTick()
+      expect(chord.attributes('aria-expanded')).toBe('false')
+      expect(chord.attributes('aria-controls')).toBeUndefined()
     })
 
     it('makes real formatter chord cells focusable and keyboard-activatable', async () => {
@@ -232,9 +252,13 @@ describe('SheetViewer', () => {
 
     it('opens a popover from a chord in the HTML inline view', async () => {
       const { wrapper } = await mountWithSong('html-inline')
-      await wrapper.find('.inline-sheet .chord').trigger('click')
+      const chord = wrapper.find('.inline-sheet .chord')
+      expect(chord.attributes('aria-expanded')).toBe('false')
+      await chord.trigger('click')
       await nextTick()
       expect(wrapper.find('.chord-popover svg.chord-diagram').exists()).toBe(true)
+      expect(chord.attributes('aria-expanded')).toBe('true')
+      expect(chord.attributes('aria-controls')).toBe(wrapper.find('.chord-popover').attributes('id'))
     })
 
     it('closes the popover on Escape', async () => {
