@@ -5,6 +5,7 @@ import { PdfFormatter } from 'chordsheetjs/pdf'
 import { drawDiagramSheet } from '@/chords/pdf'
 import SheetViewer from '../SheetViewer.vue'
 import { useSheetStore } from '@/stores/sheet'
+import { useAnnouncerStore } from '@/stores/announcer'
 
 // chordsheetjs' own diagram renderer hard-codes a six-string neck, so SheetViewer
 // only lets it draw for `diagrams: 'chordsheetjs'` instruments (guitar) and
@@ -81,5 +82,30 @@ describe('SheetViewer — PDF diagram routing', () => {
     expect(wrapper.find('.error').exists()).toBe(false)
     expect(lastFormatterConfig().layout.chordDiagrams.enabled).toBe(false)
     expect(drawDiagramSheet).toHaveBeenCalledTimes(1)
+  })
+
+  it('announces PDF generation and readiness, and marks the container aria-busy while it builds (4.1.3)', async () => {
+    const { wrapper } = await mountPdf('guitar')
+    // By the time flushPromises() resolves in mountPdf(), the mocked (instant)
+    // generatePDF() has already settled — assert the terminal state directly.
+    expect(useAnnouncerStore().message).toBe('PDF ready')
+    expect(wrapper.find('.pdf').attributes('aria-busy')).toBe('false')
+  })
+
+  it('announces the PDF error and keeps the container busy when generation fails', async () => {
+    // A plain function, not an arrow, like the module-level mock above — the
+    // component calls `new PdfFormatter(...)`.
+    vi.mocked(PdfFormatter).mockImplementationOnce(function (): FakeFormatter {
+      return {
+        format: vi.fn<() => void>(),
+        getDocumentWrapper: () => ({ doc: {}, pageSize: { width: 600, height: 800 } }),
+        generatePDF: vi.fn<() => Promise<Blob>>(async () => {
+          throw new Error('boom')
+        }),
+      }
+    })
+    const { wrapper } = await mountPdf('guitar')
+    expect(wrapper.find('.error[role="alert"]').text()).toBe('boom')
+    expect(useAnnouncerStore().message).toBe('boom')
   })
 })

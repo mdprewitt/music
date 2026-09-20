@@ -1,19 +1,34 @@
 <script setup lang="ts">
-import { onMounted, ref, watchEffect } from 'vue'
+import { onMounted, ref, watch, watchEffect } from 'vue'
 import type { Song } from 'chordsheetjs'
 import { useSheetStore } from '@/stores/sheet'
 import { useThemeStore } from '@/stores/theme'
+import { useAnnouncerStore } from '@/stores/announcer'
 import { applyTheme } from '@/theme/apply'
 import { pageTitle } from '@/sheet/title'
 import DropZone from './components/DropZone.vue'
 import SheetViewer from './components/SheetViewer.vue'
 import AboutDialog from './components/AboutDialog.vue'
 import LicenseDialog from './components/LicenseDialog.vue'
+import LiveAnnouncer from './components/LiveAnnouncer.vue'
 // Same drawing as public/favicon.svg — keep the two in sync.
 import ukuleleLogo from '@/assets/ukulele.svg'
 
 const store = useSheetStore()
 const theme = useThemeStore()
+const announcer = useAnnouncerStore()
+
+// store.parseError is set from two places — store.parse() and the ?view=
+// failure handler below — so it's watched here (mounted for the app's whole
+// lifetime, before the ref is ever set) rather than in SheetViewer.vue, which
+// mounts/unmounts per sheet and would miss whichever change happened first
+// (WCAG 4.1.3: a parse failure was previously silent to a screen reader).
+watch(
+  () => store.parseError,
+  (error) => {
+    if (error) announcer.announce(error)
+  },
+)
 
 // Push the active palette onto :root as inline custom properties whenever it
 // changes — this is what makes an explicit theme choice outrank the OS setting.
@@ -52,6 +67,7 @@ function openLicense() {
 
 <template>
   <div class="app-container">
+    <LiveAnnouncer />
     <header>
       <img :src="ukuleleLogo" alt="" class="logo" width="32" height="32" />
       <h1>Sheet-View</h1>
