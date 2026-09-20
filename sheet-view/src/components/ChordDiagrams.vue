@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { ref } from 'vue'
 import type { DiagramPosition, DiagramShape } from '@/chords/types'
 import ChordDiagram from './ChordDiagram.vue'
 
@@ -9,11 +10,20 @@ defineProps<{
   position?: DiagramPosition
   pinned?: boolean
 }>()
+
+// Exposed so SheetViewer.vue can measure this strip's rendered height with a
+// ResizeObserver when it's pinned, and give the chart's chord cells a
+// matching scroll-margin — otherwise a focused chord can end up scrolled
+// underneath the pinned (position: sticky) strip (WCAG 2.4.11). `null` while
+// `shapes` is empty, since the root itself is v-if'd out then.
+const el = ref<HTMLElement | null>(null)
+defineExpose({ el })
 </script>
 
 <template>
   <div
     v-if="shapes.length"
+    ref="el"
     class="chord-diagrams"
     :class="[`pos-${position ?? 'top'}`, { pinned }]"
     role="group"

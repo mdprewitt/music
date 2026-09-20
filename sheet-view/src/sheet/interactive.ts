@@ -92,21 +92,29 @@ function sanitizeElement(el: Element): void {
 }
 
 /**
- * Reduce untrusted formatter markup to a safe element/attribute set, then add
- * `tabindex="0"` and `role="button"` to every `.chord` cell that holds a chord
- * name. The formatter also emits chord-less `.chord` spacer cells; those are
- * emptied (so `.chord:empty` styling applies) and left inert.
+ * Reduce untrusted formatter markup to a safe element/attribute set, then mark
+ * every `.chord` cell that holds a chord name as a `role="button"`. Only the
+ * *first* one gets `tabindex="0"` — the rest get `-1` (a roving tab stop, per
+ * the ARIA APG composite-widget pattern: WCAG 2.4.3 — every chord in a long
+ * chart being its own tab stop, with no way to skip past them, was previously
+ * unnavigable). SheetViewer.vue's delegated keydown handler
+ * (`handleRovingArrowKey`, `src/sheet/rovingFocus.ts`) moves the `0` with the
+ * arrow keys, Home and End. The formatter also emits chord-less `.chord`
+ * spacer cells; those are emptied (so `.chord:empty` styling applies) and
+ * left inert.
  */
 export function markChordCells(html: string): string {
   const doc = new DOMParser().parseFromString(html, 'text/html')
   sanitizeElement(doc.body)
+  let isFirst = true
   for (const cell of doc.querySelectorAll('.chord')) {
     if (!cell.textContent?.trim()) {
       // Drop the lone whitespace text node so the :empty rule matches.
       cell.textContent = ''
       continue
     }
-    cell.setAttribute('tabindex', '0')
+    cell.setAttribute('tabindex', isFirst ? '0' : '-1')
+    isFirst = false
     cell.setAttribute('role', 'button')
     // Reflects whether this chord's diagram popover is open; SheetViewer.vue
     // flips it (and sets/clears aria-controls) imperatively in openFor()/

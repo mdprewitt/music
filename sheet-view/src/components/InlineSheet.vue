@@ -1,12 +1,47 @@
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, nextTick, onMounted, ref, watch } from 'vue'
 import type { Song } from 'chordsheetjs'
 import { toInlineSheet, type InlineLine } from '@/sheet/inline'
+import { handleRovingArrowKey } from '@/sheet/rovingFocus'
 
-const props = defineProps<{ song: Song }>()
+const props = defineProps<{
+  song: Song
+  /** Id of SheetViewer.vue's shared arrow-key hint, for aria-describedby. */
+  navHintId?: string
+}>()
 const emit = defineEmits<{ 'chord-click': [el: HTMLElement, name: string] }>()
 
 const sheet = computed(() => toInlineSheet(props.song))
+
+// Every chord is one roving tab stop, not one each (WCAG 2.4.3) — mirrors
+// SheetViewer.vue's html view (markChordCells() + rovingFocus.ts). Chord
+// spans default to tabindex="-1" in the template; this promotes the first
+// one to "0" whenever the sheet (re)renders, since a fresh set of <span>s
+// has no memory of which was last focused. Arrow-key navigation itself is a
+// delegated keydown below, reusing the same handleRovingArrowKey().
+const root = ref<HTMLElement | null>(null)
+
+function seedRovingTabindex() {
+  const cells = root.value?.querySelectorAll<HTMLElement>('.chord.clickable')
+  // Explicitly reset every cell, not just promote the first — Vue's patcher
+  // skips rewriting an attribute whose *bound template expression* hasn't
+  // changed since its own last render, so it won't know to undo a previous
+  // roving-focus move that set some other cell's tabindex out of band.
+  cells?.forEach((cell, i) => cell.setAttribute('tabindex', i === 0 ? '0' : '-1'))
+}
+
+onMounted(seedRovingTabindex)
+watch(sheet, async () => {
+  await nextTick()
+  seedRovingTabindex()
+})
+
+function onKeydown(event: KeyboardEvent) {
+  const cell = (event.target as HTMLElement).closest('.chord.clickable') as HTMLElement | null
+  if (!cell || !root.value) return
+  const cells = Array.from(root.value.querySelectorAll<HTMLElement>('.chord.clickable'))
+  handleRovingArrowKey(event, cells, cell)
+}
 
 interface Segment {
   cls: string
@@ -50,7 +85,7 @@ function activateChord(event: Event, name: string) {
 </script>
 
 <template>
-  <div class="inline-sheet">
+  <div ref="root" class="inline-sheet" role="group" :aria-describedby="navHintId" @keydown="onKeydown">
     <h1 v-if="sheet.title" class="title">{{ sheet.title }}</h1>
     <h2 v-if="sheet.subtitle" class="subtitle">{{ sheet.subtitle }}</h2>
 
@@ -71,7 +106,7 @@ function activateChord(event: Event, name: string) {
           :key="si"
           :class="[seg.cls, { clickable: seg.chord }]"
           :role="seg.chord ? 'button' : undefined"
-          :tabindex="seg.chord ? 0 : undefined"
+          :tabindex="seg.chord ? -1 : undefined"
           :aria-expanded="seg.chord ? 'false' : undefined"
           @click="seg.chord && activateChord($event, seg.chord)"
           @keydown.enter.prevent="seg.chord && activateChord($event, seg.chord)"

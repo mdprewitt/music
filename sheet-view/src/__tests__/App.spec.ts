@@ -127,3 +127,23 @@ describe('App — theme wiring', () => {
     expect(root.getPropertyValue('--sv-background')).toBe(THEME_PRESETS.stage.colors.background)
   })
 })
+
+describe('App — skip link', () => {
+  beforeEach(() => {
+    setActivePinia(createPinia())
+  })
+
+  it('is the first focusable element and targets a focusable #main-content (2.4.1)', () => {
+    const wrapper = mount(App, { attachTo: document.body })
+    const skipLink = wrapper.find('a.skip-link')
+    expect(skipLink.exists()).toBe(true)
+    expect(skipLink.attributes('href')).toBe('#main-content')
+
+    const main = wrapper.find('#main-content')
+    expect(main.element.tagName).toBe('MAIN')
+    // tabindex="-1": not in the Tab order itself, but a valid target for the
+    // skip link to move programmatic focus to.
+    expect(main.attributes('tabindex')).toBe('-1')
+    wrapper.unmount()
+  })
+})

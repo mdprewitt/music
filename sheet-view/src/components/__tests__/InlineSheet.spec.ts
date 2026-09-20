@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { mount } from '@vue/test-utils'
+import { flushPromises, mount } from '@vue/test-utils'
 import { ChordProParser, type Song } from 'chordsheetjs'
 import InlineSheet from '../InlineSheet.vue'
 
@@ -58,5 +58,65 @@ describe('InlineSheet', () => {
       props: { song: songOf('[C]Amazing [G]grace, how [C]sweet the sound') },
     })
     expect(wrapper.find('p.line').text()).toBe('[C]Amazing [G]grace, how [C]sweet the sound')
+  })
+
+  it('is a labelled group describing the arrow-key convention (2.4.3)', () => {
+    const wrapper = mount(InlineSheet, {
+      props: { song: songOf('[C]hi'), navHintId: 'hint-id' },
+    })
+    expect(wrapper.attributes('role')).toBe('group')
+    expect(wrapper.attributes('aria-describedby')).toBe('hint-id')
+  })
+
+  describe('roving tab stop', () => {
+    it('seeds only the first chord with tabindex="0" — the rest get "-1"', () => {
+      const wrapper = mount(InlineSheet, {
+        props: { song: songOf('[C]Amazing [G]grace, [Am]how [F]sweet') },
+      })
+      const chords = wrapper.findAll('.chord.clickable')
+      expect(chords.map((c) => c.attributes('tabindex'))).toEqual(['0', '-1', '-1', '-1'])
+    })
+
+    it('re-seeds the first chord when the song changes', async () => {
+      const wrapper = mount(InlineSheet, { props: { song: songOf('[C]hi [G]there') } })
+      const cells = () => wrapper.findAll('.chord.clickable')
+      // Move the tab stop off the first chord, then swap in a new song.
+      await cells()[0]!.trigger('keydown', { key: 'ArrowRight' })
+      expect(cells()[1]!.attributes('tabindex')).toBe('0')
+
+      await wrapper.setProps({ song: songOf('[Am]new [F]song') })
+      // The re-seed watcher awaits its own nextTick() beyond setProps()'s —
+      // same idiom as announcer.announce() (see stores/announcer.ts).
+      await flushPromises()
+      const fresh = cells()
+      expect(fresh.map((c) => c.attributes('tabindex'))).toEqual(['0', '-1'])
+    })
+
+    it('moves the tab stop with the arrow keys', async () => {
+      const wrapper = mount(InlineSheet, {
+        props: { song: songOf('[C]a [G]b [Am]c') },
+      })
+      const cells = () => wrapper.findAll('.chord.clickable')
+
+      await cells()[0]!.trigger('keydown', { key: 'ArrowRight' })
+      expect(cells().map((c) => c.attributes('tabindex'))).toEqual(['-1', '0', '-1'])
+
+      await cells()[1]!.trigger('keydown', { key: 'ArrowLeft' })
+      expect(cells().map((c) => c.attributes('tabindex'))).toEqual(['0', '-1', '-1'])
+
+      await cells()[0]!.trigger('keydown', { key: 'End' })
+      expect(cells().map((c) => c.attributes('tabindex'))).toEqual(['-1', '-1', '0'])
+
+      await cells()[2]!.trigger('keydown', { key: 'Home' })
+      expect(cells().map((c) => c.attributes('tabindex'))).toEqual(['0', '-1', '-1'])
+    })
+
+    it('clamps at the last chord instead of wrapping', async () => {
+      const wrapper = mount(InlineSheet, { props: { song: songOf('[C]a [G]b') } })
+      const cells = () => wrapper.findAll('.chord.clickable')
+      await cells()[0]!.trigger('keydown', { key: 'ArrowRight' })
+      await cells()[1]!.trigger('keydown', { key: 'ArrowRight' })
+      expect(cells().map((c) => c.attributes('tabindex'))).toEqual(['-1', '0'])
+    })
   })
 })

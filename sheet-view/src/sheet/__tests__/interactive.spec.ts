@@ -11,11 +11,21 @@ describe('markChordCells', () => {
     '<div class="column"><div class="chord">G7</div><div class="lyrics">how</div></div>' +
     '</div>'
 
-  it('makes every non-empty chord cell focusable and a button', () => {
+  it('makes every non-empty chord cell a button', () => {
     const out = markChordCells(html)
     const doc = new DOMParser().parseFromString(out, 'text/html')
-    const marked = doc.querySelectorAll('.chord[tabindex="0"][role="button"]')
+    const marked = doc.querySelectorAll('.chord[role="button"]')
     expect([...marked].map((c) => c.textContent)).toEqual(['C', 'G7'])
+  })
+
+  it('seeds a roving tab stop: only the first non-empty chord gets tabindex="0" (2.4.3)', () => {
+    // The rest get "-1" — still focusable programmatically, but not by Tab —
+    // so a long chart is one tab stop, not one per chord. SheetViewer.vue's
+    // delegated keydown handler (src/sheet/rovingFocus.ts) moves the "0" with
+    // the arrow keys.
+    const doc = new DOMParser().parseFromString(markChordCells(html), 'text/html')
+    const marked = [...doc.querySelectorAll('.chord[role="button"]')]
+    expect(marked.map((c) => c.getAttribute('tabindex'))).toEqual(['0', '-1'])
   })
 
   it('starts every chord button collapsed (SheetViewer.vue flips this on open/close)', () => {

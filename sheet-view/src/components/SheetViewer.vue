@@ -10,6 +10,7 @@ import { describeShape } from '@/chords/diagram'
 import { INSTRUMENTS } from '@/chords/types'
 import { drawDiagramSheet, type PdfDoc } from '@/chords/pdf'
 import { markChordCells } from '@/sheet/interactive'
+import { handleRovingArrowKey } from '@/sheet/rovingFocus'
 import ViewSelector from './ViewSelector.vue'
 import InstrumentSelector from './InstrumentSelector.vue'
 import KeySelector from './KeySelector.vue'
@@ -23,6 +24,10 @@ const announcer = useAnnouncerStore()
 // store.displaySong is store.song, or a re-keyed copy when a target key is set.
 // It is markRaw(Song), but Pinia's UnwrapRef loses class fidelity — cast back.
 const song = computed(() => (store.displaySong ? (store.displaySong as Song) : null))
+
+// Names the arrow-key convention (WCAG 2.4.3) for both HTML views' roving tab
+// stop — see the .sr-only <p> in the template.
+const chordNavHintId = useId()
 
 // The formatter output is untrusted markup (HtmlDivFormatter does not escape
 // chart text). markChordCells sanitizes it to a safe element/attribute set
@@ -141,6 +146,45 @@ watch(
   },
 )
 
+// --- Keep a focused chord from landing under the pinned diagram strip -------
+
+// Only pos-top/pos-bottom overlay the chart when pinned (position: sticky);
+// pos-right sits beside it. Measured (not a fixed guess) because the strip's
+// height varies with instrument/shape count and how many diagrams wrap.
+const diagramsRef = ref<InstanceType<typeof ChordDiagrams> | null>(null)
+const pinnedStripSize = ref(0)
+let stripResizeObserver: ResizeObserver | null = null
+
+watch(
+  diagramsRef,
+  (instance) => {
+    stripResizeObserver?.disconnect()
+    stripResizeObserver = null
+    const el = instance?.el
+    // jsdom lacks ResizeObserver (as it lacks matchMedia) — guard it, same
+    // idiom as DisplayPanel.vue's own measure-and-clamp ResizeObserver.
+    if (!el || typeof ResizeObserver === 'undefined') {
+      pinnedStripSize.value = 0
+      return
+    }
+    // getBoundingClientRect() (border-box), not entries[0].contentRect
+    // (content-box only) — the strip's own padding/border are still part of
+    // what visually overlaps the chart underneath it once pinned.
+    stripResizeObserver = new ResizeObserver(() => {
+      pinnedStripSize.value = el.getBoundingClientRect().height
+    })
+    stripResizeObserver.observe(el)
+  },
+  { immediate: true },
+)
+
+const pinnedGapStyle = computed(() => {
+  const pinnedOverlay = store.pinDiagrams && store.diagramPosition !== 'right'
+  return pinnedOverlay ? { '--pinned-strip-size': `${pinnedStripSize.value}px` } : {}
+})
+
+onBeforeUnmount(() => stripResizeObserver?.disconnect())
+
 // --- Click a chord → show its diagram in a popover above it -------------------
 
 const sheetBody = ref<HTMLElement | null>(null)
@@ -198,12 +242,21 @@ function openFor(el: HTMLElement, rawName: string) {
   )
 }
 
-// The HTML div view is v-html, so its chord cells get a delegated handler.
+// The HTML div view is v-html, so its chord cells get a delegated handler:
+// Enter/Space opens the diagram popover, the arrow keys/Home/End move the
+// roving tab stop `markChordCells()` seeds (WCAG 2.4.3).
 function onSheetActivate(event: MouseEvent | KeyboardEvent) {
-  if (event instanceof KeyboardEvent && event.key !== 'Enter' && event.key !== ' ') return
-  const cell = (event.target as HTMLElement).closest('.chord') as HTMLElement | null
+  const cell = (event.target as HTMLElement).closest('.chord[role="button"]') as HTMLElement | null
   if (!cell) return
-  if (event instanceof KeyboardEvent) event.preventDefault()
+  if (event instanceof KeyboardEvent) {
+    const container = cell.closest('.sheet')
+    if (container) {
+      const cells = Array.from(container.querySelectorAll<HTMLElement>('.chord[role="button"]'))
+      if (handleRovingArrowKey(event, cells, cell)) return
+    }
+    if (event.key !== 'Enter' && event.key !== ' ') return
+    event.preventDefault()
+  }
   openFor(cell, cell.textContent ?? '')
 }
 
@@ -284,18 +337,28 @@ watch(
       ref="sheetBody"
       class="sheet-body"
       :class="[`pos-${store.diagramPosition}`, { pinned: store.pinDiagrams }]"
+      :style="pinnedGapStyle"
     >
       <ChordDiagrams
         v-if="song && store.showDiagrams"
+        ref="diagramsRef"
         :shapes="diagramIndex?.shapes ?? []"
         :position="store.diagramPosition"
         :pinned="store.pinDiagrams"
       />
+      <!-- Every chord is one roving tab stop (WCAG 2.4.3) — chordNavHintId
+           names the arrow-key convention for whoever tabs onto it. -->
+      <p v-if="song" :id="chordNavHintId" class="sr-only">
+        Use the arrow keys to move between chords. Press Enter or Space to view a chord's
+        diagram.
+      </p>
       <!-- v-html input is sanitized by markChordCells (formatter output is untrusted
            chart text). Chord cells inside it are focusable and handled by delegation. -->
       <div
         v-if="store.viewFormat === 'html'"
         class="sheet"
+        role="group"
+        :aria-describedby="chordNavHintId"
         @click="onSheetActivate"
         @keydown="onSheetActivate"
         v-html="html"
@@ -303,6 +366,7 @@ watch(
       <InlineSheet
         v-else-if="song && store.viewFormat === 'html-inline'"
         :song="song"
+        :nav-hint-id="chordNavHintId"
         @chord-click="openFor"
       />
       <pre v-else class="plain">{{ text }}</pre>
@@ -496,6 +560,12 @@ button:hover {
 .sheet :deep(.chord[tabindex]) {
   cursor: pointer;
   border-radius: 3px;
+  /* --pinned-strip-size (set on .sheet-body by SheetViewer.vue, measured off
+     the actual ChordDiagrams strip) keeps a focused chord from landing under
+     the pinned (position: sticky) strip when it's at the top or bottom
+     (WCAG 2.4.11). :deep() also reaches InlineSheet.vue's chord spans, which
+     share this same block. */
+  scroll-margin-block: var(--pinned-strip-size, 0px);
 }
 
 /* Hover, keyboard focus and "diagram open" are three distinct states and must
