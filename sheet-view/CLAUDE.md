@@ -69,8 +69,12 @@ src/
                           #   sheet-view:customColors. OS scheme honoured once.
     storage.ts            # readStored()/writeStored() — localStorage helpers
                           #   shared by sheet.ts and theme.ts (swallow exceptions)
+    announcer.ts          # Pinia store: message + announce(text) — the one shared
+                          #   WCAG 4.1.3 status-message live region (LiveAnnouncer.vue
+                          #   renders it, mounted once in App.vue). Not persisted.
     __tests__/sheet.spec.ts
     __tests__/theme.spec.ts
+    __tests__/announcer.spec.ts
   theme/                  # colour-theming feature (no Vue imports)
     types.ts              # ThemeId, ThemeColors, ThemePreset, isThemeId/isThemeColors
     presets.ts            # THEME_PRESETS — the 4 standard palettes (light/dark/sepia/stage)
@@ -145,6 +149,9 @@ src/
     ChordDiagrams.vue     # the strip of diagrams above the chart
     ChordPopover.vue      # anchored popover — one diagram shown above a clicked chord
     InlineSheet.vue       # renders toInlineSheet() output — the "HTML inline" view
+    LiveAnnouncer.vue     # role="status" aria-live="polite" sr-only div reflecting
+                          #   stores/announcer.ts; mount exactly once (App.vue) — a
+                          #   second instance would double-announce
     __tests__/
   assets/
     base.css              # --sv-* theme palette + derived tokens, reset (do not import directly in components)
@@ -204,6 +211,7 @@ playwright.config.ts          # testDir e2e/, chromium only, webServer = build +
 - `.sr-only` lives in `base.css` (not per-component) — reuse it for anything that must reach screen readers but not the page (a `<legend>`, a live-region host). It sets both the legacy `clip` and modern `clip-path` for older AT.
 - The chord "buttons" in `SheetViewer.vue`'s `html` view and `InlineSheet.vue` share one convention for hover/focus/"diagram open": hover and open both paint `--sv-surface-hover`, but only `open` adds a persistent underline — the three states must stay visually distinguishable without relying on the (removed) `outline: none` + colour-only hack.
 - `prefers-reduced-motion` is respected for the one global animation (`body`'s theme-change colour transition in `base.css`); wrap any new transition/animation the same way.
+- Status announcements (WCAG 4.1.3) go through `useAnnouncerStore` (`src/stores/announcer.ts`) — call its `announce(text)`, never mount a one-off live region. `LiveAnnouncer.vue` renders the single shared `role="status" aria-live="polite"` region and is mounted exactly once, in `App.vue`; a second instance would double-announce. `announce()` clears the message and sets it on the next tick, so the same text announced twice in a row still triggers (tests need an extra `await flushPromises()` beyond the state change itself to observe the final value). Pair it with `role="alert"` on any persistent visible error element (`store.parseError`, `pdfError`, `DropZone`'s `loadError`) — belt-and-suspenders, since not every screen reader reliably catches a freshly-inserted alert-role node. Watch a store field that's also mutated by non-UI code (like `store.parseError`, set both by `store.parse()` and by `App.vue`'s `?view=` catch) from a component mounted for the app's whole lifetime (`App.vue`), not one that mounts per sheet (`SheetViewer.vue`) — the latter's watcher baseline would already reflect an earlier change and silently miss it.
 
 ## Testing conventions
 

@@ -5,6 +5,7 @@ import { nextTick } from 'vue'
 import SheetViewer from '../SheetViewer.vue'
 import { useSheetStore } from '@/stores/sheet'
 import type { ViewFormat } from '@/stores/sheet'
+import { useAnnouncerStore } from '@/stores/announcer'
 import { installMemoryStorage } from '@/__tests__/memoryStorage'
 
 const SAMPLE_CHORDPRO = '{title: Test}\n{artist: Artist}\n\n[C]Hello [G]world'
@@ -109,6 +110,31 @@ describe('SheetViewer', () => {
     expect(text).not.toContain('G')
   })
 
+  it('announces a key change, including the reset-to-original ↺ button (4.1.3)', async () => {
+    const store = useSheetStore()
+    await store.loadFile(new File([KEYED_CHORDPRO], 'keyed.cho', { type: 'text/plain' }))
+    mount(SheetViewer)
+    await flushPromises()
+    await nextTick()
+
+    store.targetKey = 'E'
+    // announce() clears the message, then sets it on its own internal
+    // nextTick — one extra tick beyond the watcher's own for that to settle.
+    await flushPromises()
+    expect(useAnnouncerStore().message).toBe('Key: E')
+
+    store.targetKey = null // the ↺ button, and picking "C (original)", both do this
+    await flushPromises()
+    expect(useAnnouncerStore().message).toBe('Key: C (original)')
+  })
+
+  it('announces an instrument change (4.1.3)', async () => {
+    const { store } = await mountWithSong('html')
+    store.instrument = 'ukulele'
+    await flushPromises()
+    expect(useAnnouncerStore().message).toBe('Instrument: Usual (GCEA)')
+  })
+
   it('re-keys the diagram strip and the click-to-peek popover with the target key', async () => {
     const store = useSheetStore()
     await store.loadFile(new File([KEYED_CHORDPRO], 'keyed.cho', { type: 'text/plain' }))
@@ -202,13 +228,19 @@ describe('SheetViewer', () => {
   describe('click a chord to peek its diagram', () => {
     it('opens a popover with a diagram when a chord is clicked in the HTML view', async () => {
       const { wrapper } = await mountWithSong('html')
-      await wrapper.find('.sheet .chord[role="button"]').trigger('click')
+      const chord = wrapper.find('.sheet .chord[role="button"]')
+      await chord.trigger('click')
       await nextTick()
       const popover = wrapper.find('.chord-popover')
       expect(popover.exists()).toBe(true)
       expect(popover.find('svg.chord-diagram').exists()).toBe(true)
       // role="group", not "dialog" — it's a disclosure, not a modal (4.1.2).
       expect(popover.attributes('role')).toBe('group')
+      // The popover itself isn't focused or announced on its own, so this is
+      // what actually reaches a screen reader (4.1.3) — same text ChordDiagram
+      // puts in its own aria-label.
+      expect(useAnnouncerStore().message).toBe(popover.find('svg').attributes('aria-label'))
+      expect(useAnnouncerStore().message).toContain(chord.text())
     })
 
     it('reflects the open popover on the triggering chord (aria-expanded/aria-controls, 4.1.2)', async () => {
@@ -292,6 +324,9 @@ describe('SheetViewer', () => {
       await nextTick()
       expect(wrapper.find('.chord-popover .no-diagram').exists()).toBe(true)
       expect(wrapper.find('.chord-popover svg.chord-diagram').exists()).toBe(false)
+      // Still announced (4.1.3) — a screen-reader user gets told there's no
+      // diagram rather than silence, matching the visible "no diagram" note.
+      expect(useAnnouncerStore().message).toBe('Zqz9: no diagram for this instrument.')
     })
   })
 

@@ -7,6 +7,7 @@ import SheetViewer from '../components/SheetViewer.vue'
 import DropZone from '../components/DropZone.vue'
 import { useSheetStore } from '@/stores/sheet'
 import { useThemeStore } from '@/stores/theme'
+import { useAnnouncerStore } from '@/stores/announcer'
 import { THEME_PRESETS } from '@/theme/presets'
 import { installMemoryStorage } from '@/__tests__/memoryStorage'
 
@@ -64,6 +65,11 @@ describe('App — ?view= URL parameter', () => {
 
     expect(store.parseError).toMatch(/CORS/)
     expect(wrapper.find('.error').text()).toMatch(/CORS/)
+    // store.parseError is set here — App.vue's ?view= catch block — bypassing
+    // store.parse() entirely, so it must be watched from a component mounted
+    // for the app's whole lifetime rather than one that mounts per sheet
+    // (WCAG 4.1.3: this failure would otherwise be silent to a screen reader).
+    expect(useAnnouncerStore().message).toMatch(/CORS/)
   })
 })
 
