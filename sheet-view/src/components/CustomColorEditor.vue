@@ -1,6 +1,8 @@
 <script setup lang="ts">
+import { computed } from 'vue'
 import { useThemeStore } from '@/stores/theme'
 import type { ThemeColors } from '@/theme/types'
+import { AA_TEXT, contrastRatio } from '@/theme/contrast'
 
 const theme = useThemeStore()
 
@@ -11,6 +13,21 @@ const SLOTS: readonly { key: keyof ThemeColors; label: string }[] = [
   { key: 'comment', label: 'Comments' },
   { key: 'meta', label: 'Title' },
 ]
+
+// Contrast against the background for the four text colours — a custom
+// palette has no built-in guard against an unreadable pairing the way the
+// four presets do (src/theme/__tests__/contrast.spec.ts), so this is the
+// user's own feedback loop instead (WCAG 1.4.3). Advisory only: picking a
+// low-contrast combination stays entirely the user's call.
+const ratios = computed(() => {
+  const { background } = theme.customColors
+  return Object.fromEntries(
+    SLOTS.filter((slot) => slot.key !== 'background').map((slot) => [
+      slot.key,
+      contrastRatio(theme.customColors[slot.key], background),
+    ]),
+  ) as Record<Exclude<keyof ThemeColors, 'background'>, number>
+})
 </script>
 
 <template>
@@ -25,6 +42,19 @@ const SLOTS: readonly { key: keyof ThemeColors; label: string }[] = [
         @change="theme.customColors[slot.key] = ($event.target as HTMLInputElement).value"
       />
       {{ slot.label }}
+      <span
+        v-if="slot.key !== 'background'"
+        class="ratio"
+        :class="{ low: ratios[slot.key] < AA_TEXT }"
+      >
+        <!-- Colour alone never carries the warning (WCAG 1.4.1) — the glyph
+             and, for AT, the sr-only text both do too. -->
+        <span v-if="ratios[slot.key] < AA_TEXT" aria-hidden="true">⚠ </span>
+        {{ ratios[slot.key].toFixed(1) }}:1
+        <span v-if="ratios[slot.key] < AA_TEXT" class="sr-only">
+          — low contrast against the background; {{ AA_TEXT }}:1 is the minimum for readable text
+        </span>
+      </span>
     </label>
     <button type="button" @click="theme.resetCustom()">Reset to Light</button>
   </div>
@@ -37,6 +67,17 @@ const SLOTS: readonly { key: keyof ThemeColors; label: string }[] = [
   align-items: center;
   gap: 0.5rem 1rem;
   padding: 0.5rem 0;
+}
+
+.ratio {
+  font-size: 0.75rem;
+  color: var(--sv-comment);
+  font-variant-numeric: tabular-nums;
+}
+
+.ratio.low {
+  color: var(--sv-error);
+  font-weight: 600;
 }
 
 .slot {

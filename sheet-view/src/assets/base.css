@@ -104,3 +104,21 @@ body {
       background-color 0.5s;
   }
 }
+
+/* Printing is always black-on-white, whatever theme is active on screen —
+   the Dark/Stage presets would otherwise print near-white text on a white
+   page (most browsers skip background colours by default) or a full-bleed
+   dark page (if the user enables "background graphics"). `!important` is
+   required: applyTheme() writes the five vars as *inline* styles, which
+   would otherwise always outrank a plain stylesheet rule for the same
+   property on the same element. Every derived --sv-* token re-resolves
+   automatically, since each is a color-mix() that references these five. */
+@media print {
+  :root {
+    --sv-background: #ffffff !important;
+    --sv-lyrics: #000000 !important;
+    --sv-chord: #000000 !important;
+    --sv-comment: #333333 !important;
+    --sv-meta: #000000 !important;
+  }
+}

@@ -49,8 +49,13 @@ defineExpose({ isOpen })
         </p>
         <p>
           For the complete license text, see
-          <a href="https://www.gnu.org/licenses/agpl-3.0.html" target="_blank"
-            >https://www.gnu.org/licenses/agpl-3.0.html</a
+          <a
+            href="https://www.gnu.org/licenses/agpl-3.0.html"
+            target="_blank"
+            rel="noopener noreferrer"
+            >https://www.gnu.org/licenses/agpl-3.0.html<span class="sr-only"
+              >(opens in a new window)</span
+            ></a
           >
         </p>
         <p class="disclaimer">

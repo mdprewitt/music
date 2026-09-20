@@ -50,6 +50,33 @@ describe('DisplayPanel', () => {
     expect(wrapper.find('.panel').exists()).toBe(false)
   })
 
+  it('returns focus to the trigger on Escape when focus was inside the panel (2.4.3)', async () => {
+    const store = useSheetStore()
+    store.displayPanelOpen = true
+    const wrapper = mount(DisplayPanel, { attachTo: document.body })
+    ;(wrapper.find('.panel input[type="radio"]').element as HTMLElement).focus()
+
+    document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }))
+    await nextTick()
+    expect(document.activeElement).toBe(wrapper.find('.panel-trigger').element)
+    wrapper.unmount()
+  })
+
+  it('leaves focus alone on Escape when it was never inside the panel', async () => {
+    const store = useSheetStore()
+    store.displayPanelOpen = true
+    const wrapper = mount(DisplayPanel, { attachTo: document.body })
+    const elsewhere = document.createElement('button')
+    document.body.appendChild(elsewhere)
+    elsewhere.focus()
+
+    document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }))
+    await nextTick()
+    expect(document.activeElement).toBe(elsewhere)
+    elsewhere.remove()
+    wrapper.unmount()
+  })
+
   it('closes on an outside pointerdown but not one inside the panel', async () => {
     const store = useSheetStore()
     store.displayPanelOpen = true
@@ -65,6 +92,29 @@ describe('DisplayPanel', () => {
     await nextTick()
     expect(store.displayPanelOpen).toBe(false)
     wrapper.unmount()
+  })
+
+  it('names a disclosure, not a menu/dialog trigger, and links it to the panel (4.1.2)', async () => {
+    const wrapper = mount(DisplayPanel, { attachTo: document.body })
+    const trigger = wrapper.find('.panel-trigger')
+    expect(trigger.attributes('aria-haspopup')).toBeUndefined()
+    // aria-controls is stable — a valid disclosure pattern keeps it present
+    // (pointing at an id that only exists once expanded) rather than adding
+    // it only after the fact.
+    const controlsId = trigger.attributes('aria-controls')
+    expect(controlsId).toBeTruthy()
+
+    await trigger.trigger('click')
+    expect(wrapper.find('.panel').attributes('id')).toBe(controlsId)
+    wrapper.unmount()
+  })
+
+  it('uses h2 for its section headings, matching the page having no h2 elsewhere (1.3.1)', () => {
+    useSheetStore().displayPanelOpen = true
+    const wrapper = mount(DisplayPanel)
+    const headings = wrapper.findAll('.panel-heading')
+    expect(headings.map((h) => h.element.tagName)).toEqual(['H2', 'H2'])
+    expect(headings.map((h) => h.text())).toEqual(['Diagrams', 'Theme'])
   })
 
   it('shows the custom colour editor only for the custom theme', async () => {

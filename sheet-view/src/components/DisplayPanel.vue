@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
+import { nextTick, onBeforeUnmount, onMounted, ref, useId, watch } from 'vue'
 import { useSheetStore } from '@/stores/sheet'
 import { useThemeStore } from '@/stores/theme'
 import { panelShift } from './displayPanel'
@@ -10,6 +10,7 @@ import CustomColorEditor from './CustomColorEditor.vue'
 const store = useSheetStore()
 const theme = useThemeStore()
 
+const panelId = useId()
 const trigger = ref<HTMLElement | null>(null)
 const panel = ref<HTMLElement | null>(null)
 // Positive px: how far to push the right-anchored panel back onto the screen
@@ -67,8 +68,17 @@ function onDocumentPointerDown(event: MouseEvent) {
   store.displayPanelOpen = false
 }
 
+// Only Escape returns focus to the trigger, matching the ARIA APG disclosure
+// pattern — an outside *click* naturally sends focus wherever the user
+// clicked (or, for a non-focusable point, to <body>, same as a native
+// <details>), so overriding that would fight the click rather than help it.
+// Escape has no such destination, so without this it drops to <body>
+// (WCAG 2.4.3).
 function onDocumentKeydown(event: KeyboardEvent) {
-  if (event.key === 'Escape') store.displayPanelOpen = false
+  if (event.key !== 'Escape' || !store.displayPanelOpen) return
+  const hadFocus = panel.value?.contains(document.activeElement)
+  store.displayPanelOpen = false
+  if (hadFocus) trigger.value?.focus()
 }
 
 onMounted(() => {
@@ -92,7 +102,7 @@ onBeforeUnmount(() => {
       class="panel-trigger"
       :class="{ active: store.displayPanelOpen }"
       :aria-expanded="store.displayPanelOpen"
-      aria-haspopup="true"
+      :aria-controls="panelId"
       @click="toggle"
     >
       Display
@@ -100,6 +110,7 @@ onBeforeUnmount(() => {
 
     <div
       v-if="store.displayPanelOpen"
+      :id="panelId"
       ref="panel"
       class="panel"
       role="group"
@@ -107,7 +118,7 @@ onBeforeUnmount(() => {
       :style="{ right: `${-shift}px` }"
     >
       <section>
-        <h3 class="panel-heading">Diagrams</h3>
+        <h2 class="panel-heading">Diagrams</h2>
         <template v-if="store.showDiagrams && store.viewFormat !== 'pdf'">
           <DiagramPositionSelector v-model="store.diagramPosition" />
           <label class="diagram-toggle">
@@ -125,7 +136,7 @@ onBeforeUnmount(() => {
       </section>
 
       <section>
-        <h3 class="panel-heading">Theme</h3>
+        <h2 class="panel-heading">Theme</h2>
         <ThemeSelector
           :model-value="theme.themeId"
           :custom-colors="theme.customColors"

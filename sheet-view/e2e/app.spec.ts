@@ -78,6 +78,21 @@ test.describe('narrow viewport', () => {
     expect(box!.x).toBeGreaterThanOrEqual(0)
     expect(box!.x + box!.width).toBeLessThanOrEqual(390)
   })
+
+  test('the "Right" diagram strip stacks below the chart instead of overflowing the screen', async ({
+    page,
+  }) => {
+    await page.goto('/')
+    await page.locator('input[type="file"]').setInputFiles(SAMPLE_CHART)
+    await page.getByRole('button', { name: 'Display' }).click()
+    await page.locator('.position-selector .option', { hasText: 'Right' }).click()
+    await expect(page.locator('.chord-diagrams')).toHaveClass(/pos-right/)
+
+    const overflows = await page.evaluate(
+      () => document.documentElement.scrollWidth > document.documentElement.clientWidth,
+    )
+    expect(overflows).toBe(false)
+  })
 })
 
 test('the Display panel no longer carries the instrument picker', async ({ page }) => {

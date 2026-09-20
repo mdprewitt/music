@@ -47,8 +47,16 @@ const ALLOWED_TAGS = new Set([
   'SUP',
 ])
 
-/** Attributes allowed on any element. `tabindex`/`role` are ours (added below). */
-const GLOBAL_ATTRS = new Set(['class', 'tabindex', 'role'])
+/**
+ * Attributes allowed on any element, straight from the untrusted formatter
+ * output. `tabindex`/`role`/`aria-expanded` are ours — `markChordCells()`
+ * sets them itself, on the parsed document, *after* `sanitizeElement()` runs
+ * below, so they never need to survive this allowlist. Keeping them off it
+ * closes what would otherwise be a hole: a chart could ship its own
+ * `role="alert"` or a `tabindex` moving a chord out of the roving tab
+ * order, and this filter would have waved it through as one of "ours".
+ */
+const GLOBAL_ATTRS = new Set(['class'])
 
 /** Extra attributes allowed on specific elements. */
 const TAG_ATTRS: Record<string, Set<string>> = {

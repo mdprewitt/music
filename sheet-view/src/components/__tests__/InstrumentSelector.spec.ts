@@ -30,4 +30,11 @@ describe('InstrumentSelector', () => {
     await wrapper.find('select').setValue('tenor')
     expect(wrapper.emitted('update:modelValue')?.[0]).toEqual(['tenor'])
   })
+
+  it('associates the visible "Instrument" label with the select via <label for>', () => {
+    const wrapper = mount(InstrumentSelector, { props: { modelValue: 'guitar' } })
+    const label = wrapper.find('label')
+    expect(label.text()).toBe('Instrument')
+    expect(label.attributes('for')).toBe(wrapper.find('select').attributes('id'))
+  })
 })

@@ -147,3 +147,17 @@ describe('App — skip link', () => {
     wrapper.unmount()
   })
 })
+
+describe('App — footer links', () => {
+  beforeEach(() => {
+    setActivePinia(createPinia())
+  })
+
+  it('marks the external GitHub link safe to open and announces it opens a new window (3.2.5)', () => {
+    const wrapper = mount(App)
+    const link = wrapper.find('a[href="https://github.com/mdprewitt/music"]')
+    expect(link.attributes('rel')).toBe('noopener noreferrer')
+    expect(link.attributes('target')).toBe('_blank')
+    expect(link.text()).toContain('opens in a new window')
+  })
+})

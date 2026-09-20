@@ -69,6 +69,26 @@ describe('markChordCells', () => {
     expect(out).toContain('class="chord-sheet"')
   })
 
+  it('strips an attacker-supplied role/tabindex/aria-expanded rather than trusting them as "ours"', () => {
+    // tabindex/role/aria-expanded are added by this function itself, on the
+    // parsed document, *after* sanitizing — they must never be let through
+    // from the untrusted input, or a chart could move a chord out of the
+    // roving tab order or inject an arbitrary role/aria-expanded elsewhere.
+    const out = markChordCells(
+      '<div class="chord" role="alert" tabindex="5" aria-expanded="true">C</div>' +
+        '<div class="lyrics" role="button" tabindex="0" aria-expanded="true">hi</div>',
+    )
+    const doc = new DOMParser().parseFromString(out, 'text/html')
+    const chord = doc.querySelector('.chord')
+    expect(chord?.getAttribute('tabindex')).toBe('0') // ours, not the attacker's "5"
+    expect(chord?.getAttribute('role')).toBe('button') // ours, not "alert"
+    expect(chord?.getAttribute('aria-expanded')).toBe('false')
+    const lyrics = doc.querySelector('.lyrics')
+    expect(lyrics?.hasAttribute('role')).toBe(false)
+    expect(lyrics?.hasAttribute('tabindex')).toBe(false)
+    expect(lyrics?.hasAttribute('aria-expanded')).toBe(false)
+  })
+
   it('drops javascript: hrefs but keeps a safe one', () => {
     const bad = markChordCells('<div><a href="javascript:alert(1)">x</a></div>')
     expect(bad).not.toContain('javascript:')

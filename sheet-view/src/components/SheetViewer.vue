@@ -464,6 +464,16 @@ button:hover {
   align-items: flex-start;
 }
 
+/* A 12rem side rail eats too much of the ~390px a chord chart needs on a
+   phone — stack it below the chart instead, same breakpoint as main.css's
+   #app gutter (WCAG 1.4.10 Reflow). ChordDiagrams.vue makes the matching
+   change to the strip itself. */
+@media (max-width: 640px) {
+  .sheet-body.pos-right {
+    flex-direction: column;
+  }
+}
+
 .sheet-body > .sheet,
 .sheet-body > .inline-sheet,
 .sheet-body > .plain {
@@ -521,6 +531,11 @@ button:hover {
 
 .sheet :deep(.paragraph) {
   margin-bottom: 1.5rem;
+  /* Both properties: page-break-inside is the older, still-widely-honoured
+     name; break-inside is its modern successor. A hint, not a guarantee — a
+     paragraph taller than one page still splits. */
+  page-break-inside: avoid;
+  break-inside: avoid;
 }
 
 /* HtmlDivFormatter: `.row` = one chart line, a flex track of `.column`
@@ -532,6 +547,8 @@ button:hover {
   /* flex-start, not flex-end: a column whose lyric wraps internally hangs down
      without dragging its neighbours off the line. */
   align-items: flex-start;
+  page-break-inside: avoid;
+  break-inside: avoid;
 }
 
 .sheet :deep(.row) > * {
@@ -605,5 +622,21 @@ button:hover {
   font-style: italic;
   white-space: pre-wrap;
   overflow-wrap: anywhere;
+}
+
+@media print {
+  /* The header's view/instrument/key controls and "Load another" serve a
+     screen, not a printed page — the chart underneath is what's wanted. */
+  .viewer-header {
+    display: none;
+  }
+
+  /* position: sticky has no meaning across print pages, and the opaque
+     background it needs on screen (to hide scrolling text underneath) would
+     otherwise paint an unwanted block over the chart on paper. */
+  .sheet-body.pinned :deep(.chord-diagrams) {
+    position: static;
+    background: none;
+  }
 }
 </style>
