@@ -35,4 +35,14 @@ describe('ChordDiagrams', () => {
     const wrapper = mount(ChordDiagrams, { props: { shapes } })
     expect(wrapper.find('.chord-diagrams').attributes('role')).toBe('group')
   })
+
+  it('exposes its root element so SheetViewer.vue can measure it when pinned (2.4.11)', () => {
+    const wrapper = mount(ChordDiagrams, { props: { shapes } })
+    expect(wrapper.vm.el).toBe(wrapper.find('.chord-diagrams').element)
+  })
+
+  it('exposes a null root element while there are no shapes to render', () => {
+    const wrapper = mount(ChordDiagrams, { props: { shapes: [] } })
+    expect(wrapper.vm.el).toBeNull()
+  })
 })

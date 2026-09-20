@@ -223,6 +223,23 @@ describe('SheetViewer', () => {
       await nextTick()
       expect(pinToggle(wrapper)).toBeUndefined()
     })
+
+    it('carries a --pinned-strip-size gap only when the strip overlays the chart (top/bottom, 2.4.11)', async () => {
+      // jsdom has no ResizeObserver (guarded in SheetViewer.vue, same idiom as
+      // DisplayPanel.vue), so the measured value stays 0 here — this only
+      // pins down which positions get the CSS var at all. The real measured
+      // gap is exercised manually in a browser, not unit-tested.
+      const { store, wrapper } = await mountWithSong('html')
+      expect(wrapper.find('.sheet-body').attributes('style') ?? '').not.toContain('--pinned-strip-size')
+
+      store.pinDiagrams = true
+      await nextTick()
+      expect(wrapper.find('.sheet-body').attributes('style')).toContain('--pinned-strip-size')
+
+      store.diagramPosition = 'right'
+      await nextTick()
+      expect(wrapper.find('.sheet-body').attributes('style') ?? '').not.toContain('--pinned-strip-size')
+    })
   })
 
   describe('click a chord to peek its diagram', () => {
@@ -269,6 +286,34 @@ describe('SheetViewer', () => {
       await cell.trigger('keydown', { key: 'Enter' })
       await nextTick()
       expect(wrapper.find('.chord-popover svg.chord-diagram').exists()).toBe(true)
+    })
+
+    it('is a labelled group describing the arrow-key convention (2.4.3)', async () => {
+      const { wrapper } = await mountWithSong('html')
+      const sheet = wrapper.find('.sheet')
+      expect(sheet.attributes('role')).toBe('group')
+      const hintId = sheet.attributes('aria-describedby')
+      expect(hintId).toBeTruthy()
+      expect(wrapper.find(`#${hintId}`).text()).toContain('arrow keys')
+    })
+
+    it('moves the roving tab stop across chord cells with the arrow keys (2.4.3)', async () => {
+      const { wrapper } = await mountWithSong('html')
+      const cells = () => wrapper.findAll('.sheet .chord[role="button"]')
+      expect(cells().map((c) => [c.text(), c.attributes('tabindex')])).toEqual([
+        ['C', '0'],
+        ['G', '-1'],
+      ])
+
+      await cells()[0]!.trigger('keydown', { key: 'ArrowRight' })
+      expect(cells().map((c) => c.attributes('tabindex'))).toEqual(['-1', '0'])
+
+      // Clamps at the end instead of wrapping.
+      await cells()[1]!.trigger('keydown', { key: 'ArrowRight' })
+      expect(cells().map((c) => c.attributes('tabindex'))).toEqual(['-1', '0'])
+
+      await cells()[1]!.trigger('keydown', { key: 'Home' })
+      expect(cells().map((c) => c.attributes('tabindex'))).toEqual(['0', '-1'])
     })
 
     it('toggles the popover shut when the same chord is clicked again', async () => {

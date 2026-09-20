@@ -84,10 +84,16 @@ src/
                           #   "HTML inline" view (bracketed chords in the lyric flow)
     interactive.ts        # markChordCells() — sanitize HtmlDivFormatter output to a
                           #   safe element/attribute allowlist (it's untrusted chart
-                          #   text inserted via v-html), add tabindex/role to its
-                          #   chord cells, and empty the chord-less `.chord` spacer
-                          #   divs so `.chord:empty` styling applies (no template —
-                          #   it's a string)
+                          #   text inserted via v-html), seed a roving tabindex (only
+                          #   the first chord cell gets "0", the rest "-1") + role on
+                          #   its chord cells, and empty the chord-less `.chord`
+                          #   spacer divs so `.chord:empty` styling applies (no
+                          #   template — it's a string)
+    rovingFocus.ts        # moveRovingFocus()/handleRovingArrowKey() — shared arrow-
+                          #   key roving-tabindex navigation for a same-role group,
+                          #   used by both HTML views' chord cells (SheetViewer.vue's
+                          #   delegated keydown for the v-html view, InlineSheet.vue's
+                          #   own for its real <span>s)
     key.ts                # songIdentity()/recallKey()/rememberKey() — per-song key
                           #   memory (sheet-view:songKeys — JSON array of [id, key]
                           #   pairs, newest last; legacy {id:key} object migrated on
@@ -212,6 +218,8 @@ playwright.config.ts          # testDir e2e/, chromium only, webServer = build +
 - The chord "buttons" in `SheetViewer.vue`'s `html` view and `InlineSheet.vue` share one convention for hover/focus/"diagram open": hover and open both paint `--sv-surface-hover`, but only `open` adds a persistent underline — the three states must stay visually distinguishable without relying on the (removed) `outline: none` + colour-only hack.
 - `prefers-reduced-motion` is respected for the one global animation (`body`'s theme-change colour transition in `base.css`); wrap any new transition/animation the same way.
 - Status announcements (WCAG 4.1.3) go through `useAnnouncerStore` (`src/stores/announcer.ts`) — call its `announce(text)`, never mount a one-off live region. `LiveAnnouncer.vue` renders the single shared `role="status" aria-live="polite"` region and is mounted exactly once, in `App.vue`; a second instance would double-announce. `announce()` clears the message and sets it on the next tick, so the same text announced twice in a row still triggers (tests need an extra `await flushPromises()` beyond the state change itself to observe the final value). Pair it with `role="alert"` on any persistent visible error element (`store.parseError`, `pdfError`, `DropZone`'s `loadError`) — belt-and-suspenders, since not every screen reader reliably catches a freshly-inserted alert-role node. Watch a store field that's also mutated by non-UI code (like `store.parseError`, set both by `store.parse()` and by `App.vue`'s `?view=` catch) from a component mounted for the app's whole lifetime (`App.vue`), not one that mounts per sheet (`SheetViewer.vue`) — the latter's watcher baseline would already reflect an earlier change and silently miss it.
+- A group of same-role elements that should act as one tab stop uses the "roving tabindex" pattern (`src/sheet/rovingFocus.ts`: `moveRovingFocus`/`handleRovingArrowKey`) instead of making every one individually tabbable (WCAG 2.4.3) — the chord cells in both `SheetViewer.vue`'s `html` view (seeded by `markChordCells()`) and `InlineSheet.vue`'s spans (seeded imperatively in `InlineSheet.vue` itself, since Vue's patcher won't rewrite an attribute whose bound template expression hasn't changed, so a declarative binding alone can't undo an out-of-band roving-focus move) are one worked example; reuse the same helper for the next one rather than hand-rolling arrow-key math again. `App.vue`'s skip link (`#main-content`, `tabindex="-1"` on `<main>`) exists because of this — with the chart down to one or two tab stops, skipping the header controls actually matters.
+- A pinned/sticky element that can overlay scrollable content needs the content's focusable descendants to carry a matching `scroll-margin` (WCAG 2.4.11), sized to the *actual* rendered size (`ResizeObserver`, guarded with `typeof ResizeObserver === 'undefined'` — same idiom as `DisplayPanel.vue`'s own measure-and-clamp), not a guessed fixed value — see `SheetViewer.vue`'s `--pinned-strip-size` var, measured off `ChordDiagrams.vue`'s exposed root element with `getBoundingClientRect()` (border-box; `ResizeObserver`'s own `contentRect` excludes padding/border, which are still part of what visually overlaps).
 
 ## Testing conventions
 

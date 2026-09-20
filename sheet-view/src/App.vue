@@ -67,12 +67,19 @@ function openLicense() {
 
 <template>
   <div class="app-container">
+    <!-- The chart's chords are one roving tab stop each (SheetViewer.vue /
+         InlineSheet.vue), not individually tabbable, so a skip link is no
+         longer just a nicety — without it every header control still had to
+         be tabbed past to reach the chart (WCAG 2.4.1). tabindex="-1" makes
+         #main-content a valid programmatic focus target; it isn't otherwise
+         tabbable. -->
+    <a href="#main-content" class="skip-link">Skip to chart</a>
     <LiveAnnouncer />
     <header>
       <img :src="ukuleleLogo" alt="" class="logo" width="32" height="32" />
       <h1>Sheet-View</h1>
     </header>
-    <main>
+    <main id="main-content" tabindex="-1">
       <DropZone v-if="!store.song && !store.parseError" />
       <SheetViewer v-else />
     </main>
@@ -94,6 +101,32 @@ function openLicense() {
   display: flex;
   flex-direction: column;
   min-height: 100vh;
+}
+
+.skip-link {
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 100;
+  padding: 0.5rem 1rem;
+  background: var(--sv-chord);
+  color: var(--sv-on-accent);
+  border-radius: 0 0 4px 0;
+  /* Off-screen (not display:none — it must stay focusable) until focused,
+     with no transition: an instant snap into view carries the same
+     information as an animated one, with none of the motion. */
+  transform: translateY(-100%);
+}
+
+.skip-link:focus {
+  transform: translateY(0);
+}
+
+main:focus-visible {
+  /* A ring around the whole viewer when the skip link lands here is more
+     distracting than useful — the ring on whichever chord/control the reader
+     lands on next is the one that matters. */
+  outline: none;
 }
 
 header {
