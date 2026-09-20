@@ -1,10 +1,13 @@
 <script setup lang="ts">
+import { useId } from 'vue'
 import type { Instrument } from '@/chords/types'
 import { INSTRUMENTS, INSTRUMENT_IDS, INSTRUMENT_FAMILIES } from '@/chords/types'
 
 // A <select>, not the radiogroup the other selectors use: thirteen tunings is
 // too many pill buttons for the header row (same call as KeySelector).
 const model = defineModel<Instrument>({ required: true })
+
+const selectId = useId()
 
 // One <optgroup> per family. Options stay in INSTRUMENT_IDS registry order (the
 // registry is grouped by family), so the picker never re-sorts. Empty families
@@ -20,8 +23,8 @@ const GROUPS = INSTRUMENT_FAMILIES.map((family) => ({
 
 <template>
   <div class="instrument-selector">
-    <span class="instrument-label">Instrument</span>
-    <select v-model="model" aria-label="Instrument">
+    <label :for="selectId" class="instrument-label">Instrument</label>
+    <select :id="selectId" v-model="model">
       <optgroup v-for="group in GROUPS" :key="group.id" :label="group.label">
         <option v-for="opt in group.options" :key="opt.value" :value="opt.value">
           {{ opt.label }}

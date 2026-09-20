@@ -26,8 +26,12 @@ describe('InlineSheet', () => {
         ),
       },
     })
-    expect(wrapper.find('h1.title').text()).toBe('Grace')
-    expect(wrapper.find('h3.label').text()).toBe('Chorus')
+    // h2/h4, not h1/h3 — App.vue already has the page's one h1, and the
+    // internal title -> label relationship stays hierarchical either way
+    // (1.3.1: no level skipped, from either the page's or this
+    // component's own perspective).
+    expect(wrapper.find('h2.title').text()).toBe('Grace')
+    expect(wrapper.find('h4.label').text()).toBe('Chorus')
   })
 
   it('renders a {comment} as an aside, not a lyric line', () => {
@@ -44,6 +48,32 @@ describe('InlineSheet', () => {
     expect(events).toHaveLength(1)
     expect(events![0]![1]).toBe('G')
     expect(events![0]![0]).toBeInstanceOf(HTMLElement)
+  })
+
+  it('emits chord-click on Enter or Space, via the delegated roving-focus keydown handler', async () => {
+    const wrapper = mount(InlineSheet, { props: { song: songOf('[C]Amazing [G]grace') } })
+    const chord = wrapper.findAll('.chord.clickable')[1]!
+
+    const enter = new KeyboardEvent('keydown', { key: 'Enter', bubbles: true, cancelable: true })
+    chord.element.dispatchEvent(enter)
+    expect(enter.defaultPrevented).toBe(true)
+    let events = wrapper.emitted('chord-click')
+    expect(events).toHaveLength(1)
+    expect(events![0]).toEqual([chord.element, 'G'])
+
+    const space = new KeyboardEvent('keydown', { key: ' ', bubbles: true, cancelable: true })
+    chord.element.dispatchEvent(space)
+    events = wrapper.emitted('chord-click')
+    expect(events).toHaveLength(2)
+  })
+
+  it('does not activate or prevent default for a non-Enter/Space/arrow key', async () => {
+    const wrapper = mount(InlineSheet, { props: { song: songOf('[C]hi') } })
+    const chord = wrapper.find('.chord.clickable')
+    const key = new KeyboardEvent('keydown', { key: 'a', bubbles: true, cancelable: true })
+    chord.element.dispatchEvent(key)
+    expect(key.defaultPrevented).toBe(false)
+    expect(wrapper.emitted('chord-click')).toBeUndefined()
   })
 
   it('only makes real chords clickable, not annotations', () => {

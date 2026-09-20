@@ -88,7 +88,7 @@ function openLicense() {
         <button @click="openAbout" class="link-btn">About</button>
         <button @click="openLicense" class="link-btn">License</button>
         <a href="https://github.com/mdprewitt/music" target="_blank" rel="noopener noreferrer"
-          class="link-btn">GitHub</a>
+          class="link-btn">GitHub<span class="sr-only"> (opens in a new window)</span></a>
       </nav>
     </footer>
     <AboutDialog ref="aboutDialog" />
@@ -176,5 +176,15 @@ nav {
   /* Always underlined, not just on hover — colour alone doesn't reliably
      distinguish these from surrounding footer text (WCAG 1.4.1). */
   text-decoration: underline;
+}
+
+/* App chrome — the skip link, logo/title and About/License/GitHub nav —
+   serves a screen, not a printed page. */
+@media print {
+  .skip-link,
+  header,
+  footer {
+    display: none;
+  }
 }
 </style>

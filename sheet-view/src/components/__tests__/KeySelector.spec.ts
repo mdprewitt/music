@@ -31,6 +31,35 @@ describe('KeySelector', () => {
     expect(wrapper.findAll('option').map((o) => o.text())).toEqual(['—'])
   })
 
+  it('explains a disabled control with visible text, not just a title tooltip (3.3.2)', () => {
+    // A disabled element's own title is unreachable by keyboard, touch and
+    // most screen readers — title stays only as a mouse-hover convenience.
+    const wrapper = mount(KeySelector, {
+      props: { modelValue: null, keys: [], originalKey: null },
+    })
+    const select = wrapper.find('select')
+    const hintId = select.attributes('aria-describedby')
+    expect(hintId).toBeTruthy()
+    expect(wrapper.find(`#${hintId}`).text()).toMatch(/\{key: C\}/)
+  })
+
+  it('carries no hint or aria-describedby once the sheet has a key', () => {
+    const wrapper = mount(KeySelector, {
+      props: { modelValue: null, keys: KEYS, originalKey: 'C' },
+    })
+    expect(wrapper.find('select').attributes('aria-describedby')).toBeUndefined()
+    expect(wrapper.find('.key-hint').exists()).toBe(false)
+  })
+
+  it('associates the visible "Key" label with the select via <label for>', () => {
+    const wrapper = mount(KeySelector, {
+      props: { modelValue: null, keys: KEYS, originalKey: 'C' },
+    })
+    const label = wrapper.find('label')
+    expect(label.text()).toBe('Key')
+    expect(label.attributes('for')).toBe(wrapper.find('select').attributes('id'))
+  })
+
   it('emits the chosen key on change', async () => {
     const wrapper = mount(KeySelector, {
       props: { modelValue: null, keys: KEYS, originalKey: 'C' },
@@ -53,6 +82,9 @@ describe('KeySelector', () => {
     })
     const reset = wrapper.find('.key-reset')
     expect(reset.exists()).toBe(true)
+    // Its only visible content is the "↺" glyph — an accessible name is
+    // needed separately (4.1.2).
+    expect(reset.attributes('aria-label')).toBe('Back to C')
     await reset.trigger('click')
     expect(wrapper.emitted('update:modelValue')?.[0]).toEqual([null])
   })

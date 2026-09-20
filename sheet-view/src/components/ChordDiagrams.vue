@@ -67,6 +67,30 @@ defineExpose({ el })
   border-left: 1px solid var(--sv-divider);
 }
 
+/* Below SheetViewer.vue's matching .sheet-body.pos-right breakpoint, the
+   strip stacks under the chart instead of beside it — same look as
+   pos-bottom (WCAG 1.4.10 Reflow). */
+@media (max-width: 640px) {
+  .chord-diagrams.pos-right {
+    display: flex;
+    flex-wrap: wrap;
+    width: auto;
+    align-content: normal;
+    padding-left: 0;
+    border-left: none;
+    padding-top: 1rem;
+    margin-top: 1rem;
+    border-top: 1px solid var(--sv-divider);
+  }
+
+  .chord-diagrams.pinned.pos-right {
+    top: auto;
+    bottom: 0;
+    align-self: auto;
+    background: var(--sv-background);
+  }
+}
+
 /* Pinned: the strip holds its place (against the window scroll) while the chart
    scrolls past. An opaque background keeps chart text from showing through the
    top/bottom strips; the right strip is beside the chart so it needs none. */

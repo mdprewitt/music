@@ -36,11 +36,21 @@ watch(sheet, async () => {
   seedRovingTabindex()
 })
 
+// One delegated listener for the whole sheet, not one Enter/Space pair per
+// chord span — besides the obvious cost of hundreds of listeners on a long
+// chart, a per-span binding can't help but exist on every span it's written
+// on, including non-interactive lyric/annotation spans that never actually
+// receive focus (so it could never fire from them either way, but there's no
+// reason to attach it there at all).
 function onKeydown(event: KeyboardEvent) {
   const cell = (event.target as HTMLElement).closest('.chord.clickable') as HTMLElement | null
   if (!cell || !root.value) return
   const cells = Array.from(root.value.querySelectorAll<HTMLElement>('.chord.clickable'))
-  handleRovingArrowKey(event, cells, cell)
+  if (handleRovingArrowKey(event, cells, cell)) return
+  if (event.key !== 'Enter' && event.key !== ' ') return
+  event.preventDefault()
+  const name = cell.dataset.chord
+  if (name) emit('chord-click', cell, name)
 }
 
 interface Segment {
@@ -86,8 +96,11 @@ function activateChord(event: Event, name: string) {
 
 <template>
   <div ref="root" class="inline-sheet" role="group" :aria-describedby="navHintId" @keydown="onKeydown">
-    <h1 v-if="sheet.title" class="title">{{ sheet.title }}</h1>
-    <h2 v-if="sheet.subtitle" class="subtitle">{{ sheet.subtitle }}</h2>
+    <!-- One level below each, not h1/h2/h3 — App.vue already has the page's
+         one h1 ("Sheet-View"), so starting here at h1 would both duplicate
+         it and skip a level from this component's own perspective (1.3.1). -->
+    <h2 v-if="sheet.title" class="title">{{ sheet.title }}</h2>
+    <h3 v-if="sheet.subtitle" class="subtitle">{{ sheet.subtitle }}</h3>
 
     <section
       v-for="(paragraph, pi) in sheet.paragraphs"
@@ -95,7 +108,7 @@ function activateChord(event: Event, name: string) {
       class="paragraph"
       :class="paragraph.type"
     >
-      <h3 v-if="paragraph.label" class="label">{{ paragraph.label }}</h3>
+      <h4 v-if="paragraph.label" class="label">{{ paragraph.label }}</h4>
       <p
         v-for="(line, li) in paragraph.lines"
         :key="li"
@@ -108,9 +121,8 @@ function activateChord(event: Event, name: string) {
           :role="seg.chord ? 'button' : undefined"
           :tabindex="seg.chord ? -1 : undefined"
           :aria-expanded="seg.chord ? 'false' : undefined"
+          :data-chord="seg.chord"
           @click="seg.chord && activateChord($event, seg.chord)"
-          @keydown.enter.prevent="seg.chord && activateChord($event, seg.chord)"
-          @keydown.space.prevent="seg.chord && activateChord($event, seg.chord)"
           >{{ seg.text }}</span
         >
       </p>
@@ -139,6 +151,11 @@ function activateChord(event: Event, name: string) {
 
 .paragraph {
   margin-bottom: 1.5rem;
+  /* Both properties: page-break-inside is the older, still-widely-honoured
+     name; break-inside is its modern successor. A hint, not a guarantee — a
+     paragraph taller than one page still splits. */
+  page-break-inside: avoid;
+  break-inside: avoid;
 }
 
 .label {

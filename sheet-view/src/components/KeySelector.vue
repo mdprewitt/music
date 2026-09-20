@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, useId } from 'vue'
 
 // A <select>, not the radiogroup the other selectors use: 12–15 target keys is
 // too many buttons for the header row.
@@ -14,6 +14,9 @@ const props = defineProps<{
 
 const HINT = 'Add a {key: C} directive to this sheet to change its key.'
 
+const selectId = useId()
+const hintId = useId()
+
 const current = computed(() => model.value ?? props.originalKey ?? '')
 const transposed = computed(() => model.value !== null && model.value !== props.originalKey)
 
@@ -25,12 +28,13 @@ function onChange(event: Event) {
 
 <template>
   <div class="key-selector">
-    <span class="key-label">Key</span>
+    <label :for="selectId" class="key-label">Key</label>
     <select
+      :id="selectId"
       :value="current"
       :disabled="originalKey === null"
       :title="originalKey === null ? HINT : undefined"
-      aria-label="Key"
+      :aria-describedby="originalKey === null ? hintId : undefined"
       @change="onChange"
     >
       <option v-if="originalKey === null" value="">—</option>
@@ -38,11 +42,16 @@ function onChange(event: Event) {
         {{ key === originalKey ? `${key} (original)` : key }}
       </option>
     </select>
+    <!-- A disabled control's own title tooltip is unreachable by keyboard,
+         touch and most screen readers — this is the real explanation
+         (WCAG 3.3.2), title stays only as a mouse-hover convenience. -->
+    <p v-if="originalKey === null" :id="hintId" class="key-hint">{{ HINT }}</p>
     <button
       v-if="transposed"
       type="button"
       class="key-reset"
       :title="`Back to ${originalKey}`"
+      :aria-label="`Back to ${originalKey}`"
       @click="model = null"
     >
       ↺
@@ -60,6 +69,12 @@ function onChange(event: Event) {
 .key-label {
   font-size: 0.85rem;
   color: var(--sv-lyrics);
+}
+
+.key-hint {
+  font-size: 0.8rem;
+  color: var(--sv-comment);
+  font-style: italic;
 }
 
 select {
