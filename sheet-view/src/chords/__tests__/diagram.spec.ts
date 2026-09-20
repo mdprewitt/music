@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { toDiagramShape, MIN_FRET_COUNT } from '../diagram'
+import { toDiagramShape, describeShape, MIN_FRET_COUNT } from '../diagram'
 import type { RawChordDefinition } from '../types'
 
 function def(partial: Partial<RawChordDefinition>): RawChordDefinition {
@@ -84,5 +84,35 @@ describe('toDiagramShape', () => {
     const shape = toDiagramShape(def({ name: 'Bb', frets: [3, 2, 1, 1] }))
     expect(shape.barres).toEqual([])
     expect(shape.markers.map((m) => m.string)).toEqual([1, 2, 3, 4])
+  })
+})
+
+describe('describeShape', () => {
+  it('describes open, muted and fretted strings in order', () => {
+    const shape = toDiagramShape(def({ name: 'Am7', frets: ['x', 0, 2, 0, 1, 0] }))
+    expect(describeShape(shape)).toBe(
+      '6 strings. string 1 muted, string 2 open, string 3 fret 2, string 4 open, ' +
+        'string 5 fret 1, string 6 open.',
+    )
+  })
+
+  it('names the finger when the definition has fingering, grouping identical consecutive strings', () => {
+    const shape = toDiagramShape(def({ name: 'C', frets: [0, 0, 0, 3], fingers: [0, 0, 0, 3] }))
+    expect(describeShape(shape)).toBe('4 strings. strings 1-3 open, string 4 fret 3, finger 3.')
+  })
+
+  it('collapses a barre spanning several strings into one clause', () => {
+    const shape = toDiagramShape(def({ name: 'Fmaj7', frets: [1, 1, 1, 2], fingers: [1, 1, 1, 2] }))
+    expect(describeShape(shape)).toBe('4 strings. strings 1-3 fret 1, finger 1, string 4 fret 2, finger 2.')
+  })
+
+  it('notes a non-default base fret', () => {
+    const shape = toDiagramShape(def({ name: 'C', baseFret: 3, frets: [1, 3, 3, 2, 1, 1] }))
+    expect(describeShape(shape)).toContain('Base fret 3.')
+  })
+
+  it('omits the base-fret note when the shape starts at the nut', () => {
+    const shape = toDiagramShape(def({ name: 'C', frets: [0, 0, 0, 3] }))
+    expect(describeShape(shape)).not.toContain('Base fret')
   })
 })

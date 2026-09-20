@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, ref, watch, onMounted, onBeforeUnmount } from 'vue'
+import { computed, ref, watch, onMounted, onBeforeUnmount, useId } from 'vue'
 import { ChordProFormatter, HtmlDivFormatter, type Song } from 'chordsheetjs'
 import { PdfFormatter } from 'chordsheetjs/pdf'
 import { jsPDF } from 'jspdf'
@@ -128,8 +128,17 @@ const activeChord = ref<{
 
 const containerWidth = computed(() => sheetBody.value?.clientWidth ?? 0)
 
+// One popover can ever be open at a time, so one stable id — set as the
+// ChordPopover's `id` and pointed at by the open chord's `aria-controls` —
+// is enough (WCAG 4.1.2: the popover was previously unreachable from the
+// triggering chord's accessibility-tree state).
+const popoverId = useId()
+
 function closePopover() {
-  activeChord.value?.el.classList.remove('chord-open')
+  const el = activeChord.value?.el
+  el?.classList.remove('chord-open')
+  el?.setAttribute('aria-expanded', 'false')
+  el?.removeAttribute('aria-controls')
   activeChord.value = null
 }
 
@@ -153,6 +162,8 @@ function openFor(el: HTMLElement, rawName: string) {
   }
   const shape = diagramIndex.value ? findShape(diagramIndex.value, name) : null
   el.classList.add('chord-open')
+  el.setAttribute('aria-expanded', 'true')
+  el.setAttribute('aria-controls', popoverId)
   activeChord.value = { name, shape, anchor, el }
 }
 
@@ -267,6 +278,7 @@ watch(
 
       <ChordPopover
         v-if="activeChord"
+        :id="popoverId"
         :name="activeChord.name"
         :shape="activeChord.shape"
         :anchor="activeChord.anchor"

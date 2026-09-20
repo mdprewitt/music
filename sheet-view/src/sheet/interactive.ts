@@ -108,6 +108,12 @@ export function markChordCells(html: string): string {
     }
     cell.setAttribute('tabindex', '0')
     cell.setAttribute('role', 'button')
+    // Reflects whether this chord's diagram popover is open; SheetViewer.vue
+    // flips it (and sets/clears aria-controls) imperatively in openFor()/
+    // closePopover(), the same way it toggles the .chord-open class — these
+    // attributes are added after sanitizeElement() runs, so they are ours,
+    // not untrusted chart markup, and don't need a GLOBAL_ATTRS allowance.
+    cell.setAttribute('aria-expanded', 'false')
   }
   return doc.body.innerHTML
 }
