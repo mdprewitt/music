@@ -3,6 +3,7 @@ import { flushPromises, mount } from '@vue/test-utils'
 import { setActivePinia, createPinia } from 'pinia'
 import DropZone from '../DropZone.vue'
 import { useSheetStore } from '@/stores/sheet'
+import { useAnnouncerStore } from '@/stores/announcer'
 
 const SAMPLE_CHORDPRO = '{title: T}\n[C]hello'
 
@@ -35,7 +36,13 @@ describe('DropZone', () => {
     Object.defineProperty(input.element, 'files', { value: [file], configurable: true })
     await input.trigger('change')
     await flushPromises()
-    expect(wrapper.find('.error').exists()).toBe(true)
+    const error = wrapper.find('.error')
+    expect(error.exists()).toBe(true)
+    // role="alert" (WCAG 4.1.3) — the shared announcer is a belt-and-suspenders
+    // backup, since not every screen reader reliably catches an alert-role
+    // element being freshly inserted.
+    expect(error.attributes('role')).toBe('alert')
+    expect(useAnnouncerStore().message).toBe(error.text())
     expect(store.song).toBeNull()
   })
 

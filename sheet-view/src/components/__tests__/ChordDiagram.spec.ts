@@ -42,4 +42,39 @@ describe('ChordDiagram', () => {
     expect(wrapper.findAll('.cd-indicators circle')).toHaveLength(2) // two open strings
     expect(wrapper.findAll('.cd-indicators line')).toHaveLength(2) // one cross = two lines
   })
+
+  it('names AND describes the fingering, not just the chord name (WCAG 1.1.1)', () => {
+    const shape = toDiagramShape({ name: 'Am7', baseFret: 1, frets: ['x', 0, 2, 0] })
+    const wrapper = mount(ChordDiagram, { props: { shape } })
+    const svg = wrapper.find('svg')
+
+    // role="img" prunes the SVG's own text nodes from the accessibility tree,
+    // so aria-label carries the only text a screen reader gets — it must
+    // include the per-string fingering, not just repeat the visible title.
+    const label = svg.attributes('aria-label')
+    expect(label).toContain('Am7 chord diagram')
+    expect(label).toContain('string 1 muted')
+    expect(label).toContain('string 3 fret 2')
+
+    // <title>/<desc> are a redundant fallback for consumers that read those
+    // directly; each instance gets its own ids so two diagrams for the same
+    // chord (the strip + a popover) never collide.
+    expect(wrapper.find('title').text()).toBe('Am7 chord diagram')
+    expect(wrapper.find('desc').text()).toBe(label!.replace('Am7 chord diagram. ', ''))
+  })
+
+  it('gives two instances of the same chord distinct title/desc ids', () => {
+    // useId() is unique per Vue app instance, not globally — two separate
+    // mount() calls each start a fresh app and would both get "v-0". Mount
+    // both diagrams under one parent, as they really appear together (the
+    // strip + a popover for the same chord), to exercise the real guarantee.
+    const shape = toDiagramShape({ name: 'Am7', baseFret: 1, frets: ['x', 0, 2, 0] })
+    const wrapper = mount({
+      components: { ChordDiagram },
+      setup: () => ({ shape }),
+      template: '<div><ChordDiagram :shape="shape" /><ChordDiagram :shape="shape" /></div>',
+    })
+    const [titleA, titleB] = wrapper.findAll('title')
+    expect(titleA?.attributes('id')).not.toBe(titleB?.attributes('id'))
+  })
 })

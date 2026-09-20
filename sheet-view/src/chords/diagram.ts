@@ -1,5 +1,16 @@
 import type { DiagramBarre, DiagramMarker, DiagramShape, RawChordDefinition } from './types'
 
+/**
+ * A run of consecutive strings that all resolve to the same
+ * {@link describeString} text — a barre reads as one clause rather than one
+ * per string.
+ */
+interface StringGroup {
+  from: number
+  to: number
+  description: string
+}
+
 /** Minimum number of fret rows a diagram draws, even for shapes near the nut. */
 export const MIN_FRET_COUNT = 4
 
@@ -95,6 +106,63 @@ export function toDiagramShape(
     markers: visibleMarkers.sort((a, b) => a.string - b.string),
     barres: barres.sort((a, b) => a.fret - b.fret || a.from - b.from),
   }
+}
+
+function fingerSuffix(finger: number): string {
+  return finger > 0 ? `, finger ${finger}` : ''
+}
+
+function groupConsecutive(descriptions: readonly string[]): StringGroup[] {
+  const groups: StringGroup[] = []
+  for (const [index, description] of descriptions.entries()) {
+    const stringNumber = index + 1
+    const last = groups[groups.length - 1]
+    if (last && last.description === description && last.to === stringNumber - 1) {
+      last.to = stringNumber
+    } else {
+      groups.push({ from: stringNumber, to: stringNumber, description })
+    }
+  }
+  return groups
+}
+
+/**
+ * A plain-language equivalent of the diagram geometry — every string's fret,
+ * finger and open/muted state — for use as an SVG `<title>`/`aria-label`.
+ * `ChordDiagram.vue`'s `role="img"` collapses the SVG's own text nodes from
+ * the accessibility tree, so this is the only way the fingering itself
+ * (not just the chord's name) reaches a screen-reader user (WCAG 1.1.1).
+ */
+export function describeShape(shape: DiagramShape): string {
+  const openStrings = new Set(shape.openStrings)
+  const mutedStrings = new Set(shape.mutedStrings)
+  const barreByString = new Map<number, DiagramBarre>()
+  for (const barre of shape.barres) {
+    for (let s = barre.from; s <= barre.to; s++) barreByString.set(s, barre)
+  }
+  const markerByString = new Map<number, DiagramMarker>()
+  for (const marker of shape.markers) markerByString.set(marker.string, marker)
+
+  function describeString(stringNumber: number): string {
+    if (openStrings.has(stringNumber)) return 'open'
+    if (mutedStrings.has(stringNumber)) return 'muted'
+    const barre = barreByString.get(stringNumber)
+    if (barre) return `fret ${barre.fret}${fingerSuffix(barre.finger)}`
+    const marker = markerByString.get(stringNumber)
+    if (marker) return `fret ${marker.fret}${fingerSuffix(marker.finger)}`
+    return 'not played'
+  }
+
+  const descriptions = Array.from({ length: shape.stringCount }, (_, i) => describeString(i + 1))
+  const clauses = groupConsecutive(descriptions).map((group) =>
+    group.from === group.to
+      ? `string ${group.from} ${group.description}`
+      : `strings ${group.from}-${group.to} ${group.description}`,
+  )
+
+  const stringWord = shape.stringCount === 1 ? 'string' : 'strings'
+  const baseFretNote = shape.baseFret > 1 ? ` Base fret ${shape.baseFret}.` : ''
+  return `${shape.stringCount} ${stringWord}.${baseFretNote} ${clauses.join(', ')}.`
 }
 
 function deriveMarkersAndBarres(

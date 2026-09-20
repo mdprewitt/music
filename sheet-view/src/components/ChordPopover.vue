@@ -20,6 +20,10 @@ const props = defineProps<{
   containerWidth: number
 }>()
 
+// A caller-supplied `id` (SheetViewer.vue passes one so it can point the
+// triggering chord's aria-controls at this element) falls through onto the
+// single root <div> below without needing to be declared as a prop.
+
 const GAP = 8
 
 const root = ref<HTMLElement | null>(null)
@@ -62,7 +66,7 @@ const style = computed(() => {
     class="chord-popover"
     :class="`place-${placement}`"
     :style="style"
-    role="dialog"
+    role="group"
     :aria-label="`${name} chord diagram`"
   >
     <ChordDiagram v-if="shape" :shape="shape" />

@@ -1,10 +1,12 @@
 <script setup lang="ts">
-import { computed, ref, watch, onMounted, onBeforeUnmount } from 'vue'
+import { computed, ref, watch, onMounted, onBeforeUnmount, useId } from 'vue'
 import { ChordProFormatter, HtmlDivFormatter, type Song } from 'chordsheetjs'
 import { PdfFormatter } from 'chordsheetjs/pdf'
 import { jsPDF } from 'jspdf'
 import { useSheetStore } from '@/stores/sheet'
+import { useAnnouncerStore } from '@/stores/announcer'
 import { buildDiagramIndex, findShape } from '@/chords/shapes'
+import { describeShape } from '@/chords/diagram'
 import { INSTRUMENTS } from '@/chords/types'
 import { drawDiagramSheet, type PdfDoc } from '@/chords/pdf'
 import { markChordCells } from '@/sheet/interactive'
@@ -17,6 +19,7 @@ import InlineSheet from './InlineSheet.vue'
 import ChordPopover, { type AnchorRect } from './ChordPopover.vue'
 
 const store = useSheetStore()
+const announcer = useAnnouncerStore()
 // store.displaySong is store.song, or a re-keyed copy when a target key is set.
 // It is markRaw(Song), but Pinia's UnwrapRef loses class fidelity — cast back.
 const song = computed(() => (store.displaySong ? (store.displaySong as Song) : null))
@@ -75,6 +78,7 @@ watch(
       return
     }
     const runId = ++pdfRunId
+    announcer.announce('Generating PDF…')
     try {
       // chordsheetjs' own diagram renderer hard-codes a six-string neck, so we
       // only let it draw for instruments whose shapes come from its bundled
@@ -102,10 +106,12 @@ watch(
       revokePdfUrl()
       pdfUrl.value = URL.createObjectURL(blob)
       pdfError.value = null
+      announcer.announce('PDF ready')
     } catch (err) {
       if (runId !== pdfRunId || disposed) return
       revokePdfUrl()
       pdfError.value = err instanceof Error ? err.message : String(err)
+      announcer.announce(pdfError.value)
     }
   },
   { immediate: true },
@@ -115,6 +121,25 @@ onBeforeUnmount(() => {
   disposed = true
   revokePdfUrl()
 })
+
+// Announce header changes that silently re-render the whole chart (WCAG
+// 4.1.3). Safe to watch from here rather than a persistent ancestor: this
+// component only (re)mounts once store.parse() has already applied any
+// autodetected instrument / restored key for this sheet, so each watcher's
+// baseline already reflects that value and only fires for a genuine change
+// the reader makes afterwards (an instrument/key picked, or the "back to
+// original key" ↺ button, which also sets targetKey to null).
+watch(
+  () => store.instrument,
+  (value) => announcer.announce(`Instrument: ${INSTRUMENTS[value].label}`),
+)
+watch(
+  () => store.targetKey,
+  (value) => {
+    const key = value ?? store.originalKey
+    if (key) announcer.announce(`Key: ${key}${value === null ? ' (original)' : ''}`)
+  },
+)
 
 // --- Click a chord → show its diagram in a popover above it -------------------
 
@@ -128,8 +153,17 @@ const activeChord = ref<{
 
 const containerWidth = computed(() => sheetBody.value?.clientWidth ?? 0)
 
+// One popover can ever be open at a time, so one stable id — set as the
+// ChordPopover's `id` and pointed at by the open chord's `aria-controls` —
+// is enough (WCAG 4.1.2: the popover was previously unreachable from the
+// triggering chord's accessibility-tree state).
+const popoverId = useId()
+
 function closePopover() {
-  activeChord.value?.el.classList.remove('chord-open')
+  const el = activeChord.value?.el
+  el?.classList.remove('chord-open')
+  el?.setAttribute('aria-expanded', 'false')
+  el?.removeAttribute('aria-controls')
   activeChord.value = null
 }
 
@@ -153,7 +187,15 @@ function openFor(el: HTMLElement, rawName: string) {
   }
   const shape = diagramIndex.value ? findShape(diagramIndex.value, name) : null
   el.classList.add('chord-open')
+  el.setAttribute('aria-expanded', 'true')
+  el.setAttribute('aria-controls', popoverId)
   activeChord.value = { name, shape, anchor, el }
+  // The popover itself (role="group") isn't focused and isn't announced on
+  // its own, so this is what actually gets the fingering to a screen-reader
+  // user (WCAG 4.1.3) — same text ChordDiagram.vue puts in its aria-label.
+  announcer.announce(
+    shape ? `${name} chord diagram. ${describeShape(shape)}` : `${name}: no diagram for this instrument.`,
+  )
 }
 
 // The HTML div view is v-html, so its chord cells get a delegated handler.
@@ -226,10 +268,10 @@ watch(
       <button @click="store.reset()">Load another</button>
     </header>
 
-    <pre v-if="store.parseError" class="error">{{ store.parseError }}</pre>
+    <pre v-if="store.parseError" class="error" role="alert">{{ store.parseError }}</pre>
 
-    <div v-else-if="store.viewFormat === 'pdf'" class="pdf">
-      <pre v-if="pdfError" class="error">{{ pdfError }}</pre>
+    <div v-else-if="store.viewFormat === 'pdf'" class="pdf" :aria-busy="!pdfError && !pdfUrl">
+      <pre v-if="pdfError" class="error" role="alert">{{ pdfError }}</pre>
       <template v-else-if="pdfUrl">
         <iframe :src="pdfUrl" title="PDF preview" class="pdf-frame" />
         <a :href="pdfUrl" :download="pdfFilename" class="download">Download PDF</a>
@@ -267,6 +309,7 @@ watch(
 
       <ChordPopover
         v-if="activeChord"
+        :id="popoverId"
         :name="activeChord.name"
         :shape="activeChord.shape"
         :anchor="activeChord.anchor"

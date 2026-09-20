@@ -1,8 +1,10 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import { useSheetStore } from '@/stores/sheet'
+import { useAnnouncerStore } from '@/stores/announcer'
 
 const store = useSheetStore()
+const announcer = useAnnouncerStore()
 const fileInput = ref<HTMLInputElement | null>(null)
 const isDragging = ref(false)
 const loadError = ref<string | null>(null)
@@ -15,17 +17,25 @@ function hasAcceptedExt(name: string): boolean {
   return ACCEPTED_EXT.some((ext) => name.toLowerCase().endsWith(ext))
 }
 
+function fail(message: string) {
+  loadError.value = message
+  // Belt-and-suspenders alongside the .error element's own role="alert"
+  // below (WCAG 4.1.3) — role="alert" announces reliably on most screen
+  // readers when the node is freshly inserted, but not every one catches it.
+  announcer.announce(message)
+}
+
 async function handleFile(file: File | undefined) {
   if (!file) return
   if (!file.type.startsWith('text/') && !hasAcceptedExt(file.name)) {
-    loadError.value = 'Please drop a text or ChordPro file.'
+    fail('Please drop a text or ChordPro file.')
     return
   }
   loadError.value = null
   try {
     await store.loadFile(file)
   } catch {
-    loadError.value = 'Could not read that file. Try again, or pick it with the button.'
+    fail('Could not read that file. Try again, or pick it with the button.')
   }
 }
 
@@ -37,7 +47,7 @@ async function fetchUrl() {
   try {
     await store.loadFromUrl(trimmed)
   } catch (err) {
-    loadError.value = err instanceof Error ? err.message : 'Could not load that URL.'
+    fail(err instanceof Error ? err.message : 'Could not load that URL.')
   } finally {
     fetching.value = false
   }
@@ -89,7 +99,7 @@ function onPick(e: Event) {
         {{ fetching ? 'Fetching…' : 'Fetch' }}
       </button>
     </form>
-    <p v-if="loadError" class="error">{{ loadError }}</p>
+    <p v-if="loadError" class="error" role="alert">{{ loadError }}</p>
   </div>
 </template>
 
