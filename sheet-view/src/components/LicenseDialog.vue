@@ -5,7 +5,9 @@ const dialog = ref<HTMLDialogElement | null>(null)
 const isOpen = ref(false)
 let lastFocused: HTMLElement | null = null
 
-// See AboutDialog.vue — native <dialog>.showModal() with a jsdom fallback.
+// See AboutDialog.vue — native <dialog>.showModal() with a jsdom fallback,
+// and the same note on why @click.self's no-static-element-interactions
+// exemption lives in eslint.config.ts rather than an inline template comment.
 watch(isOpen, async (open) => {
   await nextTick()
   const el = dialog.value

@@ -3,6 +3,15 @@ import { ref } from 'vue'
 import { useSheetStore } from '@/stores/sheet'
 import { useAnnouncerStore } from '@/stores/announcer'
 
+// The template's drag handlers on .drop-zone are a pointer-only enhancement,
+// not the only way in — the "View" button and the URL form below are the
+// keyboard/AT-reachable equivalent (WCAG 2.5.7 is satisfied by them, not by
+// that div), so eslint-plugin-vuejs-accessibility's
+// no-static-element-interactions is disabled for this file in
+// eslint.config.ts rather than an inline template comment — one placed
+// immediately before .drop-zone (this file's own SFC root) makes Vue treat
+// the component as multi-root, which breaks @vue/test-utils's
+// wrapper.classes()/trigger() — confirmed empirically.
 const store = useSheetStore()
 const announcer = useAnnouncerStore()
 const fileInput = ref<HTMLInputElement | null>(null)
@@ -79,6 +88,11 @@ function onPick(e: Event) {
     </p>
     <p class="instruction">Drop a ChordPro file here, or</p>
     <button @click="fileInput?.click()">View</button>
+    <!-- Hidden and proxied by the "View" button above — never reachable or
+         exposed to any user, so it needs no label of its own. The rule only
+         recognises input[type=hidden] (a hidden *form value*), not this
+         boolean `hidden` attribute (a hidden *file picker*). -->
+    <!-- eslint-disable-next-line vuejs-accessibility/form-control-has-label -->
     <input
       ref="fileInput"
       type="file"

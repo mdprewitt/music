@@ -8,6 +8,15 @@ let lastFocused: HTMLElement | null = null
 // Drive the native <dialog>: showModal() gives Escape-to-close, a focus trap,
 // the ::backdrop and focus restore for free. jsdom has none of it, so fall back
 // to the `open` attribute there and restore focus by hand.
+//
+// The template's @click.self is backdrop-dismiss (native <dialog>'s own
+// ::backdrop isn't a real element to attach a handler to) — eslint-plugin-
+// vuejs-accessibility's no-static-element-interactions doesn't know a native
+// <dialog> is itself a top-level interactive container once open, so it's
+// disabled for this file in eslint.config.ts. (Not an inline template
+// comment: a comment immediately before an SFC's own single root element
+// makes Vue treat the component as multi-root, which breaks
+// @vue/test-utils's wrapper.classes()/trigger() — confirmed empirically.)
 watch(isOpen, async (open) => {
   await nextTick()
   const el = dialog.value

@@ -353,7 +353,12 @@ watch(
         diagram.
       </p>
       <!-- v-html input is sanitized by markChordCells (formatter output is untrusted
-           chart text). Chord cells inside it are focusable and handled by delegation. -->
+           chart text). Chord cells inside it are focusable and handled by delegation.
+           role="group" is a plain grouping container, not an interactive one — the
+           click/keydown handlers here only ever act on a chord descendant (already
+           role="button" + tabindex individually, set by markChordCells()); it's
+           delegation, not this div's own interaction. -->
+      <!-- eslint-disable-next-line vuejs-accessibility/no-static-element-interactions -->
       <div
         v-if="store.viewFormat === 'html'"
         class="sheet"
