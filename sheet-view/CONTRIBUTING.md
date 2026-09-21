@@ -63,11 +63,32 @@ layout, `<select>` and pointer interaction, SVG chord diagrams, the `?view=`
 deep-link. Load a chart by feeding `e2e/fixtures/sample.cho` to the hidden file
 input, and select elements by role or label rather than by CSS class.
 
+`e2e/a11y.spec.ts` runs an [axe-core](https://github.com/dequelabs/axe-core)
+sweep (via `@axe-core/playwright`) over the drop zone, each chart view, the
+open Display panel, an open chord popover, and all four colour themes —
+`bun test:e2e` runs it alongside everything else. It's a backstop for whatever
+the targeted unit/e2e assertions elsewhere don't happen to cover, not a
+replacement for them; a change that touches interactive markup or colours
+should still get its own specific test (`aria-expanded` toggling, focus
+return, a contrast ratio, …) in addition to staying green here.
+
 ### Lint with [ESLint](https://eslint.org/)
 
 ```sh
 bun lint
 ```
+
+`eslint-plugin-vuejs-accessibility`'s `flat/recommended` rules run as part of
+this. Its `label-has-for` needs a project-wide option override (`eslint.config.ts`
+sets `required: { some: [...] }` — its own default requires both nesting *and*
+a for/id pair, which no ordinary label satisfies), and a few files disable
+`no-static-element-interactions` for one deliberate root-element handler each
+(a native `<dialog>`'s backdrop-dismiss, or delegation from a `role="group"`
+container to its already-interactive descendants) — see the comment next to
+each override. Put the reasoning in a `<script>` comment in the component
+itself, not an inline template comment right before an SFC's own single root
+element: Vue then treats the component as multi-root, which silently breaks
+`@vue/test-utils`'s `wrapper.classes()`/`.attributes()`/`.trigger()`.
 
 ### Makefile shortcuts
 

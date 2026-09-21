@@ -42,6 +42,15 @@ watch(sheet, async () => {
 // on, including non-interactive lyric/annotation spans that never actually
 // receive focus (so it could never fire from them either way, but there's no
 // reason to attach it there at all).
+//
+// The template's root <div role="group"> carries this @keydown, but it's a
+// plain grouping container, not an interactive one — eslint-plugin-vuejs-
+// accessibility's no-static-element-interactions doesn't know the handler
+// only ever acts on a chord descendant (delegation), so it's disabled for
+// this file in eslint.config.ts rather than an inline template comment: a
+// comment immediately before an SFC's own single root element makes Vue
+// treat the component as multi-root, which breaks @vue/test-utils's
+// wrapper.attributes()/classes() — confirmed empirically.
 function onKeydown(event: KeyboardEvent) {
   const cell = (event.target as HTMLElement).closest('.chord.clickable') as HTMLElement | null
   if (!cell || !root.value) return
@@ -114,6 +123,11 @@ function activateChord(event: Event, name: string) {
         :key="li"
         :class="line.isComment ? 'comment' : 'line'"
       >
+        <!-- role/tabindex are conditional on seg.chord, so the static
+             analysis can't see this is role="button" for a chord segment —
+             it *is* keyboard-reachable, via the delegated onKeydown above
+             (Enter/Space activate it, matching the click handler below). -->
+        <!-- eslint-disable-next-line vuejs-accessibility/no-static-element-interactions, vuejs-accessibility/click-events-have-key-events -->
         <span
           v-for="(seg, si) in segments(line)"
           :key="si"
