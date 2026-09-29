@@ -189,6 +189,20 @@ as-is when the reader has DADGAD (or Open G, …) selected, and a GCEA ukulele
 `{define}` is drawn under a DGBE baritone. The built-in tables are always
 tuning-correct; only chart-supplied shapes are affected.
 
+## Adding a song
+
+Drop the `.cho` file in `song-book/` (needs at least a `{t:}` title tag; add
+`{artist:}` too if you have it), then regenerate the index:
+
+```bash
+bun run generate:songbook
+```
+
+This rewrites `song-book/README.md` — a markdown table of every chart, linking to the raw
+`.cho` file and to the hosted Sheet-View viewer. It's generated
+(`scripts/generate-song-index.mjs`); don't hand-edit it. Commit the regenerated file alongside
+the new chart.
+
 ## Changing the key
 
 `store.song` is always the pristine parse. The key change is a **derived**

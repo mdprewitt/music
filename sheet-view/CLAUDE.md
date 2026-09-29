@@ -177,6 +177,12 @@ scripts/
                               #   tractable — that still emits candidates in the old
                               #   exhaustive order, so regenerating the pre-existing tables
                               #   is a no-op diff.
+  generate-song-index.mjs     # `bun run generate:songbook`. Reads every `song-book/*.cho`'s
+                              #   `{t:}`/`{title:}` + `{artist:}` tags and rewrites
+                              #   `song-book/README.md` as a markdown table linking each song
+                              #   to its raw `.cho` and to the hosted Sheet-View viewer
+                              #   (`?view=<github blob url>`). Plain node:fs, no src/ import —
+                              #   runs under `node` or `bun`. Run by hand after adding a chart.
 e2e/
   app.spec.ts                 # Playwright smoke suite — drop zone, picking a chart, the
                               #   header instrument <select> redrawing diagrams, the Display
