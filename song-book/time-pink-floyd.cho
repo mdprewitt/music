@@ -1,0 +1,84 @@
+{t:Time}
+{artist:Pink Floyd}
+{st:Words and music Ⓒ David Gilmore}
+{key: E}
+
+D   Em   D   Em
+D   Em   D   Em
+Em   G   D   Em
+
+ 
+
+Verse:
+[Em]Ticking away the moments that make up a [G]dull day
+[D]Fritter and waste the hours in an off-hand [Em]way
+[Em]Kicking around on a piece of ground in your [G]home town
+[D]Waiting for someone or something to show you the [Em]way
+
+ 
+
+Post Verse:
+[Cmaj7]Tired of lying in the sunshine [Gmaj7]staying home to watch the rain
+[Cmaj7]You are young and life is long and [Gmaj7]there is time to kill today
+[Cmaj7] And then one day you find [Bm7] ten years have got behind you
+[Am7]No one told you when to run, [D] you missed the starting gun
+
+ 
+
+Solo:
+Em   G   D   Em     x4
+Cmaj7   Gmaj7   Cmaj7   Gmaj7
+Cmaj7   Bm7   Am7   D
+
+ 
+
+Verse:
+And you [Em]run and you run to catch up with the sun but it’s [G]sinking
+[D]Racing around to come up behind you a[Em]gain
+[Em]The sun is the same in a relative way, but you’re [G]older
+[D]Shorter of breath and one day closer to [Em]death
+
+ 
+
+Post Verse:
+[Cmaj7]Every year is getting shorter, [Gmaj7]never seem to find the time
+[Cmaj7]Plans that either come to naught or [Gmaj7]half a page of scribbled lines
+[Cmaj7]Hanging on in quiet despe[Bm7]ration is the English way
+The [Am7]time is gone, the song is over, [C]thought I’d something [Cm]more to [Dm]say
+
+ 
+
+Breathe Represe Intro:
+[Dm],       [G7] – [G7sus4] – [G7]     x2
+
+ 
+
+[Dm]Home, home [G7]again   [G7sus4]                [G7]
+[Dm]I like to be here when I [G7]can      [G7sus4]                [G7]
+[Dm]When I come home cold and [G7]tired      [G7sus4]                [G7]
+It’s [Dm]good to warm my bones beside the [G7]fire       [G7sus4]                [G7]
+[A#]Far away, across the field
+[Am]The tolling of the iron bell
+[D#]Calls the faithful to their knees
+[F]To hear the softly [Cm7]spoken    [Bbm7]magic    [Am]spell
+
+# {t: Your Title } needed                               
+# {artist: Performer} Optional  
+# {st: Sub Title} Optional extra information - date etc.
+# {key: } Needed if you want to try changing keys       
+#  
+# Standard web link Standard html link to clubsite or 
+# Youtube etc - see format above - optional  
+# {c: }  gives blank line e.g. between verses  
+# blank line in songs also gives blank line!!!         
+# {c: comment} put's indented comment on a line         
+# {soc} start of chorus block - indents                 
+#     {eoc} end of chorus block - end of indent         
+# {sot} start of tab block                              
+#     {eot} end of tab block                            
+# {define:..}  - easiest way is to create chord using -      
+# "A Chord Builder" above in EDIT and copy the Define produced 
+#                                                       
+# Many other high-lighting tools - see ozbcoz.com       
+#  Models above for you to overwrite                    
+########################################################

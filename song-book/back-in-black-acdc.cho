@@ -1,0 +1,161 @@
+{t:Back in Black}
+{artist: AC/DC}
+{key: D}
+Based on <a href="https://www.youtube.com/watch?v=s5usS-vh3Zg" target="_blank">Jb Lessons</a> and <a href="https://youtu.be/cpn8g-DV-rM">Ukulele Cheats</a>
+{st: Written by Angus Young, Malcolm Young, and Brian Johnson.}
+
+Notes:
+p=Pull Off
+b=Bend 1/2 step
+
+{c: "pull off riff"}
+{sot}
+-3-p0-------------
+------3-p0--------
+------------2b-p0-
+------------------
+{eot}
+
+{c: "slide riff"}
+{sot}
+------------------------
+-0---0---0---0----------
+---1---2---3---4-slide-- (use fist finger on all)
+------------------------
+{eot}
+{c: "chorus note"}
+In the chorus only play the root of the chord for [C]*
+
+{c: Verse}
+         
+[A] Back in black, 
+[G][G][G] I hit the sack
+[D][D][D] I've been too long, 
+I'm glad to be back
+{pull off riff}
+
+Yes, I'm [A] let loose
+[G][G][G] From the noose
+[D][D][D] That's kept me hanging about
+{slide riff}
+
+I've been [A] looking at the sky
+[G][G][G] 'Cause it's gettin' me high
+[D][D][D] Forget the hearse 'cause I never die
+{pull off riff}
+
+I got [A] nine lives
+[G][G][G] Cat's eyes
+[D][D][D] Abusin' every one of them and running wild
+{slide riff}
+
+{c: Chorus}
+'Cause I'm back
+[D] [A] [E] [D] [E]
+Yes, I'm back
+[D] [A] [E] [D] [E]
+Well, I'm back
+[C] [G] [D] [C]* [D]
+Yes, I'm back
+[C] [G] [D] [C]* [D]
+Well, I'm back,
+[D] [A] [E] [D] [E]
+ back
+[D] [A] [E] [D] [E]
+Well, I'm [C] back in black
+Yes, I'm [G] back in black
+
+{c: Verse}
+[A] Back in the back
+Of a [G][G][G] Cadillac
+[D][D][D] Number one with a bullet, I'm a power pack
+{pull off riff}
+
+Yes, I'm [A] in a bang
+[G][G][G]  With a gang
+[D][D][D] They've got to catch me if they want me to hang
+{slide riff}
+
+'Cause I'[A] back on the track
+And I'm [G][G][G]  beatin' the flack
+[D][D][D] Nobody's gonna get me on another rap
+{pull off riff}
+
+So [A] look at me now
+I'm just [G][G][G]  makin' my play
+Don't [D][D][D] try to push your luck, just get out of my way
+{slide riff}
+
+{c: Chorus}
+'Cause I'm back
+[D] [A] [E] [D] [E]
+Yes, I'm back
+[D] [A] [E] [D] [E]
+Well, I'm back
+[C] [G] [D] [C] [D]
+Yes, I'm back
+[C] [G] [D] [C] [D]
+Well, I'm back,
+[D] [A] [E] [D] [E]
+ back
+[D] [A] [E] [D] [E]
+Well, I'm [C] back in black
+Yes, I'm [G] back in black
+
+{c: Guitar solo verse}
+
+{c: Chorus}
+
+'Cause I'm back
+[D] [A] [E] [D] [E]
+Yes, I'm back
+[D] [A] [E] [D] [E]
+Well, I'm back
+[C] [G] [D] [C]* [D]
+Yes, I'm back
+[C] [G] [D] [C]* [D]
+Well, I'm back,
+[D] [A] [E] [D] [E]
+ back
+[D] [A] [E] [D] [E]
+Well, I'm [C] back in black
+Yes, I'm [G] back in black
+
+
+{c: Outro}
+
+Oh, yeah
+Oh, yeah
+Take my love
+Oh, yeah, yeah
+Oh, yeah, yeah, ooh, yeah
+
+
+Well, I'm back (I'm back)
+Back (I'm back)
+Back (I'm back)
+Back (I'm back)
+Back (I'm back)
+Back
+Back in black
+Yes, I'm back in black
+I've hit the sack
+
+
+# {t: Your Title } needed                               
+# {artist: Performer} Optional  
+# {st: Sub Title} Optional extra information - date etc.
+# {key: } Needed if you want to try changing keys       
+#  
+# Standard web link Standard html link to clubsite or 
+# Youtube etc - see format above - optional  
+# {c: }  gives blank line e.g. between verses  
+# blank line in songs also gives blank line!!!         
+# {c: comment} put's indented comment on a line         
+# {soc} start of chorus block - indents                 
+#     {eoc} end of chorus block - end of indent         
+# {sot} start of tab block                              
+#     {eot} end of tab block                            
+# {define:..}  - easiest way is to create chord using -      
+# "A Chord Builder" above in EDIT and copy the Define produced 
+#

@@ -1,0 +1,72 @@
+{t:Carol of the Bells}
+{artist:}
+{key: A}
+
+[Am]Hark! how the bells, 
+[G]Sweet silver bells, 
+[F]All seem to say
+[E]"Throw cares away."
+ 
+[Am]Christmas is here, 
+[Am]Bringing good cheer 
+[Dm]To young and old,
+[Am]Meek and the bold.
+ 
+[Dm]Ding, dong, ding, dong, 
+[Am]That is their song 
+[Dm]With joyful ring, 
+[Am]All caroling.
+ 
+[Dm]One seems to hear 
+[Am]Words of good cheer 
+[Dm]From everywhere 
+[Am]Filling the air;
+ 
+[Dm]Oh how they pound, 
+[Am]Raising the sound 
+[Dm]O'er hill and dale,
+[Am]Telling their tale.
+ 
+[Am]Gailly they ring 
+While people sing 
+[Dm]Song(s) of good cheer 
+Christmas is here
+ 
+[Am]Merry, merry, merry, [Am]merry Christmas! 2x 
+ 
+[Am]On, on they send, 
+[Dm]On without end, 
+[Am7]Their joyful tone
+[Dm]To ev'ry home.
+ 
+[Am]Hark! how the bells, 
+Sweet silver bells, 
+All seem to say    
+"Throw cares away."
+ 
+[Am]On, on they send, 
+On without end, 
+Their joyful tone
+To ev'ry home.
+Em- Ding, dong ding dong 
+
+# {t: Your Title } needed                               
+# {artist: Performer} Optional  
+# {st: Sub Title} Optional extra information - date etc.
+# {key: } Needed if you want to try changing keys       
+#  
+# Standard web link Standard html link to clubsite or 
+# Youtube etc - see format above - optional  
+# {c: }  gives blank line e.g. between verses  
+# blank line in songs also gives blank line!!!         
+# {c: comment} put's indented comment on a line         
+# {soc} start of chorus block - indents                 
+#     {eoc} end of chorus block - end of indent         
+# {sot} start of tab block                              
+#     {eot} end of tab block                            
+# {define:..}  - easiest way is to create chord using -      
+# "A Chord Builder" above in EDIT and copy the Define produced 
+#                                                       
+# Many other high-lighting tools - see ozbcoz.com       
+#  Models above for you to overwrite                    
+########################################################

@@ -1,0 +1,87 @@
+{t:Baker Street}
+{artist:Gerry Rafferty}
+{st:Words and music Ⓒ Gerry Rafferty}
+{key: D}
+
+{sot}
+&nbsp;  [G/A] [Eb/F]  [F/G] [G/A] [Eb/F] [F/G]
+A 20- 1---- -0  -2  -1   -0
+E 3-3 33-13 -1  -3  -3   -1
+C 2-- 3-3-- 00  22  33   00
+G 0-- 0---- -2  -0  -0   -2
+   G/A   Eb/F  F/G
+A 02320- 1---- -0
+E -3---3 33--- -1
+C -2---- 3-320 20
+G -0---- 0---- -2
+{eot}
+
+Sax Solo
+[D][F][D][F][C][Asus4][G]
+[D][F][D][F][C][Asus4][G]
+[A]Winding your [Asus4]way down on [A]Baker [Asus4]Street
+[A]Light in your [Asus4]head, and  [A]dead on your [Asus4]feet
+Well a[Em]nother crazy day, you [G]drink the night away
+And for[D]get about ever[G]y[D]thing
+[A]This city [Asus4]desert makes you [A]feel so [Asus4]cold, its got
+[A]So many [Asus4]people but its [A]got no [Asus4]soul
+And it's [Em]taken you so long to [G]find out you were wrong
+When you [D]thought it held everything
+[Dm7]You used to think that it was [Am7]so easy
+[Dm7]You used to say that it was [Am7]so easy
+But [C]you're tryin', [G]you're tryin' [D]now
+[Dm7]Another year and then you'd [Am7]be happy
+[Dm7]Just one more year and then you'd [Am7]be happy
+But [C]you're cryin', [G]you're cryin' [A]now [F]
+Sax Solo
+[D][F][D][F][C][Asus4][G]
+[D][F][D][F][C][Asus4][G]
+[A]Way down the [Asus4]street there's a [A]light in his [Asus4]place
+[A]He opens the [Asus4]door, he's got that [A]look on his [Asus4]face
+And he [Em]asks you where youv'e been, you [G]tell him who you've seen
+And you [D]talk about anything
+[A]He's got this [Asus4]dream about [A]buyin' some [Asus4]land
+[A]He's gonna give up the [Asus4]booze and the [A]one night [Asus4]stands
+And [Em]then he'll settle down, in some [G]quiet little town
+And for[D]get about everything
+[Dm7]But you know he'll always [Am7]keep moving
+[Dm7]You know he's never gonna [Am7]stop moving
+Cause [C]he's rollin', [G]He's the rolling [D]stone
+[Dm7]And when you wake up it's a [Am7]new morning
+[Dm7]The sun is shining it's a [Am7]new morning
+And [C]you're going, [G]you're going [A]home [F]
+Sax Solo
+[D][F][D][F][C][Asus4][G]
+[D][F][D][F][C][Asus4][G]
+Intro
+[G/A][Eb/F][F/G]
+[G/A][Eb/F][F/G]
+[G/A][Eb/F][F/G]
+Sax Solo
+[D][F][D][F][C][Asus4][G]
+[D][F][D][F][C][Asus4][G]
+[D][F][D][F][C][Asus4][G]
+[D][F][D][F][C][Asus4][G]
+
+# {t: Your Title } needed                               
+# {artist: Performer} Optional  
+# {st: Sub Title} Optional extra information - date etc.
+# {key: } Needed if you want to try changing keys       
+#  
+# Standard web link Standard html link to clubsite or 
+# Youtube etc - see format above - optional  
+# {c: }  gives blank line e.g. between verses  
+# blank line in songs also gives blank line!!!         
+# {c: comment} put's indented comment on a line         
+# {soc} start of chorus block - indents                 
+#     {eoc} end of chorus block - end of indent         
+# {sot} start of tab block                              
+#     {eot} end of tab block                            
+# {define:..}  - easiest way is to create chord using -      
+{define: G/A frets 2 2 3 2 fingers 1 1 2 1}
+{define: Eb/F frets 0 3 1 1 fingers 0 3 1 1}
+# "A Chord Builder" above in EDIT and copy the Define produced 
+#                                                       
+# Many other high-lighting tools - see ozbcoz.com       
+#  Models above for you to overwrite                    
+########################################################
