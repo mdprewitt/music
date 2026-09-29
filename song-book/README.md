@@ -34,6 +34,6 @@
 | Shine on You Crazy Diamond | Pink Floyd | [CHO](shine-on-you-crazy-diamond-pink-floyd.cho) [Song-View](https://mdprewitt.github.io/music/?view=https://github.com/mdprewitt/music/blob/main/song-book/shine-on-you-crazy-diamond-pink-floyd.cho) |
 | Spider Man |  | [CHO](spider-man-bob-harris.cho) [Song-View](https://mdprewitt.github.io/music/?view=https://github.com/mdprewitt/music/blob/main/song-book/spider-man-bob-harris.cho) |
 | Stairway to Heaven | Led Zeppelin | [CHO](stairway-to-heaven-led-zeppelin.cho) [Song-View](https://mdprewitt.github.io/music/?view=https://github.com/mdprewitt/music/blob/main/song-book/stairway-to-heaven-led-zeppelin.cho) |
-| Take the Long Way Home |  | [CHO](long-way-home-supertramp.cho) [Song-View](https://mdprewitt.github.io/music/?view=https://github.com/mdprewitt/music/blob/main/song-book/long-way-home-supertramp.cho) |
+| Take the Long Way Home | Supertramp | [CHO](long-way-home-supertramp.cho) [Song-View](https://mdprewitt.github.io/music/?view=https://github.com/mdprewitt/music/blob/main/song-book/long-way-home-supertramp.cho) |
 | Time | Pink Floyd | [CHO](time-pink-floyd.cho) [Song-View](https://mdprewitt.github.io/music/?view=https://github.com/mdprewitt/music/blob/main/song-book/time-pink-floyd.cho) |
 | XTC Vs Adam Ant | They Might Be Giants | [CHO](xtc-vs-adam-ant-tmbg.cho) [Song-View](https://mdprewitt.github.io/music/?view=https://github.com/mdprewitt/music/blob/main/song-book/xtc-vs-adam-ant-tmbg.cho) |
