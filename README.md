@@ -2,6 +2,6 @@
 
 This repo contains a small set of chord profiles for songs I've arranged as well as an app called "Sheet View" which is a flexible chart viewer.
 
-- [Song Book](song-book/README.md)
+- [Song Book](song-book/README.md) ([live page](https://mdprewitt.github.io/music/songbook.html))
 - [Sheet View Code](sheet-view)
 - [Strudel Charts](strudel)
