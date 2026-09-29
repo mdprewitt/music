@@ -223,6 +223,7 @@ const bodyHtml = `<!doctype html>
     </style>
   </head>
   <body>
+    <main>
     <a class="back-link" href="./">&larr; Sheet-View</a>
     <h1>Song Book</h1>
     <p class="count" id="count">${rows.length} of ${rows.length} songs</p>
@@ -257,6 +258,7 @@ ${tableRowsHtml}
         </tbody>
       </table>
     </div>
+    </main>
     <script>
       const TOTAL = ${rows.length}
       const filterInput = document.getElementById('filter')
