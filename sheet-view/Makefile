@@ -2,7 +2,7 @@
 # Run `make` or `make help` for the list.
 
 .DEFAULT_GOAL := help
-.PHONY: help install dev build preview test test-watch test-e2e test-e2e-ui type-check lint format check clean
+.PHONY: help install dev build preview test test-watch test-e2e test-e2e-ui type-check lint format generate-index check clean
 
 help: ## List the available targets
 	@grep -E '^[a-zA-Z0-9_-]+:.*## ' $(MAKEFILE_LIST) \
@@ -40,6 +40,9 @@ lint: ## Lint and autofix (oxlint then eslint)
 
 format: ## Format src/ with Prettier
 	bun run format
+
+generate-index: ## Regenerate song-book/README.md from the .cho charts
+	bun run generate:songbook
 
 check: type-check lint test ## Run the full pre-commit gate
 
