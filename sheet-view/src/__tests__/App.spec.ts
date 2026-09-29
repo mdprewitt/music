@@ -161,3 +161,22 @@ describe('App — footer links', () => {
     expect(link.text()).toContain('opens in a new window')
   })
 })
+
+describe('App — songbook link', () => {
+  beforeEach(() => {
+    setActivePinia(createPinia())
+  })
+
+  it('links to songbook.html from both the header and the footer', () => {
+    const wrapper = mount(App)
+
+    const headerLink = wrapper.find('header a.songbook-link')
+    expect(headerLink.exists()).toBe(true)
+    expect(headerLink.attributes('href')).toBe('/songbook.html')
+    expect(headerLink.text()).toBe('Songbook')
+
+    const footerLink = wrapper.find('footer a.link-btn')
+    expect(footerLink.attributes('href')).toBe('/songbook.html')
+    expect(footerLink.text()).toBe('Songbook')
+  })
+})

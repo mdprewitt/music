@@ -77,6 +77,28 @@ test.describe('accessibility (axe-core)', () => {
   }
 })
 
+test.describe('songbook page (axe-core)', () => {
+  test('has no violations in light mode', async ({ page }) => {
+    await page.emulateMedia({ colorScheme: 'light' })
+    await page.goto('/songbook.html')
+    await expect(page.getByRole('heading', { name: 'Song Book' })).toBeVisible()
+    await expectNoViolations(page)
+  })
+
+  test('has no violations in dark mode', async ({ page }) => {
+    await page.emulateMedia({ colorScheme: 'dark' })
+    await page.goto('/songbook.html')
+    await expect(page.getByRole('heading', { name: 'Song Book' })).toBeVisible()
+    await expectNoViolations(page)
+  })
+
+  test('has no violations once the filter narrows the table', async ({ page }) => {
+    await page.goto('/songbook.html')
+    await page.getByLabel('Filter').fill('pink floyd')
+    await expectNoViolations(page)
+  })
+})
+
 test.describe('narrow viewport (320px)', () => {
   test.use({ viewport: { width: 320, height: 700 } })
 

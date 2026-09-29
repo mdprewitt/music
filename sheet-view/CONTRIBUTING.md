@@ -195,13 +195,22 @@ Drop the `.cho` file in `song-book/` (needs at least a `{t:}` title tag; add
 `{artist:}` too if you have it), then regenerate the index:
 
 ```bash
-bun run generate:songbook
+bun run generate:songbook   # or: make generate-index
 ```
 
-This rewrites `song-book/README.md` — a markdown table of every chart, linking to the raw
-`.cho` file and to the hosted Sheet-View viewer. It's generated
-(`scripts/generate-song-index.mjs`); don't hand-edit it. Commit the regenerated file alongside
-the new chart.
+This rewrites two generated files (`scripts/generate-song-index.mjs`; don't hand-edit either)
+linking every chart to its raw `.cho` file and to the hosted Sheet-View viewer:
+
+- `song-book/README.md` — a markdown table, browsable on github.com.
+- `public/songbook.html` — a standalone page deployed to GitHub Pages alongside the app, linked
+  from the app's header and footer ("Songbook").
+
+Commit both regenerated files alongside the new chart. The GitHub Pages workflow also
+regenerates `public/songbook.html` before every build, so a stale commit won't ship — but commit
+it anyway so `bun dev`/`bun run preview` and the e2e suite see a current page without a build
+step, and so the diff review shows the new song landing in the index. A chart added or edited
+under `song-book/` now triggers a Pages redeploy on its own (see `.github/workflows/pages.yml`'s
+`paths` filter), the same as a change under `sheet-view/`.
 
 ## Changing the key
 

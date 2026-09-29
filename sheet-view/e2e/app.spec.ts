@@ -95,6 +95,38 @@ test.describe('narrow viewport', () => {
   })
 })
 
+test.describe('songbook page', () => {
+  test('the header link opens the song index, which filters and links back', async ({ page }) => {
+    await page.goto('/')
+
+    await page.getByRole('link', { name: 'Songbook' }).first().click()
+    await expect(page).toHaveURL(/\/songbook\.html$/)
+    await expect(page.getByRole('heading', { name: 'Song Book' })).toBeVisible()
+
+    // A known chart is listed, its viewer link round-trips through ?view=.
+    const pinballRow = page.locator('tr', { hasText: 'Pinball Wizard' })
+    await expect(pinballRow).toBeVisible()
+    const viewerHref = await pinballRow
+      .getByRole('link', { name: 'Pinball Wizard' })
+      .getAttribute('href')
+    expect(viewerHref).toMatch(/\?view=https:\/\/github\.com\/.+pinball-wizard-the-who\.cho$/)
+
+    // Filtering narrows the table and updates the visible count.
+    await page.getByLabel('Filter').fill('pinball')
+    await expect(pinballRow).toBeVisible()
+    await expect(page.locator('tr[data-search]:visible')).toHaveCount(1)
+    await expect(page.locator('#count')).toHaveText('1 of 31 songs')
+
+    // Escape clears the filter and restores every row.
+    await page.getByLabel('Filter').press('Escape')
+    await expect(page.locator('tr[data-search]:visible')).toHaveCount(31)
+
+    // The back link returns to the drop zone.
+    await page.getByRole('link', { name: /Sheet-View/ }).click()
+    await expect(page.locator('.drop-zone')).toBeVisible()
+  })
+})
+
 test('the Display panel no longer carries the instrument picker', async ({ page }) => {
   await page.goto('/')
   await page.locator('input[type="file"]').setInputFiles(SAMPLE_CHART)

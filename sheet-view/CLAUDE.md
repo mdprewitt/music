@@ -177,12 +177,23 @@ scripts/
                               #   tractable — that still emits candidates in the old
                               #   exhaustive order, so regenerating the pre-existing tables
                               #   is a no-op diff.
-  generate-song-index.mjs     # `bun run generate:songbook`. Reads every `song-book/*.cho`'s
-                              #   `{t:}`/`{title:}` + `{artist:}` tags and rewrites
-                              #   `song-book/README.md` as a markdown table linking each song
-                              #   to its raw `.cho` and to the hosted Sheet-View viewer
-                              #   (`?view=<github blob url>`). Plain node:fs, no src/ import —
-                              #   runs under `node` or `bun`. Run by hand after adding a chart.
+  generate-song-index.mjs     # `bun run generate:songbook` (`make generate-index`). Reads every
+                              #   `song-book/*.cho`'s `{t:}`/`{title:}` + `{artist:}` tags and
+                              #   writes two outputs, both linking each song to its raw `.cho`
+                              #   and to the hosted Sheet-View viewer (`?view=<github blob
+                              #   url>`): `song-book/README.md` (markdown table, browsable on
+                              #   github.com) and `public/songbook.html` (standalone page,
+                              #   deployed to Pages alongside the app — commit both). Plain
+                              #   node:fs, no src/ import — runs under `node` or `bun`.
+                              #   `.github/workflows/pages.yml` also runs it before every build,
+                              #   so a forgotten local run can't ship a stale page; running it by
+                              #   hand after adding a chart keeps the committed files (and local
+                              #   `bun dev`/`preview`) current too.
+                              #   `public/songbook.html`'s own gotcha: Vite copies `public/`
+                              #   into `dist/` **verbatim** — unlike `index.html` it does not
+                              #   rewrite root-relative URLs for `BASE_PATH` — so every link the
+                              #   generated page emits to itself/the app is relative (`./…`),
+                              #   never `/…`.
 e2e/
   app.spec.ts                 # Playwright smoke suite — drop zone, picking a chart, the
                               #   header instrument <select> redrawing diagrams, the Display
