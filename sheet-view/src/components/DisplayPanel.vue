@@ -1,15 +1,22 @@
 <script setup lang="ts">
-import { nextTick, onBeforeUnmount, onMounted, ref, useId, watch } from 'vue'
+import { computed, nextTick, onBeforeUnmount, onMounted, ref, useId, watch } from 'vue'
 import { useSheetStore } from '@/stores/sheet'
 import { useThemeStore } from '@/stores/theme'
 import { panelShift } from './displayPanel'
+import { PAGE_TURNER_PRESETS } from '@/sheet/pageTurner'
 import DiagramPositionSelector from './DiagramPositionSelector.vue'
 import ThemeSelector from './ThemeSelector.vue'
 import CustomColorEditor from './CustomColorEditor.vue'
 import FontControls from './FontControls.vue'
+import RadioGroup from './RadioGroup.vue'
 
 const store = useSheetStore()
 const theme = useThemeStore()
+
+const turnerOptions = PAGE_TURNER_PRESETS.map((p) => ({ value: p.id, label: p.label }))
+const turnerHint = computed(
+  () => PAGE_TURNER_PRESETS.find((p) => p.id === store.pageTurner)?.hint ?? '',
+)
 
 const panelId = useId()
 const trigger = ref<HTMLElement | null>(null)
@@ -140,6 +147,20 @@ onBeforeUnmount(() => {
         <h2 class="panel-heading">Text</h2>
         <FontControls v-if="store.viewFormat !== 'pdf'" />
         <p v-else class="panel-note">Text size and font do not apply to the PDF layout.</p>
+      </section>
+
+      <section>
+        <h2 class="panel-heading">Page turner</h2>
+        <template v-if="store.viewFormat !== 'pdf'">
+          <RadioGroup
+            v-model="store.pageTurner"
+            name="page-turner"
+            label="Page turner keys"
+            :options="turnerOptions"
+          />
+          <p class="panel-note">{{ turnerHint }}</p>
+        </template>
+        <p v-else class="panel-note">Page turner keys do not work in the PDF view.</p>
       </section>
 
       <section>

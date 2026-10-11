@@ -10,6 +10,7 @@ import { describeShape } from '@/chords/diagram'
 import { INSTRUMENTS } from '@/chords/types'
 import { drawDiagramSheet, type PdfDoc } from '@/chords/pdf'
 import { fontStack } from '@/sheet/typography'
+import { pageTurnDirection, pageTurnDistance } from '@/sheet/pageTurner'
 import { markChordCells } from '@/sheet/interactive'
 import { handleRovingArrowKey } from '@/sheet/rovingFocus'
 import ViewSelector from './ViewSelector.vue'
@@ -179,10 +180,14 @@ watch(
   { immediate: true },
 )
 
-const pinnedGapStyle = computed(() => {
-  const pinnedOverlay = store.pinDiagrams && store.diagramPosition !== 'right'
-  return pinnedOverlay ? { '--pinned-strip-size': `${pinnedStripSize.value}px` } : {}
-})
+const pinnedOverlay = computed(() => store.pinDiagrams && store.diagramPosition !== 'right')
+// Height the pinned strip covers (0 when not an overlay) — also trims a page turn.
+const pinnedOverlaySize = computed(() =>
+  pinnedOverlay.value && store.showDiagrams ? pinnedStripSize.value : 0,
+)
+const pinnedGapStyle = computed(() =>
+  pinnedOverlay.value ? { '--pinned-strip-size': `${pinnedStripSize.value}px` } : {},
+)
 
 // Reader's text size / font, consumed by the chart styles below and by InlineSheet.vue.
 const sheetBodyStyle = computed(() => ({
@@ -281,9 +286,29 @@ function onDocumentKeydown(event: KeyboardEvent) {
   if (event.key === 'Escape') closePopover()
 }
 
+// Hardware page turners arrive as plain key presses. Registered on `document`
+// (bubble phase) so the chord cells' own arrow-key handling runs first and, by
+// calling preventDefault(), keeps priority. The window is the scroll container
+// (`#app` has no overflow). The PDF view's iframe swallows keys itself.
+function onPageTurnKeydown(event: KeyboardEvent) {
+  if (store.viewFormat === 'pdf') return
+  const direction = pageTurnDirection(event, store.pageTurner)
+  if (direction === null) return
+  event.preventDefault()
+  closePopover()
+  const reduceMotion =
+    typeof window.matchMedia === 'function' &&
+    window.matchMedia('(prefers-reduced-motion: reduce)').matches
+  window.scrollBy({
+    top: direction * pageTurnDistance(window.innerHeight, pinnedOverlaySize.value),
+    behavior: reduceMotion ? 'auto' : 'smooth',
+  })
+}
+
 onMounted(() => {
   document.addEventListener('pointerdown', onDocumentPointerDown)
   document.addEventListener('keydown', onDocumentKeydown)
+  document.addEventListener('keydown', onPageTurnKeydown)
   // The anchor is a snapshot of getBoundingClientRect at click time; any reflow
   // strands it, so drop the popover rather than let it float over other lyrics.
   window.addEventListener('resize', closePopover)
@@ -291,6 +316,7 @@ onMounted(() => {
 onBeforeUnmount(() => {
   document.removeEventListener('pointerdown', onDocumentPointerDown)
   document.removeEventListener('keydown', onDocumentKeydown)
+  document.removeEventListener('keydown', onPageTurnKeydown)
   window.removeEventListener('resize', closePopover)
 })
 

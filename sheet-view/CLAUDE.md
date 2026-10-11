@@ -50,12 +50,12 @@ src/
   stores/
     sheet.ts              # Pinia store: rawText, filename, song, parseError,
                           #   sourceFormat, viewFormat, instrument, diagramPosition,
-                          #   pinDiagrams, displayPanelOpen, fontScale, sheetFont,
+                          #   pinDiagrams, displayPanelOpen, fontScale, sheetFont, pageTurner,
                           #   showDiagrams, targetKey
                           #   + originalKey/availableKeys/canChangeKey/displaySong (computed)
                           #   + loadFile/loadFromUrl/parse/reset
                           #   viewFormat, instrument, diagramPosition, pinDiagrams,
-                          #   fontScale, sheetFont and
+                          #   fontScale, sheetFont, pageTurner and
                           #   displayPanelOpen persist (sheet-view:*) and survive reset();
                           #   showDiagrams + targetKey reset per sheet. targetKey is
                           #   remembered per song in sheet-view:songKeys (see sheet/key.ts)
@@ -107,6 +107,10 @@ src/
                           #   registry (system stacks), guards, fontStack(). SheetViewer
                           #   sets --sv-sheet-scale/--sv-sheet-font on .sheet-body; the
                           #   chart styles and InlineSheet.vue read them (inner sizes in em).
+    pageTurner.ts         # PAGE_TURNER_PRESETS (key pairs per device mode),
+                          #   pageTurnDirection(event, id) -> 1|-1|null, pageTurnDistance().
+                          #   SheetViewer's document keydown (bubble phase, after the chord
+                          #   cells' own handler) calls window.scrollBy; off in PDF view.
     title.ts              # pageTitle(song, filename) — the browser tab title:
                           #   "<name> - Sheet-View", name = the song's {title} (via
                           #   key.ts's metaText) or else the loaded filename with its
@@ -141,7 +145,7 @@ src/
                           #   <button> of .viewer-header — a spec depends on that);
                           #   owns the click-a-chord -> ChordPopover interaction (both HTML views)
     DisplayPanel.vue      # "Display" disclosure button + anchored panel holding the set-once
-                          #   prefs (Diagrams position+pin / Theme+CustomColorEditor), each
+                          #   prefs (Diagrams position+pin / Page turner presets / Theme+CustomColorEditor), each
                           #   captioned; open state = store.displayPanelOpen; dismiss on
                           #   Esc / outside pointerdown (same idiom as SheetViewer's popover).
                           #   The wrapping toolbar can drop the trigger anywhere on the

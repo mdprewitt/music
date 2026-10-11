@@ -393,4 +393,50 @@ describe('SheetViewer', () => {
       expect(link.attributes('download')).toBe('song.pdf')
     })
   })
+
+  describe('page turner keys', () => {
+    function press(key: string) {
+      const event = new KeyboardEvent('keydown', { key, bubbles: true, cancelable: true })
+      document.body.dispatchEvent(event)
+      return event
+    }
+
+    it('scrolls a screen forward and back for the chosen preset', async () => {
+      const scrollBy = vi.fn<(opts: ScrollToOptions) => void>()
+      vi.stubGlobal('scrollBy', scrollBy)
+      const { store, wrapper } = await mountWithSong('html')
+      store.pageTurner = 'page-keys'
+      const down = press('PageDown')
+      expect(down.defaultPrevented).toBe(true)
+      expect(scrollBy.mock.calls[0]?.[0].top).toBeGreaterThan(0)
+      press('PageUp')
+      expect(scrollBy.mock.calls[1]?.[0].top).toBeLessThan(0)
+      wrapper.unmount()
+    })
+
+    it('does nothing while off or in the PDF view', async () => {
+      const scrollBy = vi.fn<(opts: ScrollToOptions) => void>()
+      vi.stubGlobal('scrollBy', scrollBy)
+      const { store, wrapper } = await mountWithSong('html')
+      press('PageDown')
+      store.pageTurner = 'page-keys'
+      store.viewFormat = 'chordpro'
+      press('ArrowDown')
+      expect(scrollBy).not.toHaveBeenCalled()
+      store.viewFormat = 'pdf'
+      press('PageDown')
+      expect(scrollBy).not.toHaveBeenCalled()
+      wrapper.unmount()
+    })
+
+    it('stops listening after unmount', async () => {
+      const scrollBy = vi.fn<(opts: ScrollToOptions) => void>()
+      vi.stubGlobal('scrollBy', scrollBy)
+      const { store, wrapper } = await mountWithSong('html')
+      store.pageTurner = 'page-keys'
+      wrapper.unmount()
+      press('PageDown')
+      expect(scrollBy).not.toHaveBeenCalled()
+    })
+  })
 })

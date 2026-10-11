@@ -17,6 +17,7 @@ import {
   isSheetFontId,
   type SheetFontId,
 } from '@/sheet/typography'
+import { DEFAULT_PAGE_TURNER, isPageTurnerId, type PageTurnerId } from '@/sheet/pageTurner'
 
 type SourceFormat = 'chordpro'
 export type ViewFormat = 'chordpro' | 'html' | 'html-inline' | 'pdf'
@@ -34,6 +35,7 @@ const VIEW_FORMAT_STORAGE_KEY = 'sheet-view:viewFormat'
 const DISPLAY_PANEL_STORAGE_KEY = 'sheet-view:displayPanel'
 const FONT_SCALE_STORAGE_KEY = 'sheet-view:fontScale'
 const SHEET_FONT_STORAGE_KEY = 'sheet-view:sheetFont'
+const PAGE_TURNER_STORAGE_KEY = 'sheet-view:pageTurner'
 const DEFAULT_INSTRUMENT: Instrument = 'guitar'
 const DEFAULT_DIAGRAM_POSITION: DiagramPosition = 'top'
 const DEFAULT_VIEW_FORMAT: ViewFormat = 'html'
@@ -47,6 +49,7 @@ const asFontScale = (raw: string): number | null => {
   return isFontScale(value) ? value : null
 }
 const asSheetFont = (raw: string): SheetFontId | null => (isSheetFontId(raw) ? raw : null)
+const asPageTurner = (raw: string): PageTurnerId | null => (isPageTurnerId(raw) ? raw : null)
 const asBoolean = (raw: string): boolean => raw === 'true'
 
 /**
@@ -106,6 +109,10 @@ export const useSheetStore = defineStore('sheet', () => {
   )
   const sheetFont = ref<SheetFontId>(
     readStored(SHEET_FONT_STORAGE_KEY, asSheetFont) ?? DEFAULT_SHEET_FONT,
+  )
+  // Which key pair a hardware page turner sends — see `src/sheet/pageTurner.ts`.
+  const pageTurner = ref<PageTurnerId>(
+    readStored(PAGE_TURNER_STORAGE_KEY, asPageTurner) ?? DEFAULT_PAGE_TURNER,
   )
   const showDiagrams = ref(true)
   // `null` means "render in the sheet's own key". Only meaningful when the
@@ -182,6 +189,7 @@ export const useSheetStore = defineStore('sheet', () => {
     flush: 'sync',
   })
   watch(sheetFont, (value) => writeStored(SHEET_FONT_STORAGE_KEY, value), { flush: 'sync' })
+  watch(pageTurner, (value) => writeStored(PAGE_TURNER_STORAGE_KEY, value), { flush: 'sync' })
   watch(viewFormat, (value) => writeStored(VIEW_FORMAT_STORAGE_KEY, value), { flush: 'sync' })
   watch(displayPanelOpen, (value) => writeStored(DISPLAY_PANEL_STORAGE_KEY, String(value)), {
     flush: 'sync',
@@ -319,7 +327,8 @@ export const useSheetStore = defineStore('sheet', () => {
     showDiagrams.value = true
     targetKey.value = null
     // keep `instrument`, `diagramPosition`, `pinDiagrams`, `viewFormat`,
-    // `fontScale`, `sheetFont` and `displayPanelOpen` — they are user preferences that outlive a single sheet.
+    // `fontScale`, `sheetFont`, `pageTurner` and `displayPanelOpen` — they are user preferences
+    // that outlive a single sheet.
     // `targetKey` is song-scoped (like `showDiagrams`) so it is cleared here, but
     // the per-song choice stays in localStorage and is restored on reload.
   }
@@ -337,6 +346,7 @@ export const useSheetStore = defineStore('sheet', () => {
     displayPanelOpen,
     fontScale,
     sheetFont,
+    pageTurner,
     showDiagrams,
     targetKey,
     originalKey,

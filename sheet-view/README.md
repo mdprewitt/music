@@ -64,6 +64,9 @@ remembered once you pick one.
 - **Text** — make the chart text smaller or larger (**A−** / **A+**, 75%–250%, with a **Reset**
   back to 100%) and choose a font: monospace, sans-serif or serif. Applies to the HTML,
   HTML-inline and ChordPro views; the PDF layout is fixed. Remembered between visits.
+- **Page turner** — pick the key pair your Bluetooth page turner sends (↑/↓ arrows, ←/→ arrows,
+  Page Up/Down, or Space/Enter + Backspace) and those keys scroll the chart about a screen at a
+  time, leaving a little overlap. Off by default; not available in the PDF view. Remembered.
 - **Theme** — the colour templates and custom pickers described below.
 
 The panel is anchored under its button, so opening it never pushes the chart down, and it closes
