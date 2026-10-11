@@ -130,6 +130,19 @@ scale with it. **To add a font:** add a row to `SHEET_FONTS`; the radio group
 enumerates it. The PDF is not affected. The controls are `FontControls.vue`, shown in
 the Display panel's "Text" section.
 
+## Page turner keys
+
+Hardware page turners are HID keyboards, so support is a key mapping.
+`src/sheet/pageTurner.ts` holds the `PAGE_TURNER_PRESETS` registry (next/prev
+`KeyboardEvent.key` values), `pageTurnDirection()` (ignores modified keys, form
+fields, already-`preventDefault`ed events, and Space/Enter on buttons/links) and
+`pageTurnDistance()`. The choice is `store.pageTurner` (`sheet-view:pageTurner`,
+survives `reset()`). `SheetViewer.vue` listens on `document` (bubble phase, so the
+chord cells' arrow-key navigation keeps priority) and calls `window.scrollBy`,
+reduced by the pinned diagram strip's height and using `behavior: 'auto'` under
+`prefers-reduced-motion`. **To add a device mode:** add a row to
+`PAGE_TURNER_PRESETS`; the Display panel's radio group enumerates it.
+
 ## Chord diagrams
 
 `buildDiagramIndex(song, instrument, rawText)` in `src/chords/shapes.ts` is the

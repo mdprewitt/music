@@ -200,6 +200,22 @@ describe('useSheetStore', () => {
     expect(useSheetStore().fontScale).toBe(1)
   })
 
+  it('defaults pageTurner to off, keeps it across a reset and persists it', async () => {
+    const store = useSheetStore()
+    expect(store.pageTurner).toBe('off')
+    store.pageTurner = 'page-keys'
+    await store.loadFile(fileOf(SAMPLE_CHORDPRO))
+    store.reset()
+    expect(store.pageTurner).toBe('page-keys')
+    setActivePinia(createPinia())
+    expect(useSheetStore().pageTurner).toBe('page-keys')
+  })
+
+  it('ignores a stored pageTurner that is not a preset', () => {
+    localStorage.setItem('sheet-view:pageTurner', 'bogus')
+    expect(useSheetStore().pageTurner).toBe('off')
+  })
+
   it('defaults pinDiagrams to false', () => {
     expect(useSheetStore().pinDiagrams).toBe(false)
   })

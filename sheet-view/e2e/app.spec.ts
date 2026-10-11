@@ -153,3 +153,22 @@ test('the Display panel text size buttons resize the chart', async ({ page }) =>
   await page.getByRole('button', { name: 'Reset' }).click()
   expect(await sizeOf()).toBe(before)
 })
+
+test('a page turner preset scrolls the chart by a screen', async ({ page }) => {
+  await page.setViewportSize({ width: 800, height: 300 })
+  await page.goto('/')
+  await page.locator('input[type="file"]').setInputFiles(SAMPLE_CHART)
+  // Make the page taller than the viewport so there is something to scroll.
+  await page.evaluate(() => {
+    document.body.style.minHeight = '3000px'
+  })
+  await page.getByRole('button', { name: 'Display' }).click()
+  await page.locator('.option', { hasText: 'Page Up / Down' }).click()
+  await page.getByRole('button', { name: 'Display' }).click()
+
+  await page.evaluate(() => window.scrollTo(0, 0))
+  await page.keyboard.press('PageDown')
+  await expect.poll(() => page.evaluate(() => window.scrollY)).toBeGreaterThan(100)
+  await page.keyboard.press('PageUp')
+  await expect.poll(() => page.evaluate(() => window.scrollY)).toBe(0)
+})

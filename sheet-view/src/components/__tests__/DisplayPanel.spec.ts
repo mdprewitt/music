@@ -114,7 +114,18 @@ describe('DisplayPanel', () => {
     const wrapper = mount(DisplayPanel)
     const headings = wrapper.findAll('.panel-heading')
     expect(headings.map((h) => h.element.tagName)).toEqual(['H2', 'H2', 'H2'])
-    expect(headings.map((h) => h.text())).toEqual(['Diagrams', 'Text', 'Theme'])
+    expect(headings.map((h) => h.text())).toEqual(['Diagrams', 'Text', 'Page turner', 'Theme'])
+  })
+
+  it('selects a page turner preset from the radio group', async () => {
+    const store = useSheetStore()
+    store.displayPanelOpen = true
+    const wrapper = mount(DisplayPanel)
+    const radios = wrapper.findAll('input[name="page-turner"]')
+    expect(radios).toHaveLength(5)
+    await radios[3]?.setValue()
+    expect(store.pageTurner).toBe('page-keys')
+    expect(wrapper.text()).toContain('Page Down = next page')
   })
 
   it('shows the custom colour editor only for the custom theme', async () => {
