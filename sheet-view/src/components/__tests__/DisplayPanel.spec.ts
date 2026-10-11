@@ -113,7 +113,7 @@ describe('DisplayPanel', () => {
     useSheetStore().displayPanelOpen = true
     const wrapper = mount(DisplayPanel)
     const headings = wrapper.findAll('.panel-heading')
-    expect(headings.map((h) => h.element.tagName)).toEqual(['H2', 'H2', 'H2'])
+    expect(headings.map((h) => h.element.tagName)).toEqual(['H2', 'H2', 'H2', 'H2'])
     expect(headings.map((h) => h.text())).toEqual(['Diagrams', 'Text', 'Page turner', 'Theme'])
   })
 
