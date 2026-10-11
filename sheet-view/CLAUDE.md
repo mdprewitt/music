@@ -50,10 +50,12 @@ src/
   stores/
     sheet.ts              # Pinia store: rawText, filename, song, parseError,
                           #   sourceFormat, viewFormat, instrument, diagramPosition,
-                          #   pinDiagrams, displayPanelOpen, showDiagrams, targetKey
+                          #   pinDiagrams, displayPanelOpen, fontScale, sheetFont,
+                          #   showDiagrams, targetKey
                           #   + originalKey/availableKeys/canChangeKey/displaySong (computed)
                           #   + loadFile/loadFromUrl/parse/reset
-                          #   viewFormat, instrument, diagramPosition, pinDiagrams and
+                          #   viewFormat, instrument, diagramPosition, pinDiagrams,
+                          #   fontScale, sheetFont and
                           #   displayPanelOpen persist (sheet-view:*) and survive reset();
                           #   showDiagrams + targetKey reset per sheet. targetKey is
                           #   remembered per song in sheet-view:songKeys (see sheet/key.ts)
@@ -101,6 +103,10 @@ src/
                           #   itself is Song#changeKey. metaText() (string |
                           #   string[] | null|undefined -> string) is exported for
                           #   title.ts to share.
+    typography.ts         # FONT_SCALES steps + stepFontScale() (clamped), SHEET_FONTS
+                          #   registry (system stacks), guards, fontStack(). SheetViewer
+                          #   sets --sv-sheet-scale/--sv-sheet-font on .sheet-body; the
+                          #   chart styles and InlineSheet.vue read them (inner sizes in em).
     title.ts              # pageTitle(song, filename) — the browser tab title:
                           #   "<name> - Sheet-View", name = the song's {title} (via
                           #   key.ts's metaText) or else the loaded filename with its
@@ -149,6 +155,8 @@ src/
                           #   INSTRUMENT_FAMILIES), v-model on store.instrument
     KeySelector.vue       # header <select> of transpose targets, v-model on store.targetKey;
                           #   disabled with a hint when store.originalKey is null (no {key})
+    FontControls.vue      # A−/A+/Reset + font RadioGroup bound to store.fontScale/sheetFont;
+                          #   announces size changes; the Display panel's "Text" section
     ThemeSelector.vue     # radiogroup of 4 presets + Custom; :model-value/@update -> theme.selectTheme
     CustomColorEditor.vue # 5 <input type=color> bound to theme.customColors; shown when themeId==='custom'
     ChordDiagram.vue      # one SVG diagram from a DiagramShape

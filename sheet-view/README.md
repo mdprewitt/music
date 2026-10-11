@@ -61,6 +61,9 @@ remembered once you pick one.
 **Display** opens a small panel with the rest of the set-once preferences, grouped and labelled:
 - **Diagrams** — where the chord strip sits (top, right, bottom) and whether it stays pinned in
   place while the music scrolls. Shown only while diagrams are on and outside the PDF view.
+- **Text** — make the chart text smaller or larger (**A−** / **A+**, 75%–250%, with a **Reset**
+  back to 100%) and choose a font: monospace, sans-serif or serif. Applies to the HTML,
+  HTML-inline and ChordPro views; the PDF layout is fixed. Remembered between visits.
 - **Theme** — the colour templates and custom pickers described below.
 
 The panel is anchored under its button, so opening it never pushes the chart down, and it closes

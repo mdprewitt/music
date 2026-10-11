@@ -118,6 +118,18 @@ hovers, overlay, error) from them with `color-mix()`.
 - The PDF export is intentionally not themed (`chordsheetjs`' `PdfFormatter` and
   `src/chords/pdf.ts` own their ink colours).
 
+## Text size and font
+
+`src/sheet/typography.ts` holds the `FONT_SCALES` steps and the `SHEET_FONTS`
+registry (system stacks only). The reader's choice lives in the sheet store
+(`fontScale`, `sheetFont`; persisted as `sheet-view:fontScale` / `sheet-view:sheetFont`,
+kept across `reset()`). `SheetViewer.vue` publishes them as `--sv-sheet-scale` and
+`--sv-sheet-font` on `.sheet-body`; the chart styles (`.chord-sheet`, `.plain`,
+`InlineSheet.vue`'s `.inline-sheet`) consume them. Keep inner sizes in `em` so they
+scale with it. **To add a font:** add a row to `SHEET_FONTS`; the radio group
+enumerates it. The PDF is not affected. The controls are `FontControls.vue`, shown in
+the Display panel's "Text" section.
+
 ## Chord diagrams
 
 `buildDiagramIndex(song, instrument, rawText)` in `src/chords/shapes.ts` is the

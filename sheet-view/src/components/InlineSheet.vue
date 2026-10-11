@@ -146,18 +146,19 @@ function activateChord(event: Event, name: string) {
 
 <style scoped>
 .inline-sheet {
-  font-size: 1rem;
+  font-family: var(--sv-sheet-font, inherit);
+  font-size: calc(1rem * var(--sv-sheet-scale, 1));
   line-height: 1.7;
 }
 
 .title {
-  font-size: 1.5rem;
+  font-size: 1.5em;
   margin: 0 0 0.25rem;
   color: var(--sv-meta);
 }
 
 .subtitle {
-  font-size: 1.1rem;
+  font-size: 1.1em;
   font-weight: normal;
   margin: 0 0 1rem;
   color: var(--sv-comment);
@@ -173,7 +174,7 @@ function activateChord(event: Event, name: string) {
 }
 
 .label {
-  font-size: 0.95rem;
+  font-size: 0.95em;
   margin: 0 0 0.25rem;
   color: var(--sv-meta);
 }

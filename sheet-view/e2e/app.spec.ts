@@ -106,3 +106,18 @@ test('the Display panel no longer carries the instrument picker', async ({ page 
   await expect(panel).toContainText('Theme')
   await expect(panel.locator('select')).toHaveCount(0)
 })
+
+test('the Display panel text size buttons resize the chart', async ({ page }) => {
+  await page.goto('/')
+  await page.locator('input[type="file"]').setInputFiles(SAMPLE_CHART)
+  const chart = page.locator('.chord-sheet')
+  const sizeOf = () => chart.evaluate((el) => parseFloat(getComputedStyle(el).fontSize))
+  const before = await sizeOf()
+
+  await page.getByRole('button', { name: 'Display' }).click()
+  await page.getByRole('button', { name: 'Larger text' }).click()
+  expect(await sizeOf()).toBeGreaterThan(before)
+
+  await page.getByRole('button', { name: 'Reset' }).click()
+  expect(await sizeOf()).toBe(before)
+})

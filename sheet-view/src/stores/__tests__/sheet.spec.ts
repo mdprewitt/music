@@ -169,6 +169,37 @@ describe('useSheetStore', () => {
     expect(useSheetStore().diagramPosition).toBe('bottom')
   })
 
+  it('defaults fontScale and sheetFont', () => {
+    const store = useSheetStore()
+    expect(store.fontScale).toBe(1)
+    expect(store.sheetFont).toBe('mono')
+  })
+
+  it('keeps fontScale and sheetFont across a reset', async () => {
+    const store = useSheetStore()
+    store.fontScale = 1.5
+    store.sheetFont = 'serif'
+    await store.loadFile(fileOf(SAMPLE_CHORDPRO))
+    store.reset()
+    expect(store.fontScale).toBe(1.5)
+    expect(store.sheetFont).toBe('serif')
+  })
+
+  it('persists fontScale and sheetFont and restores them in a fresh store', () => {
+    const store = useSheetStore()
+    store.fontScale = 1.75
+    store.sheetFont = 'sans'
+    setActivePinia(createPinia())
+    const fresh = useSheetStore()
+    expect(fresh.fontScale).toBe(1.75)
+    expect(fresh.sheetFont).toBe('sans')
+  })
+
+  it('ignores a stored fontScale that is not one of the steps', () => {
+    localStorage.setItem('sheet-view:fontScale', '7')
+    expect(useSheetStore().fontScale).toBe(1)
+  })
+
   it('defaults pinDiagrams to false', () => {
     expect(useSheetStore().pinDiagrams).toBe(false)
   })
