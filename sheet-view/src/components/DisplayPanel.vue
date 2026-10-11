@@ -6,6 +6,7 @@ import { panelShift } from './displayPanel'
 import DiagramPositionSelector from './DiagramPositionSelector.vue'
 import ThemeSelector from './ThemeSelector.vue'
 import CustomColorEditor from './CustomColorEditor.vue'
+import FontControls from './FontControls.vue'
 
 const store = useSheetStore()
 const theme = useThemeStore()
@@ -133,6 +134,12 @@ onBeforeUnmount(() => {
               : 'Turn on “Diagrams” to place and pin the chord strip.'
           }}
         </p>
+      </section>
+
+      <section>
+        <h2 class="panel-heading">Text</h2>
+        <FontControls v-if="store.viewFormat !== 'pdf'" />
+        <p v-else class="panel-note">Text size and font do not apply to the PDF layout.</p>
       </section>
 
       <section>

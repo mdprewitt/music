@@ -9,6 +9,7 @@ import { buildDiagramIndex, findShape } from '@/chords/shapes'
 import { describeShape } from '@/chords/diagram'
 import { INSTRUMENTS } from '@/chords/types'
 import { drawDiagramSheet, type PdfDoc } from '@/chords/pdf'
+import { fontStack } from '@/sheet/typography'
 import { markChordCells } from '@/sheet/interactive'
 import { handleRovingArrowKey } from '@/sheet/rovingFocus'
 import ViewSelector from './ViewSelector.vue'
@@ -183,6 +184,13 @@ const pinnedGapStyle = computed(() => {
   return pinnedOverlay ? { '--pinned-strip-size': `${pinnedStripSize.value}px` } : {}
 })
 
+// Reader's text size / font, consumed by the chart styles below and by InlineSheet.vue.
+const sheetBodyStyle = computed(() => ({
+  ...pinnedGapStyle.value,
+  '--sv-sheet-scale': String(store.fontScale),
+  '--sv-sheet-font': fontStack(store.sheetFont),
+}))
+
 onBeforeUnmount(() => stripResizeObserver?.disconnect())
 
 // --- Click a chord → show its diagram in a popover above it -------------------
@@ -337,7 +345,7 @@ watch(
       ref="sheetBody"
       class="sheet-body"
       :class="[`pos-${store.diagramPosition}`, { pinned: store.pinDiagrams }]"
-      :style="pinnedGapStyle"
+      :style="sheetBodyStyle"
     >
       <ChordDiagrams
         v-if="song && store.showDiagrams"
@@ -487,8 +495,8 @@ button:hover {
 }
 
 .plain {
-  font-family: monospace;
-  font-size: 1rem;
+  font-family: var(--sv-sheet-font, monospace);
+  font-size: calc(1rem * var(--sv-sheet-scale, 1));
   white-space: pre;
   overflow-x: auto;
   margin: 0;
@@ -530,8 +538,8 @@ button:hover {
 }
 
 .sheet :deep(.chord-sheet) {
-  font-family: monospace;
-  font-size: 1rem;
+  font-family: var(--sv-sheet-font, monospace);
+  font-size: calc(1rem * var(--sv-sheet-scale, 1));
 }
 
 .sheet :deep(.paragraph) {

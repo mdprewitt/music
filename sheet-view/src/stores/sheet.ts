@@ -10,6 +10,13 @@ import {
   type DiagramPosition,
   type Instrument,
 } from '@/chords/types'
+import {
+  DEFAULT_FONT_SCALE,
+  DEFAULT_SHEET_FONT,
+  isFontScale,
+  isSheetFontId,
+  type SheetFontId,
+} from '@/sheet/typography'
 
 type SourceFormat = 'chordpro'
 export type ViewFormat = 'chordpro' | 'html' | 'html-inline' | 'pdf'
@@ -25,6 +32,8 @@ const DIAGRAM_POSITION_STORAGE_KEY = 'sheet-view:diagramPosition'
 const PIN_DIAGRAMS_STORAGE_KEY = 'sheet-view:pinDiagrams'
 const VIEW_FORMAT_STORAGE_KEY = 'sheet-view:viewFormat'
 const DISPLAY_PANEL_STORAGE_KEY = 'sheet-view:displayPanel'
+const FONT_SCALE_STORAGE_KEY = 'sheet-view:fontScale'
+const SHEET_FONT_STORAGE_KEY = 'sheet-view:sheetFont'
 const DEFAULT_INSTRUMENT: Instrument = 'guitar'
 const DEFAULT_DIAGRAM_POSITION: DiagramPosition = 'top'
 const DEFAULT_VIEW_FORMAT: ViewFormat = 'html'
@@ -33,6 +42,11 @@ const asInstrument = (raw: string): Instrument | null => (isInstrument(raw) ? ra
 const asDiagramPosition = (raw: string): DiagramPosition | null =>
   isDiagramPosition(raw) ? raw : null
 const asViewFormat = (raw: string): ViewFormat | null => (isViewFormat(raw) ? raw : null)
+const asFontScale = (raw: string): number | null => {
+  const value = Number(raw)
+  return isFontScale(value) ? value : null
+}
+const asSheetFont = (raw: string): SheetFontId | null => (isSheetFontId(raw) ? raw : null)
 const asBoolean = (raw: string): boolean => raw === 'true'
 
 /**
@@ -86,6 +100,13 @@ export const useSheetStore = defineStore('sheet', () => {
   const pinDiagrams = ref<boolean>(readStored(PIN_DIAGRAMS_STORAGE_KEY, asBoolean) ?? false)
   // Whether the "Display" settings panel in the viewer header is expanded.
   const displayPanelOpen = ref<boolean>(readStored(DISPLAY_PANEL_STORAGE_KEY, asBoolean) ?? false)
+  // Chart text size multiplier and font — see `src/sheet/typography.ts`.
+  const fontScale = ref<number>(
+    readStored(FONT_SCALE_STORAGE_KEY, asFontScale) ?? DEFAULT_FONT_SCALE,
+  )
+  const sheetFont = ref<SheetFontId>(
+    readStored(SHEET_FONT_STORAGE_KEY, asSheetFont) ?? DEFAULT_SHEET_FONT,
+  )
   const showDiagrams = ref(true)
   // `null` means "render in the sheet's own key". Only meaningful when the
   // ChordPro carries a `{key: …}` directive — see `canChangeKey`.
@@ -157,6 +178,10 @@ export const useSheetStore = defineStore('sheet', () => {
   watch(pinDiagrams, (value) => writeStored(PIN_DIAGRAMS_STORAGE_KEY, String(value)), {
     flush: 'sync',
   })
+  watch(fontScale, (value) => writeStored(FONT_SCALE_STORAGE_KEY, String(value)), {
+    flush: 'sync',
+  })
+  watch(sheetFont, (value) => writeStored(SHEET_FONT_STORAGE_KEY, value), { flush: 'sync' })
   watch(viewFormat, (value) => writeStored(VIEW_FORMAT_STORAGE_KEY, value), { flush: 'sync' })
   watch(displayPanelOpen, (value) => writeStored(DISPLAY_PANEL_STORAGE_KEY, String(value)), {
     flush: 'sync',
@@ -293,8 +318,8 @@ export const useSheetStore = defineStore('sheet', () => {
     sourceFormat.value = 'chordpro'
     showDiagrams.value = true
     targetKey.value = null
-    // keep `instrument`, `diagramPosition`, `pinDiagrams`, `viewFormat` and
-    // `displayPanelOpen` — they are user preferences that outlive a single sheet.
+    // keep `instrument`, `diagramPosition`, `pinDiagrams`, `viewFormat`,
+    // `fontScale`, `sheetFont` and `displayPanelOpen` — they are user preferences that outlive a single sheet.
     // `targetKey` is song-scoped (like `showDiagrams`) so it is cleared here, but
     // the per-song choice stays in localStorage and is restored on reload.
   }
@@ -310,6 +335,8 @@ export const useSheetStore = defineStore('sheet', () => {
     diagramPosition,
     pinDiagrams,
     displayPanelOpen,
+    fontScale,
+    sheetFont,
     showDiagrams,
     targetKey,
     originalKey,
