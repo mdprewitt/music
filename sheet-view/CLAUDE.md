@@ -283,6 +283,12 @@ playwright.config.ts          # testDir e2e/, chromium only, webServer = build +
 
 For each new feature request, create a new branch and when done, push the branch and create a PR. 
 
+When working on **multiple issues/features in one session, stack the PRs**: branch the first
+off `main`, branch each next one off the previous feature branch, and open each PR with its
+base set to the previous branch (`gh pr create --base <previous-branch>`), not `main`. Say in
+each PR body which PR it is stacked on. Keep one concern per branch so each PR's diff shows only
+its own change. Merge bottom-up; GitHub retargets the next PR to `main` when its base merges.
+
 Use **Conventional Commits** with scope `sheet-view/<feature>`:
 
 ```
