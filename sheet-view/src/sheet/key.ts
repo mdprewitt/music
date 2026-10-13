@@ -34,9 +34,7 @@ function parseKeyEntries(raw: string): KeyEntry[] | null {
   }
   // Legacy `{ id: key }` object — migrate on read; the next write stores an array.
   if (parsed && typeof parsed === 'object') {
-    return Object.entries(parsed).filter(
-      (entry): entry is KeyEntry => typeof entry[1] === 'string',
-    )
+    return Object.entries(parsed).filter((entry): entry is KeyEntry => typeof entry[1] === 'string')
   }
   return null
 }

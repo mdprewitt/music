@@ -66,17 +66,18 @@ test.describe('narrow viewport', () => {
     expect(overflows).toBe(false)
   })
 
-  test('the Display panel stays on screen when its trigger wraps near the left edge', async ({
+  test('the Settings drawer fits the screen as a bottom sheet', async ({
     page,
   }) => {
     await page.goto('/')
     await page.locator('input[type="file"]').setInputFiles(SAMPLE_CHART)
-    await page.getByRole('button', { name: 'Display' }).click()
+    await page.getByRole('button', { name: /Settings/ }).click()
 
-    const box = await page.locator('.panel').boundingBox()
+    const box = await page.locator('dialog.drawer').boundingBox()
     expect(box).not.toBeNull()
     expect(box!.x).toBeGreaterThanOrEqual(0)
     expect(box!.x + box!.width).toBeLessThanOrEqual(390)
+    expect(box!.y + box!.height).toBeLessThanOrEqual(844)
   })
 
   test('the "Right" diagram strip stacks below the chart instead of overflowing the screen', async ({
@@ -84,7 +85,7 @@ test.describe('narrow viewport', () => {
   }) => {
     await page.goto('/')
     await page.locator('input[type="file"]').setInputFiles(SAMPLE_CHART)
-    await page.getByRole('button', { name: 'Display' }).click()
+    await page.getByRole('button', { name: /Settings/ }).click()
     await page.locator('.position-selector .option', { hasText: 'Right' }).click()
     await expect(page.locator('.chord-diagrams')).toHaveClass(/pos-right/)
 
@@ -127,26 +128,27 @@ test.describe('songbook page', () => {
   })
 })
 
-test('the Display panel no longer carries the instrument picker', async ({ page }) => {
+test('the Settings drawer carries the set-once prefs but not the instrument picker', async ({ page }) => {
   await page.goto('/')
   await page.locator('input[type="file"]').setInputFiles(SAMPLE_CHART)
-  await page.getByRole('button', { name: 'Display' }).click()
+  await page.getByRole('button', { name: /Settings/ }).click()
 
-  const panel = page.locator('.panel')
+  const panel = page.locator('dialog.drawer')
   await expect(panel).toBeVisible()
+  await expect(panel).toContainText('View')
   await expect(panel).toContainText('Diagrams')
   await expect(panel).toContainText('Theme')
   await expect(panel.locator('select')).toHaveCount(0)
 })
 
-test('the Display panel text size buttons resize the chart', async ({ page }) => {
+test('the Settings drawer text size buttons resize the chart', async ({ page }) => {
   await page.goto('/')
   await page.locator('input[type="file"]').setInputFiles(SAMPLE_CHART)
   const chart = page.locator('.chord-sheet')
   const sizeOf = () => chart.evaluate((el) => parseFloat(getComputedStyle(el).fontSize))
   const before = await sizeOf()
 
-  await page.getByRole('button', { name: 'Display' }).click()
+  await page.getByRole('button', { name: /Settings/ }).click()
   await page.getByRole('button', { name: 'Larger text' }).click()
   expect(await sizeOf()).toBeGreaterThan(before)
 
@@ -162,9 +164,9 @@ test('a page turner preset scrolls the chart by a screen', async ({ page }) => {
   await page.evaluate(() => {
     document.body.style.minHeight = '3000px'
   })
-  await page.getByRole('button', { name: 'Display' }).click()
+  await page.getByRole('button', { name: /Settings/ }).click()
   await page.locator('.option', { hasText: 'Page Up / Down' }).click()
-  await page.getByRole('button', { name: 'Display' }).click()
+  await page.keyboard.press('Escape')
 
   await page.evaluate(() => window.scrollTo(0, 0))
   await page.keyboard.press('PageDown')

@@ -46,9 +46,7 @@ export const useThemeStore = defineStore('theme', () => {
 
   /** The colours currently in effect — a preset's, or the custom palette. */
   const colors = computed<ThemeColors>(() =>
-    themeId.value === 'custom'
-      ? customColors.value
-      : THEME_PRESETS[themeId.value].colors,
+    themeId.value === 'custom' ? customColors.value : THEME_PRESETS[themeId.value].colors,
   )
 
   watch(themeId, (value) => writeStored(THEME_STORAGE_KEY, value), { flush: 'sync' })

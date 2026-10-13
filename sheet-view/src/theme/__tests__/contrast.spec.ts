@@ -18,54 +18,57 @@ function derivedTokens(colors: (typeof THEME_PRESETS)['light']['colors']) {
   return { surface, surfaceHover, border, error, errorBg, cdGrid }
 }
 
-describe.each(THEME_PRESET_IDS.map((id) => THEME_PRESETS[id]))('theme preset contrast: $label', (preset) => {
-  const { background, lyrics, chord, comment, meta } = preset.colors
-  const { surfaceHover, border, surface, error, errorBg, cdGrid } = derivedTokens(preset.colors)
+describe.each(THEME_PRESET_IDS.map((id) => THEME_PRESETS[id]))(
+  'theme preset contrast: $label',
+  (preset) => {
+    const { background, lyrics, chord, comment, meta } = preset.colors
+    const { surfaceHover, border, surface, error, errorBg, cdGrid } = derivedTokens(preset.colors)
 
-  it('body/lyric text clears 4.5:1 (1.4.3)', () => {
-    expect(contrastRatio(lyrics, background)).toBeGreaterThanOrEqual(AA_TEXT)
-  })
+    it('body/lyric text clears 4.5:1 (1.4.3)', () => {
+      expect(contrastRatio(lyrics, background)).toBeGreaterThanOrEqual(AA_TEXT)
+    })
 
-  it('meta (headings, filename) text clears 4.5:1 (1.4.3)', () => {
-    expect(contrastRatio(meta, background)).toBeGreaterThanOrEqual(AA_TEXT)
-  })
+    it('meta (headings, filename) text clears 4.5:1 (1.4.3)', () => {
+      expect(contrastRatio(meta, background)).toBeGreaterThanOrEqual(AA_TEXT)
+    })
 
-  it('comment text clears 4.5:1 (1.4.3)', () => {
-    expect(contrastRatio(comment, background)).toBeGreaterThanOrEqual(AA_TEXT)
-  })
+    it('comment text clears 4.5:1 (1.4.3)', () => {
+      expect(contrastRatio(comment, background)).toBeGreaterThanOrEqual(AA_TEXT)
+    })
 
-  it('chord text clears 4.5:1 against the page background (1.4.3)', () => {
-    expect(contrastRatio(chord, background)).toBeGreaterThanOrEqual(AA_TEXT)
-  })
+    it('chord text clears 4.5:1 against the page background (1.4.3)', () => {
+      expect(contrastRatio(chord, background)).toBeGreaterThanOrEqual(AA_TEXT)
+    })
 
-  it('chord text clears 4.5:1 on its own hover/focus/open background (1.4.3)', () => {
-    // The chord's hover, focus and "diagram open" states all paint
-    // --sv-surface-hover behind the still-visible chord text — this is
-    // the pairing that failed on the original Light/Sepia chord hues.
-    expect(contrastRatio(chord, surfaceHover)).toBeGreaterThanOrEqual(AA_TEXT)
-  })
+    it('chord text clears 4.5:1 on its own hover/focus/open background (1.4.3)', () => {
+      // The chord's hover, focus and "diagram open" states all paint
+      // --sv-surface-hover behind the still-visible chord text — this is
+      // the pairing that failed on the original Light/Sepia chord hues.
+      expect(contrastRatio(chord, surfaceHover)).toBeGreaterThanOrEqual(AA_TEXT)
+    })
 
-  it('error text clears 4.5:1 against both the page and its own error background (1.4.3)', () => {
-    expect(contrastRatio(error, background)).toBeGreaterThanOrEqual(AA_TEXT)
-    expect(contrastRatio(error, errorBg)).toBeGreaterThanOrEqual(AA_TEXT)
-  })
+    it('error text clears 4.5:1 against both the page and its own error background (1.4.3)', () => {
+      expect(contrastRatio(error, background)).toBeGreaterThanOrEqual(AA_TEXT)
+      expect(contrastRatio(error, errorBg)).toBeGreaterThanOrEqual(AA_TEXT)
+    })
 
-  it('control borders clear 3:1 against the page and against --sv-surface (1.4.11)', () => {
-    expect(contrastRatio(border, background)).toBeGreaterThanOrEqual(AA_NON_TEXT)
-    expect(contrastRatio(border, surface)).toBeGreaterThanOrEqual(AA_NON_TEXT)
-  })
+    it('control borders clear 3:1 against the page and against --sv-surface (1.4.11)', () => {
+      expect(contrastRatio(border, background)).toBeGreaterThanOrEqual(AA_NON_TEXT)
+      expect(contrastRatio(border, surface)).toBeGreaterThanOrEqual(AA_NON_TEXT)
+    })
 
-  it('the chord-diagram grid clears 3:1 against the page (1.4.11)', () => {
-    expect(contrastRatio(cdGrid, background)).toBeGreaterThanOrEqual(AA_NON_TEXT)
-  })
+    it('the chord-diagram grid clears 3:1 against the page (1.4.11)', () => {
+      expect(contrastRatio(cdGrid, background)).toBeGreaterThanOrEqual(AA_NON_TEXT)
+    })
 
-  it('the focus ring (--sv-focus = --sv-chord) clears 3:1 against the page background (2.4.11)', () => {
-    // outline-offset pushes the ring outside the focused element's own box,
-    // so what it renders against is always the surrounding background (page
-    // or panel), never the element's own fill.
-    expect(contrastRatio(chord, background)).toBeGreaterThanOrEqual(AA_NON_TEXT)
-  })
-})
+    it('the focus ring (--sv-focus = --sv-chord) clears 3:1 against the page background (2.4.11)', () => {
+      // outline-offset pushes the ring outside the focused element's own box,
+      // so what it renders against is always the surrounding background (page
+      // or panel), never the element's own fill.
+      expect(contrastRatio(chord, background)).toBeGreaterThanOrEqual(AA_NON_TEXT)
+    })
+  },
+)
 
 describe('contrastRatio / mixSrgb', () => {
   it('gives identical colours a ratio of 1', () => {

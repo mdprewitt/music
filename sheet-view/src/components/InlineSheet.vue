@@ -104,7 +104,13 @@ function activateChord(event: Event, name: string) {
 </script>
 
 <template>
-  <div ref="root" class="inline-sheet" role="group" :aria-describedby="navHintId" @keydown="onKeydown">
+  <div
+    ref="root"
+    class="inline-sheet"
+    role="group"
+    :aria-describedby="navHintId"
+    @keydown="onKeydown"
+  >
     <!-- One level below each, not h1/h2/h3 — App.vue already has the page's
          one h1 ("Sheet-View"), so starting here at h1 would both duplicate
          it and skip a level from this component's own perspective (1.3.1). -->

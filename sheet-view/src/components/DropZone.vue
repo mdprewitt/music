@@ -82,9 +82,9 @@ function onPick(e: Event) {
     @drop.prevent="onDrop"
   >
     <p class="description">
-      Sheet View is an app you can use to view chord tabs files like ChordPro or text. The
-      viewer lets you select positions of the chord diagrams and whether you want them to stay
-      put as you scroll through the music.
+      Sheet View is an app you can use to view chord tabs files like ChordPro or text. The viewer
+      lets you select positions of the chord diagrams and whether you want them to stay put as you
+      scroll through the music.
     </p>
     <p class="instruction">Drop a ChordPro file here, or</p>
     <button @click="fileInput?.click()">View</button>

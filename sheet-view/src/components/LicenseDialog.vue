@@ -45,9 +45,9 @@ defineExpose({ isOpen })
           <strong>GNU Affero General Public License v3 (AGPL-3.0)</strong>.
         </p>
         <p>
-          This means you are free to use, modify, and distribute this software, with the
-          requirement that any modifications you make and any network services you run using
-          this software must make their source code available to users.
+          This means you are free to use, modify, and distribute this software, with the requirement
+          that any modifications you make and any network services you run using this software must
+          make their source code available to users.
         </p>
         <p>
           For the complete license text, see
@@ -62,8 +62,8 @@ defineExpose({ isOpen })
         </p>
         <p class="disclaimer">
           THE SOFTWARE IS PROVIDED "AS IS" WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED,
-          INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A
-          PARTICULAR PURPOSE AND NONINFRINGEMENT.
+          INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR
+          PURPOSE AND NONINFRINGEMENT.
         </p>
       </div>
     </div>

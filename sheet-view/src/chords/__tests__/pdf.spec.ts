@@ -68,7 +68,9 @@ describe('drawDiagramSheet', () => {
   it('paginates instead of dropping shapes that overflow a page', () => {
     const { doc, calls } = recorder()
     const tiny: PageSize = { width: 320, height: 180 }
-    const shapes = Array.from({ length: 12 }, (_, i) => shape({ name: `s${i}`, frets: [0, 0, 0, 3] }))
+    const shapes = Array.from({ length: 12 }, (_, i) =>
+      shape({ name: `s${i}`, frets: [0, 0, 0, 3] }),
+    )
     drawDiagramSheet(doc, tiny, shapes)
     const inserts = calls.filter((c) => c.fn === 'insertPage')
     expect(inserts.length).toBeGreaterThanOrEqual(2)

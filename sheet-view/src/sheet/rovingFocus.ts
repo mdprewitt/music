@@ -20,7 +20,11 @@ const ARROW_STEP: Record<string, number> = {
  * array bounds) and focus it. A no-op when the target is `from` itself or the
  * list is empty.
  */
-export function moveRovingFocus(cells: readonly HTMLElement[], from: HTMLElement, index: number): void {
+export function moveRovingFocus(
+  cells: readonly HTMLElement[],
+  from: HTMLElement,
+  index: number,
+): void {
   if (cells.length === 0) return
   const target = cells[Math.max(0, Math.min(index, cells.length - 1))]
   if (!target || target === from) return
