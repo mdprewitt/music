@@ -13,10 +13,7 @@ import { fontStack } from '@/sheet/typography'
 import { pageTurnDirection, pageTurnDistance } from '@/sheet/pageTurner'
 import { markChordCells } from '@/sheet/interactive'
 import { handleRovingArrowKey } from '@/sheet/rovingFocus'
-import ViewSelector from './ViewSelector.vue'
-import InstrumentSelector from './InstrumentSelector.vue'
-import KeySelector from './KeySelector.vue'
-import DisplayPanel from './DisplayPanel.vue'
+import PerformanceToolbar from './PerformanceToolbar.vue'
 import ChordDiagrams from './ChordDiagrams.vue'
 import InlineSheet from './InlineSheet.vue'
 import ChordPopover, { type AnchorRect } from './ChordPopover.vue'
@@ -180,6 +177,32 @@ watch(
   { immediate: true },
 )
 
+// The bottom toolbar (position: fixed) covers the last stretch of the viewport,
+// so it is measured the same way as the pinned strip: it pads the chart's end,
+// keeps focused chords clear of it (WCAG 2.4.11) and trims a page turn.
+const toolbarRef = ref<InstanceType<typeof PerformanceToolbar> | null>(null)
+const toolbarSize = ref(0)
+let toolbarResizeObserver: ResizeObserver | null = null
+
+watch(
+  toolbarRef,
+  (instance) => {
+    toolbarResizeObserver?.disconnect()
+    toolbarResizeObserver = null
+    const el = instance?.el
+    if (!el || typeof ResizeObserver === 'undefined') {
+      toolbarSize.value = 0
+      return
+    }
+    toolbarResizeObserver = new ResizeObserver(() => {
+      toolbarSize.value = el.getBoundingClientRect().height
+    })
+    toolbarResizeObserver.observe(el)
+  },
+  { immediate: true },
+)
+onBeforeUnmount(() => toolbarResizeObserver?.disconnect())
+
 const pinnedOverlay = computed(() => store.pinDiagrams && store.diagramPosition !== 'right')
 // Height the pinned strip covers (0 when not an overlay) — also trims a page turn.
 const pinnedOverlaySize = computed(() =>
@@ -251,7 +274,9 @@ function openFor(el: HTMLElement, rawName: string) {
   // its own, so this is what actually gets the fingering to a screen-reader
   // user (WCAG 4.1.3) — same text ChordDiagram.vue puts in its aria-label.
   announcer.announce(
-    shape ? `${name} chord diagram. ${describeShape(shape)}` : `${name}: no diagram for this instrument.`,
+    shape
+      ? `${name} chord diagram. ${describeShape(shape)}`
+      : `${name}: no diagram for this instrument.`,
   )
 }
 
@@ -300,7 +325,8 @@ function onPageTurnKeydown(event: KeyboardEvent) {
     typeof window.matchMedia === 'function' &&
     window.matchMedia('(prefers-reduced-motion: reduce)').matches
   window.scrollBy({
-    top: direction * pageTurnDistance(window.innerHeight, pinnedOverlaySize.value),
+    top:
+      direction * pageTurnDistance(window.innerHeight, pinnedOverlaySize.value + toolbarSize.value),
     behavior: reduceMotion ? 'auto' : 'smooth',
   })
 }
@@ -335,23 +361,9 @@ watch(
 </script>
 
 <template>
-  <div class="viewer">
+  <div class="viewer" :style="{ '--toolbar-size': `${toolbarSize}px` }">
     <header class="viewer-header">
       <span class="filename">{{ store.filename }}</span>
-      <div class="viewer-controls">
-        <ViewSelector v-model="store.viewFormat" />
-        <InstrumentSelector v-model="store.instrument" />
-        <KeySelector
-          v-model="store.targetKey"
-          :keys="store.availableKeys"
-          :original-key="store.originalKey"
-        />
-        <label class="diagram-toggle">
-          <input v-model="store.showDiagrams" type="checkbox" />
-          Diagrams
-        </label>
-        <DisplayPanel />
-      </div>
       <button @click="store.reset()">Load another</button>
     </header>
 
@@ -383,8 +395,7 @@ watch(
       <!-- Every chord is one roving tab stop (WCAG 2.4.3) — chordNavHintId
            names the arrow-key convention for whoever tabs onto it. -->
       <p v-if="song" :id="chordNavHintId" class="sr-only">
-        Use the arrow keys to move between chords. Press Enter or Space to view a chord's
-        diagram.
+        Use the arrow keys to move between chords. Press Enter or Space to view a chord's diagram.
       </p>
       <!-- v-html input is sanitized by markChordCells (formatter output is untrusted
            chart text). Chord cells inside it are focusable and handled by delegation.
@@ -419,6 +430,8 @@ watch(
         :container-width="containerWidth"
       />
     </div>
+
+    <PerformanceToolbar ref="toolbarRef" />
   </div>
 </template>
 
@@ -430,6 +443,8 @@ watch(
   /* Chord accent — sourced from the active theme. Inherits into
      ChordDiagram.vue too (custom properties pierce scoping). */
   --chord-accent: var(--sv-chord);
+  /* Room for the fixed bottom toolbar so the chart's last lines can scroll clear of it. */
+  padding-bottom: var(--toolbar-size, 0px);
 }
 
 .viewer-header {
@@ -445,22 +460,6 @@ watch(
 .filename {
   font-weight: bold;
   color: var(--sv-meta);
-}
-
-.viewer-controls {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 0.5rem 1rem;
-}
-
-.diagram-toggle {
-  display: flex;
-  align-items: center;
-  gap: 0.3rem;
-  font-size: 0.85rem;
-  color: var(--sv-lyrics);
-  cursor: pointer;
 }
 
 button {
@@ -621,7 +620,8 @@ button:hover {
      the pinned (position: sticky) strip when it's at the top or bottom
      (WCAG 2.4.11). :deep() also reaches InlineSheet.vue's chord spans, which
      share this same block. */
-  scroll-margin-block: var(--pinned-strip-size, 0px);
+  scroll-margin-block-start: var(--pinned-strip-size, 0px);
+  scroll-margin-block-end: calc(var(--pinned-strip-size, 0px) + var(--toolbar-size, 0px));
 }
 
 /* Hover, keyboard focus and "diagram open" are three distinct states and must
@@ -663,11 +663,20 @@ button:hover {
   overflow-wrap: anywhere;
 }
 
+/* A bottom-pinned strip must stop above the fixed toolbar, not slide under it. */
+.sheet-body.pinned :deep(.chord-diagrams.pos-bottom) {
+  bottom: var(--toolbar-size, 0px);
+}
+
 @media print {
   /* The header's view/instrument/key controls and "Load another" serve a
      screen, not a printed page — the chart underneath is what's wanted. */
   .viewer-header {
     display: none;
+  }
+
+  .viewer {
+    padding-bottom: 0;
   }
 
   /* position: sticky has no meaning across print pages, and the opaque

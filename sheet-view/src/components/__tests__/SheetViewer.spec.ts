@@ -21,11 +21,11 @@ async function mountWithSong(view: ViewFormat) {
   return { store, wrapper }
 }
 
-// The instrument select lives in the header; the diagram-position / theme
-// controls live in the "Display" panel, which is collapsed by default — open it
-// before querying them.
+// The key / text size / diagrams controls sit on the bottom toolbar; the rest
+// (view, instrument, diagram position, theme …) live in its "More" panel, which
+// is collapsed by default — open it before querying them.
 async function openPanel(wrapper: Awaited<ReturnType<typeof mountWithSong>>['wrapper']) {
-  await wrapper.find('.panel-trigger').trigger('click')
+  await wrapper.find('.more-trigger').trigger('click')
   await nextTick()
 }
 
@@ -193,7 +193,7 @@ describe('SheetViewer', () => {
 
   describe('pinned chord diagrams', () => {
     const pinToggle = (wrapper: Awaited<ReturnType<typeof mountWithSong>>['wrapper']) =>
-      wrapper.findAll('.diagram-toggle').find((l) => l.text().includes('Pin'))
+      wrapper.findAll('.check').find((l) => l.text().includes('Pin'))
 
     it('is off by default and adds the pinned class when toggled on', async () => {
       const { store, wrapper } = await mountWithSong('html')
@@ -230,7 +230,9 @@ describe('SheetViewer', () => {
       // pins down which positions get the CSS var at all. The real measured
       // gap is exercised manually in a browser, not unit-tested.
       const { store, wrapper } = await mountWithSong('html')
-      expect(wrapper.find('.sheet-body').attributes('style') ?? '').not.toContain('--pinned-strip-size')
+      expect(wrapper.find('.sheet-body').attributes('style') ?? '').not.toContain(
+        '--pinned-strip-size',
+      )
 
       store.pinDiagrams = true
       await nextTick()
@@ -238,7 +240,9 @@ describe('SheetViewer', () => {
 
       store.diagramPosition = 'right'
       await nextTick()
-      expect(wrapper.find('.sheet-body').attributes('style') ?? '').not.toContain('--pinned-strip-size')
+      expect(wrapper.find('.sheet-body').attributes('style') ?? '').not.toContain(
+        '--pinned-strip-size',
+      )
     })
   })
 
@@ -335,7 +339,9 @@ describe('SheetViewer', () => {
       await nextTick()
       expect(wrapper.find('.chord-popover svg.chord-diagram').exists()).toBe(true)
       expect(chord.attributes('aria-expanded')).toBe('true')
-      expect(chord.attributes('aria-controls')).toBe(wrapper.find('.chord-popover').attributes('id'))
+      expect(chord.attributes('aria-controls')).toBe(
+        wrapper.find('.chord-popover').attributes('id'),
+      )
     })
 
     it('closes the popover on Escape', async () => {

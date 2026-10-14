@@ -37,22 +37,26 @@ test.describe('accessibility (axe-core)', () => {
 
   test('the HTML inline view has no violations', async ({ page }) => {
     await loadSample(page)
+    await page.getByRole('button', { name: /More/ }).click()
     await page.locator('.option', { hasText: 'HTML inline' }).click()
+    await page.keyboard.press('Escape')
     await expect(page.locator('.inline-sheet')).toBeVisible()
     await expectNoViolations(page)
   })
 
   test('the ChordPro (plain text) view has no violations', async ({ page }) => {
     await loadSample(page)
+    await page.getByRole('button', { name: /More/ }).click()
     await page.locator('.option', { hasText: 'ChordPro' }).click()
+    await page.keyboard.press('Escape')
     await expect(page.locator('pre.plain')).toBeVisible()
     await expectNoViolations(page)
   })
 
-  test('the open Display panel has no violations', async ({ page }) => {
+  test('the open More panel has no violations', async ({ page }) => {
     await loadSample(page)
-    await page.getByRole('button', { name: 'Display' }).click()
-    await expect(page.locator('.panel')).toBeVisible()
+    await page.getByRole('button', { name: /More/ }).click()
+    await expect(page.locator('.more-panel')).toBeVisible()
     await expectNoViolations(page)
   })
 
@@ -66,7 +70,7 @@ test.describe('accessibility (axe-core)', () => {
   for (const themeLabel of THEMES) {
     test(`the ${themeLabel} theme has no violations`, async ({ page }) => {
       await loadSample(page)
-      await page.getByRole('button', { name: 'Display' }).click()
+      await page.getByRole('button', { name: /More/ }).click()
       await page.locator('.theme-selector .option', { hasText: themeLabel }).click()
       await page.keyboard.press('Escape')
       // base.css's body colour transition is 500ms; let it settle so axe's
@@ -104,7 +108,7 @@ test.describe('narrow viewport (320px)', () => {
 
   test('the "Right" diagram strip does not overflow at 320px', async ({ page }) => {
     await loadSample(page)
-    await page.getByRole('button', { name: 'Display' }).click()
+    await page.getByRole('button', { name: /More/ }).click()
     await page.locator('.position-selector .option', { hasText: 'Right' }).click()
     await expect(page.locator('.chord-diagrams')).toHaveClass(/pos-right/)
     await page.keyboard.press('Escape')
