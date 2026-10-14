@@ -51,13 +51,7 @@ describe('per-song key memory', () => {
     rememberKey('new-song', 'C')
     const stored = JSON.parse(localStorage.getItem(STORAGE_KEY) as string)
     expect(Array.isArray(stored)).toBe(true)
-    expect(stored).toEqual(
-      expect.arrayContaining([
-        ['old-song', 'A'],
-        ['1984', 'B'],
-        ['new-song', 'C'],
-      ]),
-    )
+    expect(stored).toEqual(expect.arrayContaining([['old-song', 'A'], ['1984', 'B'], ['new-song', 'C']]))
     expect(stored).toHaveLength(3)
   })
 })

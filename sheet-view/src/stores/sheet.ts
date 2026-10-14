@@ -23,7 +23,9 @@ type SourceFormat = 'chordpro'
 export type ViewFormat = 'chordpro' | 'html' | 'html-inline' | 'pdf'
 
 export function isViewFormat(value: unknown): value is ViewFormat {
-  return value === 'chordpro' || value === 'html' || value === 'html-inline' || value === 'pdf'
+  return (
+    value === 'chordpro' || value === 'html' || value === 'html-inline' || value === 'pdf'
+  )
 }
 
 const INSTRUMENT_STORAGE_KEY = 'sheet-view:instrument'

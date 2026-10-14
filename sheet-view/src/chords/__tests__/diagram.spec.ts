@@ -73,7 +73,9 @@ describe('toDiagramShape', () => {
   it('keeps a differently-fingered note at a barre fret from being dropped', () => {
     // finger 1 bars strings 1-3 at fret 2; finger 2 also presses fret 2 on
     // string 4 — same fret, different finger, so it stays a visible dot.
-    const shape = toDiagramShape(def({ name: 'Under', frets: [2, 2, 2, 2], fingers: [1, 1, 1, 2] }))
+    const shape = toDiagramShape(
+      def({ name: 'Under', frets: [2, 2, 2, 2], fingers: [1, 1, 1, 2] }),
+    )
     expect(shape.barres).toEqual([{ from: 1, to: 3, fret: 2, finger: 1 }])
     expect(shape.markers).toEqual([{ string: 4, fret: 2, finger: 2 }])
   })
@@ -101,9 +103,7 @@ describe('describeShape', () => {
 
   it('collapses a barre spanning several strings into one clause', () => {
     const shape = toDiagramShape(def({ name: 'Fmaj7', frets: [1, 1, 1, 2], fingers: [1, 1, 1, 2] }))
-    expect(describeShape(shape)).toBe(
-      '4 strings. strings 1-3 fret 1, finger 1, string 4 fret 2, finger 2.',
-    )
+    expect(describeShape(shape)).toBe('4 strings. strings 1-3 fret 1, finger 1, string 4 fret 2, finger 2.')
   })
 
   it('notes a non-default base fret', () => {

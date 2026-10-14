@@ -52,12 +52,7 @@ const fontOptions = SHEET_FONTS.map((font) => ({
         Reset
       </button>
     </div>
-    <RadioGroup
-      v-model="store.sheetFont"
-      name="sheet-font"
-      label="Chart font"
-      :options="fontOptions"
-    >
+    <RadioGroup v-model="store.sheetFont" name="sheet-font" label="Chart font" :options="fontOptions">
       <template #option="{ option }">
         <span :style="{ fontFamily: option.stack }">{{ option.label }}</span>
       </template>

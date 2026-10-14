@@ -5,12 +5,10 @@ import RadioGroup from './RadioGroup.vue'
 
 const model = defineModel<DiagramPosition>({ required: true })
 
-const OPTIONS: readonly { value: DiagramPosition; label: string }[] = DIAGRAM_POSITIONS.map(
-  (p) => ({
-    value: p.id,
-    label: p.label,
-  }),
-)
+const OPTIONS: readonly { value: DiagramPosition; label: string }[] = DIAGRAM_POSITIONS.map((p) => ({
+  value: p.id,
+  label: p.label,
+}))
 </script>
 
 <template>
