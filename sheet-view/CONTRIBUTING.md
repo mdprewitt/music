@@ -65,7 +65,7 @@ input, and select elements by role or label rather than by CSS class.
 
 `e2e/a11y.spec.ts` runs an [axe-core](https://github.com/dequelabs/axe-core)
 sweep (via `@axe-core/playwright`) over the drop zone, each chart view, the
-open Display panel, an open chord popover, and all four colour themes —
+open More panel, an open chord popover, and all four colour themes —
 `bun test:e2e` runs it alongside everything else. It's a backstop for whatever
 the targeted unit/e2e assertions elsewhere don't happen to cover, not a
 replacement for them; a change that touches interactive markup or colours
@@ -128,7 +128,7 @@ kept across `reset()`). `SheetViewer.vue` publishes them as `--sv-sheet-scale` a
 `InlineSheet.vue`'s `.inline-sheet`) consume them. Keep inner sizes in `em` so they
 scale with it. **To add a font:** add a row to `SHEET_FONTS`; the radio group
 enumerates it. The PDF is not affected. The controls are `FontControls.vue`, shown in
-the Display panel's "Text" section.
+the toolbar's text-size buttons.
 
 ## Page turner keys
 
@@ -141,7 +141,7 @@ survives `reset()`). `SheetViewer.vue` listens on `document` (bubble phase, so t
 chord cells' arrow-key navigation keeps priority) and calls `window.scrollBy`,
 reduced by the pinned diagram strip's height and using `behavior: 'auto'` under
 `prefers-reduced-motion`. **To add a device mode:** add a row to
-`PAGE_TURNER_PRESETS`; the Display panel's radio group enumerates it.
+`PAGE_TURNER_PRESETS`; the More panel's radio group enumerates it.
 
 ## Chord diagrams
 
