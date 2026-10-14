@@ -21,11 +21,11 @@ async function mountWithSong(view: ViewFormat) {
   return { store, wrapper }
 }
 
-// The instrument select lives in the header; the diagram-position / theme
-// controls live in the "Display" panel, which is collapsed by default — open it
-// before querying them.
+// The controls live in three header menus (Song / View / Settings), all
+// collapsed by default — open the View menu (diagram position + pin) before
+// querying them.
 async function openPanel(wrapper: Awaited<ReturnType<typeof mountWithSong>>['wrapper']) {
-  await wrapper.find('.panel-trigger').trigger('click')
+  await wrapper.findAll('.menu-trigger')[1]!.trigger('click')
   await nextTick()
 }
 
@@ -193,7 +193,7 @@ describe('SheetViewer', () => {
 
   describe('pinned chord diagrams', () => {
     const pinToggle = (wrapper: Awaited<ReturnType<typeof mountWithSong>>['wrapper']) =>
-      wrapper.findAll('.diagram-toggle').find((l) => l.text().includes('Pin'))
+      wrapper.findAll('.check').find((l) => l.text().includes('Pin'))
 
     it('is off by default and adds the pinned class when toggled on', async () => {
       const { store, wrapper } = await mountWithSong('html')

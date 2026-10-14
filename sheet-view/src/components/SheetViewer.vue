@@ -13,10 +13,7 @@ import { fontStack } from '@/sheet/typography'
 import { pageTurnDirection, pageTurnDistance } from '@/sheet/pageTurner'
 import { markChordCells } from '@/sheet/interactive'
 import { handleRovingArrowKey } from '@/sheet/rovingFocus'
-import ViewSelector from './ViewSelector.vue'
-import InstrumentSelector from './InstrumentSelector.vue'
-import KeySelector from './KeySelector.vue'
-import DisplayPanel from './DisplayPanel.vue'
+import ControlMenus from './ControlMenus.vue'
 import ChordDiagrams from './ChordDiagrams.vue'
 import InlineSheet from './InlineSheet.vue'
 import ChordPopover, { type AnchorRect } from './ChordPopover.vue'
@@ -338,20 +335,7 @@ watch(
   <div class="viewer">
     <header class="viewer-header">
       <span class="filename">{{ store.filename }}</span>
-      <div class="viewer-controls">
-        <ViewSelector v-model="store.viewFormat" />
-        <InstrumentSelector v-model="store.instrument" />
-        <KeySelector
-          v-model="store.targetKey"
-          :keys="store.availableKeys"
-          :original-key="store.originalKey"
-        />
-        <label class="diagram-toggle">
-          <input v-model="store.showDiagrams" type="checkbox" />
-          Diagrams
-        </label>
-        <DisplayPanel />
-      </div>
+      <ControlMenus />
       <button @click="store.reset()">Load another</button>
     </header>
 
@@ -445,22 +429,6 @@ watch(
 .filename {
   font-weight: bold;
   color: var(--sv-meta);
-}
-
-.viewer-controls {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 0.5rem 1rem;
-}
-
-.diagram-toggle {
-  display: flex;
-  align-items: center;
-  gap: 0.3rem;
-  font-size: 0.85rem;
-  color: var(--sv-lyrics);
-  cursor: pointer;
 }
 
 button {

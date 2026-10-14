@@ -32,7 +32,6 @@ const INSTRUMENT_STORAGE_KEY = 'sheet-view:instrument'
 const DIAGRAM_POSITION_STORAGE_KEY = 'sheet-view:diagramPosition'
 const PIN_DIAGRAMS_STORAGE_KEY = 'sheet-view:pinDiagrams'
 const VIEW_FORMAT_STORAGE_KEY = 'sheet-view:viewFormat'
-const DISPLAY_PANEL_STORAGE_KEY = 'sheet-view:displayPanel'
 const FONT_SCALE_STORAGE_KEY = 'sheet-view:fontScale'
 const SHEET_FONT_STORAGE_KEY = 'sheet-view:sheetFont'
 const PAGE_TURNER_STORAGE_KEY = 'sheet-view:pageTurner'
@@ -102,7 +101,6 @@ export const useSheetStore = defineStore('sheet', () => {
   // When pinned, the diagram strip stays put (position: sticky) while the chart scrolls.
   const pinDiagrams = ref<boolean>(readStored(PIN_DIAGRAMS_STORAGE_KEY, asBoolean) ?? false)
   // Whether the "Display" settings panel in the viewer header is expanded.
-  const displayPanelOpen = ref<boolean>(readStored(DISPLAY_PANEL_STORAGE_KEY, asBoolean) ?? false)
   // Chart text size multiplier and font — see `src/sheet/typography.ts`.
   const fontScale = ref<number>(
     readStored(FONT_SCALE_STORAGE_KEY, asFontScale) ?? DEFAULT_FONT_SCALE,
@@ -191,9 +189,6 @@ export const useSheetStore = defineStore('sheet', () => {
   watch(sheetFont, (value) => writeStored(SHEET_FONT_STORAGE_KEY, value), { flush: 'sync' })
   watch(pageTurner, (value) => writeStored(PAGE_TURNER_STORAGE_KEY, value), { flush: 'sync' })
   watch(viewFormat, (value) => writeStored(VIEW_FORMAT_STORAGE_KEY, value), { flush: 'sync' })
-  watch(displayPanelOpen, (value) => writeStored(DISPLAY_PANEL_STORAGE_KEY, String(value)), {
-    flush: 'sync',
-  })
   // Not a global preference — remembered per song so reopening a chart brings
   // back the key it was last read in (see `src/sheet/key.ts`).
   watch(
@@ -327,7 +322,7 @@ export const useSheetStore = defineStore('sheet', () => {
     showDiagrams.value = true
     targetKey.value = null
     // keep `instrument`, `diagramPosition`, `pinDiagrams`, `viewFormat`,
-    // `fontScale`, `sheetFont`, `pageTurner` and `displayPanelOpen` — they are user preferences
+    // `fontScale`, `sheetFont` and `pageTurner` — they are user preferences
     // that outlive a single sheet.
     // `targetKey` is song-scoped (like `showDiagrams`) so it is cleared here, but
     // the per-song choice stays in localStorage and is restored on reload.
@@ -343,7 +338,6 @@ export const useSheetStore = defineStore('sheet', () => {
     instrument,
     diagramPosition,
     pinDiagrams,
-    displayPanelOpen,
     fontScale,
     sheetFont,
     pageTurner,

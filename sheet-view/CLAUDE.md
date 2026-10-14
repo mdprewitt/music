@@ -50,13 +50,13 @@ src/
   stores/
     sheet.ts              # Pinia store: rawText, filename, song, parseError,
                           #   sourceFormat, viewFormat, instrument, diagramPosition,
-                          #   pinDiagrams, displayPanelOpen, fontScale, sheetFont, pageTurner,
+                          #   pinDiagrams, fontScale, sheetFont, pageTurner,
                           #   showDiagrams, targetKey
                           #   + originalKey/availableKeys/canChangeKey/displaySong (computed)
                           #   + loadFile/loadFromUrl/parse/reset
                           #   viewFormat, instrument, diagramPosition, pinDiagrams,
-                          #   fontScale, sheetFont, pageTurner and
-                          #   displayPanelOpen persist (sheet-view:*) and survive reset();
+                          #   fontScale, sheetFont and pageTurner
+                          #   persist (sheet-view:*) and survive reset();
                           #   showDiagrams + targetKey reset per sheet. targetKey is
                           #   remembered per song in sheet-view:songKeys (see sheet/key.ts)
                           #   and restored in parse(); displaySong = song.changeKey(targetKey)
@@ -139,28 +139,29 @@ src/
     pdf.ts                # drawDiagramSheet() — prepend a diagram page to a jsPDF doc
   components/
     DropZone.vue          # drag-drop + file picker + paste-a-URL; calls store.loadFile() / store.loadFromUrl()
-    SheetViewer.vue       # renders store.song; header = filename + ViewSelector +
-                          #   InstrumentSelector + KeySelector + Diagrams toggle +
-                          #   DisplayPanel + "Load another" (the sole direct-child
+    SheetViewer.vue       # renders store.song; header = filename + ControlMenus +
+                          #   "Load another" (the sole direct-child
                           #   <button> of .viewer-header — a spec depends on that);
                           #   owns the click-a-chord -> ChordPopover interaction (both HTML views)
-    DisplayPanel.vue      # "Display" disclosure button + anchored panel holding the set-once
-                          #   prefs (Diagrams position+pin / Page turner presets / Theme+CustomColorEditor), each
-                          #   captioned; open state = store.displayPanelOpen; dismiss on
-                          #   Esc / outside pointerdown (same idiom as SheetViewer's popover).
-                          #   The wrapping toolbar can drop the trigger anywhere on the
-                          #   line, so the right-anchored panel measures on open (+ on
-                          #   resize / ResizeObserver) and nudges itself back inside the
-                          #   viewport via panelShift() (displayPanel.ts — a plain-.ts
-                          #   sidecar so the degraded vue-tsc can see it from tests) —
-                          #   same measure-and-clamp idiom as ChordPopover.vue.
+    ControlMenus.vue      # the header's three disclosure menus, grouped by task — Song (Key +
+                          #   Instrument), View (format, Diagrams on/off + position + pin, text
+                          #   size/font), Settings (page turner, theme + CustomColorEditor). Each
+                          #   trigger summarises state ("Song: G", "View: HTML"). Owns the shared
+                          #   open-menu id (local ref, deliberately not persisted).
+    MenuPanel.vue         # one menu: a disclosure button (aria-expanded + aria-controls, no
+                          #   aria-haspopup) + anchored panel. v-model = id of the open menu in
+                          #   the group, so opening one closes the others. Dismiss on Esc (returns
+                          #   focus to the trigger when it was inside) / outside pointerdown; the
+                          #   left-anchored panel measures on open (+ resize / ResizeObserver) and
+                          #   nudges itself inside the viewport via menuShift() (menuPanel.ts — a
+                          #   plain-.ts sidecar so the degraded vue-tsc can see it from tests).
     ViewSelector.vue / DiagramPositionSelector.vue   # radiogroup, v-model on the store
     InstrumentSelector.vue # header <select> (thirteen tunings, one <optgroup> per family from
                           #   INSTRUMENT_FAMILIES), v-model on store.instrument
     KeySelector.vue       # header <select> of transpose targets, v-model on store.targetKey;
                           #   disabled with a hint when store.originalKey is null (no {key})
     FontControls.vue      # A−/A+/Reset + font RadioGroup bound to store.fontScale/sheetFont;
-                          #   announces size changes; the Display panel's "Text" section
+                          #   announces size changes; the View menu's "Text" section
     ThemeSelector.vue     # radiogroup of 4 presets + Custom; :model-value/@update -> theme.selectTheme
     CustomColorEditor.vue # 5 <input type=color> bound to theme.customColors; shown when themeId==='custom'
     ChordDiagram.vue      # one SVG diagram from a DiagramShape
@@ -248,8 +249,8 @@ playwright.config.ts          # testDir e2e/, chromium only, webServer = build +
 - `prefers-reduced-motion` is respected for the one global animation (`body`'s theme-change colour transition in `base.css`); wrap any new transition/animation the same way.
 - Status announcements (WCAG 4.1.3) go through `useAnnouncerStore` (`src/stores/announcer.ts`) — call its `announce(text)`, never mount a one-off live region. `LiveAnnouncer.vue` renders the single shared `role="status" aria-live="polite"` region and is mounted exactly once, in `App.vue`; a second instance would double-announce. `announce()` clears the message and sets it on the next tick, so the same text announced twice in a row still triggers (tests need an extra `await flushPromises()` beyond the state change itself to observe the final value). Pair it with `role="alert"` on any persistent visible error element (`store.parseError`, `pdfError`, `DropZone`'s `loadError`) — belt-and-suspenders, since not every screen reader reliably catches a freshly-inserted alert-role node. Watch a store field that's also mutated by non-UI code (like `store.parseError`, set both by `store.parse()` and by `App.vue`'s `?view=` catch) from a component mounted for the app's whole lifetime (`App.vue`), not one that mounts per sheet (`SheetViewer.vue`) — the latter's watcher baseline would already reflect an earlier change and silently miss it.
 - A group of same-role elements that should act as one tab stop uses the "roving tabindex" pattern (`src/sheet/rovingFocus.ts`: `moveRovingFocus`/`handleRovingArrowKey`) instead of making every one individually tabbable (WCAG 2.4.3) — the chord cells in both `SheetViewer.vue`'s `html` view (seeded by `markChordCells()`) and `InlineSheet.vue`'s spans (seeded imperatively in `InlineSheet.vue` itself, since Vue's patcher won't rewrite an attribute whose bound template expression hasn't changed, so a declarative binding alone can't undo an out-of-band roving-focus move) are one worked example; reuse the same helper for the next one rather than hand-rolling arrow-key math again. `App.vue`'s skip link (`#main-content`, `tabindex="-1"` on `<main>`) exists because of this — with the chart down to one or two tab stops, skipping the header controls actually matters.
-- A pinned/sticky element that can overlay scrollable content needs the content's focusable descendants to carry a matching `scroll-margin` (WCAG 2.4.11), sized to the *actual* rendered size (`ResizeObserver`, guarded with `typeof ResizeObserver === 'undefined'` — same idiom as `DisplayPanel.vue`'s own measure-and-clamp), not a guessed fixed value — see `SheetViewer.vue`'s `--pinned-strip-size` var, measured off `ChordDiagrams.vue`'s exposed root element with `getBoundingClientRect()` (border-box; `ResizeObserver`'s own `contentRect` excludes padding/border, which are still part of what visually overlaps).
-- A disclosure trigger (`DisplayPanel.vue`'s "Display" button) uses `aria-expanded` + `aria-controls` only — no `aria-haspopup`, which is for a trigger that opens a menu/listbox/dialog, not a plain expand-in-place region. On Escape (not an outside click — that already sends focus wherever the user clicked, or to `<body>` for a non-focusable point, same as a native `<details>`; forcing it back to the trigger there would fight the click rather than help it) it returns focus to its own trigger when focus was inside it, rather than dropping it to `<body>` (2.4.3).
+- A pinned/sticky element that can overlay scrollable content needs the content's focusable descendants to carry a matching `scroll-margin` (WCAG 2.4.11), sized to the *actual* rendered size (`ResizeObserver`, guarded with `typeof ResizeObserver === 'undefined'` — same idiom as `MenuPanel.vue`'s own measure-and-clamp), not a guessed fixed value — see `SheetViewer.vue`'s `--pinned-strip-size` var, measured off `ChordDiagrams.vue`'s exposed root element with `getBoundingClientRect()` (border-box; `ResizeObserver`'s own `contentRect` excludes padding/border, which are still part of what visually overlaps).
+- A disclosure trigger (`MenuPanel.vue`'s trigger) uses `aria-expanded` + `aria-controls` only — no `aria-haspopup`, which is for a trigger that opens a menu/listbox/dialog, not a plain expand-in-place region. On Escape (not an outside click — that already sends focus wherever the user clicked, or to `<body>` for a non-focusable point, same as a native `<details>`; forcing it back to the trigger there would fight the click rather than help it) it returns focus to its own trigger when focus was inside it, rather than dropping it to `<body>` (2.4.3).
 - A disabled control's `title` is unreachable by keyboard, touch and most screen readers — `KeySelector.vue`'s disabled-key hint is real visible text (`aria-describedby`), with `title` kept only as a mouse-hover convenience (3.3.2). Every header `<select>` (`KeySelector.vue`, `InstrumentSelector.vue`) is named by a real `<label for>`, not a `<span>` + `aria-label`.
 - `CustomColorEditor.vue` shows a live WCAG contrast ratio (`src/theme/contrast.ts`'s `contrastRatio`/`AA_TEXT`) next to each custom colour against the background, flagging a failing one with both a `⚠` glyph and colour (never colour alone, 1.4.1) plus `.sr-only` text — advisory only, the user keeps the final say on their own palette.
 - Printing forces black-on-white (`base.css`, `@media print` on `:root`'s five `--sv-*` vars, `!important` — required to outrank `applyTheme()`'s inline styles) regardless of the active on-screen theme, and hides screen-only chrome (`App.vue`'s header/footer/skip-link, `SheetViewer.vue`'s `.viewer-header`) and neutralises `position: sticky` on the pinned diagram strip, which has no meaning across print pages. `page-break-inside`/`break-inside: avoid` on `.paragraph`/`.row` (both `SheetViewer.vue` and `InlineSheet.vue`, which don't share style rules) keeps a short unit from splitting across a page break where reasonably possible.
