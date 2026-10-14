@@ -13,15 +13,16 @@ import { fontStack } from '@/sheet/typography'
 import { pageTurnDirection, pageTurnDistance } from '@/sheet/pageTurner'
 import { markChordCells } from '@/sheet/interactive'
 import { handleRovingArrowKey } from '@/sheet/rovingFocus'
-import ViewSelector from './ViewSelector.vue'
 import InstrumentSelector from './InstrumentSelector.vue'
 import KeySelector from './KeySelector.vue'
-import DisplayPanel from './DisplayPanel.vue'
+import SettingsDrawer from './SettingsDrawer.vue'
 import ChordDiagrams from './ChordDiagrams.vue'
 import InlineSheet from './InlineSheet.vue'
 import ChordPopover, { type AnchorRect } from './ChordPopover.vue'
 
 const store = useSheetStore()
+// Not persisted: a modal drawer reopening on every page load would be a nuisance.
+const settingsOpen = ref(false)
 const announcer = useAnnouncerStore()
 // store.displaySong is store.song, or a re-keyed copy when a target key is set.
 // It is markRaw(Song), but Pinia's UnwrapRef loses class fidelity — cast back.
@@ -251,7 +252,9 @@ function openFor(el: HTMLElement, rawName: string) {
   // its own, so this is what actually gets the fingering to a screen-reader
   // user (WCAG 4.1.3) — same text ChordDiagram.vue puts in its aria-label.
   announcer.announce(
-    shape ? `${name} chord diagram. ${describeShape(shape)}` : `${name}: no diagram for this instrument.`,
+    shape
+      ? `${name} chord diagram. ${describeShape(shape)}`
+      : `${name}: no diagram for this instrument.`,
   )
 }
 
@@ -339,21 +342,30 @@ watch(
     <header class="viewer-header">
       <span class="filename">{{ store.filename }}</span>
       <div class="viewer-controls">
-        <ViewSelector v-model="store.viewFormat" />
         <InstrumentSelector v-model="store.instrument" />
         <KeySelector
           v-model="store.targetKey"
           :keys="store.availableKeys"
           :original-key="store.originalKey"
         />
-        <label class="diagram-toggle">
+        <label class="diagram-toggle" :class="{ active: store.showDiagrams }">
           <input v-model="store.showDiagrams" type="checkbox" />
           Diagrams
         </label>
-        <DisplayPanel />
+        <button
+          type="button"
+          class="settings-trigger"
+          :aria-expanded="settingsOpen"
+          aria-haspopup="dialog"
+          @click="settingsOpen = true"
+        >
+          <span aria-hidden="true">⚙</span> Settings
+        </button>
       </div>
-      <button @click="store.reset()">Load another</button>
+      <button class="load-another" @click="store.reset()">Load another</button>
     </header>
+
+    <SettingsDrawer v-if="settingsOpen" @close="settingsOpen = false" />
 
     <pre v-if="store.parseError" class="error" role="alert">{{ store.parseError }}</pre>
 
@@ -383,8 +395,7 @@ watch(
       <!-- Every chord is one roving tab stop (WCAG 2.4.3) — chordNavHintId
            names the arrow-key convention for whoever tabs onto it. -->
       <p v-if="song" :id="chordNavHintId" class="sr-only">
-        Use the arrow keys to move between chords. Press Enter or Space to view a chord's
-        diagram.
+        Use the arrow keys to move between chords. Press Enter or Space to view a chord's diagram.
       </p>
       <!-- v-html input is sanitized by markChordCells (formatter output is untrusted
            chart text). Chord cells inside it are focusable and handled by delegation.
@@ -461,11 +472,19 @@ watch(
   font-size: 0.85rem;
   color: var(--sv-lyrics);
   cursor: pointer;
+  padding: 0.3rem 0.75rem;
+  border: 1px solid var(--sv-border);
+  border-radius: 4px;
+  background: var(--sv-surface);
+}
+
+.diagram-toggle.active {
+  border-color: var(--sv-chord);
 }
 
 button {
-  padding: 0.4rem 1rem;
-  font-size: 0.9rem;
+  padding: 0.3rem 0.75rem;
+  font-size: 0.85rem;
   border: 1px solid var(--sv-border);
   border-radius: 4px;
   background: var(--sv-surface);
@@ -475,6 +494,14 @@ button {
 
 button:hover {
   background: var(--sv-surface-hover);
+}
+
+/* Demoted: a plain link-style action, not a peer of the per-song controls. */
+.load-another {
+  border-color: transparent;
+  background: none;
+  color: var(--sv-chord);
+  text-decoration: underline;
 }
 
 .error {
