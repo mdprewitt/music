@@ -234,22 +234,6 @@ describe('useSheetStore', () => {
     expect(useSheetStore().pinDiagrams).toBe(true)
   })
 
-  it('defaults displayPanelOpen to false and persists it across a fresh store', () => {
-    const store = useSheetStore()
-    expect(store.displayPanelOpen).toBe(false)
-    store.displayPanelOpen = true
-    setActivePinia(createPinia())
-    expect(useSheetStore().displayPanelOpen).toBe(true)
-  })
-
-  it('keeps displayPanelOpen across a reset', async () => {
-    const store = useSheetStore()
-    store.displayPanelOpen = true
-    await store.loadFile(fileOf(SAMPLE_CHORDPRO))
-    store.reset()
-    expect(store.displayPanelOpen).toBe(true)
-  })
-
   describe('changing the key', () => {
     it('exposes the original key and its transpose targets for a keyed sheet', async () => {
       const store = useSheetStore()

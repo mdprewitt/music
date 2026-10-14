@@ -30,10 +30,11 @@ test('renders a picked chart with its header controls', async ({ page }) => {
   // single fragment rather than the whole line.
   await expect(page.locator('.sheet-body')).toContainText('line for the')
 
-  // The instrument picker is a header <select> (moved out of the Display panel).
-  const instrument = page.getByLabel('Instrument')
-  await expect(instrument).toBeVisible()
-  await expect(page.locator('.viewer-header')).toContainText('Key')
+  // The header carries three menus; key + instrument live under "Song".
+  await expect(page.locator('.viewer-header')).toContainText('Song: C')
+  await page.getByRole('button', { name: /^Song:/ }).click()
+  await expect(page.getByLabel('Instrument')).toBeVisible()
+  await expect(page.getByLabel('Key', { exact: true })).toBeVisible()
 })
 
 test('switching instrument redraws the chord diagrams', async ({ page }) => {
@@ -41,12 +42,15 @@ test('switching instrument redraws the chord diagrams', async ({ page }) => {
   await page.locator('input[type="file"]').setInputFiles(SAMPLE_CHART)
   await expect(page.locator('.viewer-header')).toBeVisible()
 
-  // Diagrams on, then pick a ukulele tuning and confirm the strip re-renders.
+  // Diagrams on (View menu), then pick a ukulele tuning (Song menu) and confirm
+  // the strip re-renders.
+  await page.getByRole('button', { name: /^View:/ }).click()
   const diagramsToggle = page.getByRole('checkbox', { name: 'Diagrams' })
   if (!(await diagramsToggle.isChecked())) await diagramsToggle.check()
 
   await expect(page.locator('.chord-diagrams svg').first()).toBeVisible()
 
+  await page.getByRole('button', { name: /^Song:/ }).click()
   await page.getByLabel('Instrument').selectOption({ label: 'Usual (GCEA)' })
   await expect(page.locator('.chord-diagrams svg').first()).toBeVisible()
 })
@@ -66,17 +70,17 @@ test.describe('narrow viewport', () => {
     expect(overflows).toBe(false)
   })
 
-  test('the Display panel stays on screen when its trigger wraps near the left edge', async ({
-    page,
-  }) => {
+  test('every header menu panel stays on screen when its trigger wraps', async ({ page }) => {
     await page.goto('/')
     await page.locator('input[type="file"]').setInputFiles(SAMPLE_CHART)
-    await page.getByRole('button', { name: 'Display' }).click()
 
-    const box = await page.locator('.panel').boundingBox()
-    expect(box).not.toBeNull()
-    expect(box!.x).toBeGreaterThanOrEqual(0)
-    expect(box!.x + box!.width).toBeLessThanOrEqual(390)
+    for (const name of [/^Song:/, /^View:/, /^Settings/]) {
+      await page.getByRole('button', { name }).click()
+      const box = await page.locator('.menu-panel').boundingBox()
+      expect(box).not.toBeNull()
+      expect(box!.x).toBeGreaterThanOrEqual(0)
+      expect(box!.x + box!.width).toBeLessThanOrEqual(390)
+    }
   })
 
   test('the "Right" diagram strip stacks below the chart instead of overflowing the screen', async ({
@@ -84,7 +88,7 @@ test.describe('narrow viewport', () => {
   }) => {
     await page.goto('/')
     await page.locator('input[type="file"]').setInputFiles(SAMPLE_CHART)
-    await page.getByRole('button', { name: 'Display' }).click()
+    await page.getByRole('button', { name: /^View:/ }).click()
     await page.locator('.position-selector .option', { hasText: 'Right' }).click()
     await expect(page.locator('.chord-diagrams')).toHaveClass(/pos-right/)
 
@@ -127,26 +131,32 @@ test.describe('songbook page', () => {
   })
 })
 
-test('the Display panel no longer carries the instrument picker', async ({ page }) => {
+test('the Song menu holds key + instrument and the Settings menu holds the theme', async ({
+  page,
+}) => {
   await page.goto('/')
   await page.locator('input[type="file"]').setInputFiles(SAMPLE_CHART)
-  await page.getByRole('button', { name: 'Display' }).click()
 
-  const panel = page.locator('.panel')
-  await expect(panel).toBeVisible()
-  await expect(panel).toContainText('Diagrams')
-  await expect(panel).toContainText('Theme')
-  await expect(panel.locator('select')).toHaveCount(0)
+  await page.getByRole('button', { name: /^Song:/ }).click()
+  const song = page.locator('.menu-panel')
+  await expect(song.locator('select')).toHaveCount(2)
+
+  await page.getByRole('button', { name: /^Settings/ }).click()
+  const settings = page.locator('.menu-panel')
+  await expect(settings).toHaveCount(1)
+  await expect(settings).toContainText('Theme')
+  await expect(settings).toContainText('Page turner')
+  await expect(settings.locator('select')).toHaveCount(0)
 })
 
-test('the Display panel text size buttons resize the chart', async ({ page }) => {
+test('the View menu text size buttons resize the chart', async ({ page }) => {
   await page.goto('/')
   await page.locator('input[type="file"]').setInputFiles(SAMPLE_CHART)
   const chart = page.locator('.chord-sheet')
   const sizeOf = () => chart.evaluate((el) => parseFloat(getComputedStyle(el).fontSize))
   const before = await sizeOf()
 
-  await page.getByRole('button', { name: 'Display' }).click()
+  await page.getByRole('button', { name: /^View:/ }).click()
   await page.getByRole('button', { name: 'Larger text' }).click()
   expect(await sizeOf()).toBeGreaterThan(before)
 
@@ -162,9 +172,9 @@ test('a page turner preset scrolls the chart by a screen', async ({ page }) => {
   await page.evaluate(() => {
     document.body.style.minHeight = '3000px'
   })
-  await page.getByRole('button', { name: 'Display' }).click()
+  await page.getByRole('button', { name: /^Settings/ }).click()
   await page.locator('.option', { hasText: 'Page Up / Down' }).click()
-  await page.getByRole('button', { name: 'Display' }).click()
+  await page.keyboard.press('Escape')
 
   await page.evaluate(() => window.scrollTo(0, 0))
   await page.keyboard.press('PageDown')
