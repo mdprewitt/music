@@ -60,6 +60,15 @@ test.describe('accessibility (axe-core)', () => {
     await expectNoViolations(page)
   })
 
+  test('performance mode has no violations', async ({ page }) => {
+    await loadSample(page)
+    await page.getByRole('button', { name: /Settings/ }).click()
+    await page.getByRole('checkbox', { name: /Performance mode/ }).check()
+    await page.keyboard.press('Escape')
+    await expect(page.getByRole('toolbar', { name: 'Performance controls' })).toBeVisible()
+    await expectNoViolations(page)
+  })
+
   test('an open chord popover has no violations', async ({ page }) => {
     await loadSample(page)
     await page.locator('.sheet .chord[role="button"]').first().click()

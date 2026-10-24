@@ -446,4 +446,44 @@ describe('SheetViewer', () => {
       expect(scrollBy).not.toHaveBeenCalled()
     })
   })
+
+  describe('performance mode', () => {
+    it('swaps the header controls for the bottom toolbar', async () => {
+      const { store, wrapper } = await mountWithSong('html')
+      expect(wrapper.find('.viewer-controls').exists()).toBe(true)
+      expect(wrapper.find('.perf-toolbar').exists()).toBe(false)
+      store.performanceMode = true
+      await nextTick()
+      expect(wrapper.find('.viewer-controls').exists()).toBe(false)
+      expect(wrapper.find('.perf-toolbar').exists()).toBe(true)
+      // the filename and "Load another" stay in the header
+      expect(wrapper.find('.viewer-header > button').text()).toBe('Load another')
+    })
+
+    it('scrolls the page from the toolbar buttons', async () => {
+      const scrollBy = vi.fn<(options: ScrollToOptions) => void>()
+      vi.stubGlobal('scrollBy', scrollBy)
+      const { store, wrapper } = await mountWithSong('html')
+      store.performanceMode = true
+      await nextTick()
+      const buttons = wrapper.findAll('.perf-toolbar button')
+      await buttons[0]!.trigger('click')
+      await buttons[buttons.length - 1]!.trigger('click')
+      expect(scrollBy).toHaveBeenCalledTimes(2)
+      expect(scrollBy.mock.calls[0]![0].top!).toBeGreaterThan(0)
+      expect(scrollBy.mock.calls[1]![0].top!).toBeLessThan(0)
+    })
+
+    it('opens the Settings drawer from the toolbar', async () => {
+      const { store, wrapper } = await mountWithSong('html')
+      store.performanceMode = true
+      await nextTick()
+      const settings = wrapper
+        .findAll('.perf-toolbar button')
+        .find((b) => b.text().includes('Settings'))
+      await settings!.trigger('click')
+      await flushPromises()
+      expect(wrapper.find('dialog.drawer').exists()).toBe(true)
+    })
+  })
 })

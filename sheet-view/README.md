@@ -60,6 +60,7 @@ remembered once you pick one.
 
 **Settings** opens a side drawer (a bottom sheet on a phone; Esc, the Close button or a click
 outside dismisses it) with the set-once preferences, grouped and labelled:
+- **Layout** — switch on **Performance mode** (see below).
 - **View** — ChordPro, HTML, HTML inline or PDF.
 - **Diagrams** — where the chord strip sits (top, right, bottom) and whether it stays pinned in
   place while the music scrolls. Shown only while diagrams are on and outside the PDF view.
@@ -82,6 +83,17 @@ that chord — a quick look at one shape without scanning the whole strip. It wo
 "Chord diagrams" toggle off; press Esc, click elsewhere, or click the chord again to dismiss.
 
 ## Colour themes
+
+### Performance mode
+
+For a tablet on a music stand, **Settings → Layout → Performance mode** moves the controls from the
+top of the screen to a bar fixed at the bottom. A big **▼** button at the far left scrolls the
+chart down about a screen (with a little overlap), and **▲** at the far right scrolls back up.
+Between them: the **Key** stepper (♭ / ♯, plus ↺ back to the original; "No key" for sheets without
+a `{key}`), **A− / A+** text size, the **Diagrams** toggle and **Settings**. The header keeps just
+the filename and **Load another**, and the **Instrument** picker moves into Settings while the mode
+is on. The bar stays put (it never hides), isn't printed, and the choice is remembered. The scroll
+buttons aren't shown in the PDF view, where the browser's own viewer scrolls.
 
 The theme selector lives in the **Settings** drawer and offers four standard colour
 templates — **Light**, **Dark**, **Sepia** (warm, paper-like) and **Stage**

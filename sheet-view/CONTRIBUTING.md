@@ -146,6 +146,18 @@ reduced by the pinned diagram strip's height and using `behavior: 'auto'` under
 `prefers-reduced-motion`. **To add a device mode:** add a row to
 `PAGE_TURNER_PRESETS`; the Settings drawer's radio group enumerates it.
 
+## Performance mode
+
+`store.performanceMode` (`sheet-view:performanceMode`, persisted, survives `reset()`) swaps
+`SheetViewer.vue`'s header controls for `PerformanceToolbar.vue`, a fixed bottom bar with
+scroll-down (far left) / scroll-up (far right) buttons. Both buttons emit `turn`, which
+`SheetViewer.vue`'s `turnPage()` handles — the same routine the page-turner keys use, so the
+scroll distance (`pageTurnDistance()`, minus the pinned strip and the toolbar's measured height)
+and reduced-motion behaviour stay identical. The toolbar's height is measured with a
+`ResizeObserver` into `--toolbar-size`; anything new that could sit under the bar should honour it
+(see the chord cells' `scroll-margin-block-end`). The toggle lives in `SettingsDrawer.vue`'s
+"Layout" section.
+
 ## Chord diagrams
 
 `buildDiagramIndex(song, instrument, rawText)` in `src/chords/shapes.ts` is the
