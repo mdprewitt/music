@@ -35,6 +35,9 @@ bun install
 bun dev
 ```
 
+The dev server (and `vite preview`) listens on `0.0.0.0`, so you can open it from a tablet or
+phone on the same network at `http://<your-machine-ip>:5173` — handy for trying performance mode.
+
 ### Type-Check, Compile and Minify for Production
 
 ```sh

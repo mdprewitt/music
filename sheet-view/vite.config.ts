@@ -13,6 +13,12 @@ export default defineConfig({
     vue(),
     vueDevTools(),
   ],
+  // Listen on all interfaces so the dev server (and `vite preview`) can be opened
+  // from a tablet/phone on the same network.
+  // allowedHosts: Vite rejects requests whose Host header isn't listed (DNS-rebinding guard),
+  // so the machine's Tailscale name must be named explicitly.
+  server: { host: '0.0.0.0', allowedHosts: ['mirkwood.tail136b7f.ts.net'] },
+  preview: { host: '0.0.0.0' },
   resolve: {
     alias: {
       '@': fileURLToPath(new URL('./src', import.meta.url)),
