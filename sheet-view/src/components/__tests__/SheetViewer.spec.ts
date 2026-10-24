@@ -47,6 +47,7 @@ describe('SheetViewer', () => {
     const { wrapper } = await mountWithSong('html')
     expect(wrapper.find('.sheet').exists()).toBe(true)
     expect(wrapper.html()).toContain('chord')
+    expect(wrapper.find('.viewer-header .filename').exists()).toBe(false)
   })
 
   it('renders the ChordPro view with directives and inline chords', async () => {
@@ -456,7 +457,7 @@ describe('SheetViewer', () => {
       await nextTick()
       expect(wrapper.find('.viewer-controls').exists()).toBe(false)
       expect(wrapper.find('.perf-toolbar').exists()).toBe(true)
-      // the filename and "Load another" stay in the header
+      // "Load another" stays in the header
       expect(wrapper.find('.viewer-header > button').text()).toBe('Load another')
     })
 

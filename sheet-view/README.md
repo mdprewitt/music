@@ -24,7 +24,7 @@ startup — e.g. `https://mdprewitt.github.io/music/?view=https://github.com/mdp
 Percent-encode the chart URL if it has its own query string; a plain GitHub/Gist link needs no
 encoding.
 
-The viewer header keeps to what you change per song: the filename, **Instrument** and **Key**
+The viewer header keeps to what you change per song: **Instrument** and **Key**
 pickers, a **Diagrams** on/off toggle, a **Settings** button (see below), and a **Load another**
 link. The view format (chosen in **Settings**) switches between:
 - ChordPro
@@ -91,7 +91,7 @@ top of the screen to a bar fixed at the bottom. A big **▼** button at the far 
 chart down about a screen (with a little overlap), and **▲** at the far right scrolls back up.
 Between them: the **Key** stepper (♭ / ♯, plus ↺ back to the original; "No key" for sheets without
 a `{key}`), **A− / A+** text size, the **Diagrams** toggle and **Settings**. The header keeps just
-the filename and **Load another**, and the **Instrument** picker moves into Settings while the mode
+**Load another**, and the **Instrument** picker moves into Settings while the mode
 is on. The bar stays put (it never hides), isn't printed, and the choice is remembered. The scroll
 buttons aren't shown in the PDF view, where the browser's own viewer scrolls.
 
