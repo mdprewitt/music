@@ -66,9 +66,7 @@ test.describe('narrow viewport', () => {
     expect(overflows).toBe(false)
   })
 
-  test('the Settings drawer fits the screen as a bottom sheet', async ({
-    page,
-  }) => {
+  test('the Settings drawer fits the screen as a bottom sheet', async ({ page }) => {
     await page.goto('/')
     await page.locator('input[type="file"]').setInputFiles(SAMPLE_CHART)
     await page.getByRole('button', { name: /Settings/ }).click()
@@ -128,7 +126,9 @@ test.describe('songbook page', () => {
   })
 })
 
-test('the Settings drawer carries the set-once prefs but not the instrument picker', async ({ page }) => {
+test('the Settings drawer carries the set-once prefs but not the instrument picker', async ({
+  page,
+}) => {
   await page.goto('/')
   await page.locator('input[type="file"]').setInputFiles(SAMPLE_CHART)
   await page.getByRole('button', { name: /Settings/ }).click()
@@ -173,4 +173,59 @@ test('a page turner preset scrolls the chart by a screen', async ({ page }) => {
   await expect.poll(() => page.evaluate(() => window.scrollY)).toBeGreaterThan(100)
   await page.keyboard.press('PageUp')
   await expect.poll(() => page.evaluate(() => window.scrollY)).toBe(0)
+})
+
+test.describe('performance mode', () => {
+  async function enablePerformanceMode(page: import('@playwright/test').Page) {
+    await page.goto('/')
+    await page.locator('input[type="file"]').setInputFiles(SAMPLE_CHART)
+    await page.getByRole('button', { name: /Settings/ }).click()
+    await page.getByRole('checkbox', { name: /Performance mode/ }).check()
+    await page.keyboard.press('Escape')
+    await expect(page.getByRole('toolbar', { name: 'Performance controls' })).toBeVisible()
+  }
+
+  test.use({ viewport: { width: 390, height: 600 } })
+
+  test('swaps the header controls for a bottom toolbar without overflowing', async ({ page }) => {
+    await enablePerformanceMode(page)
+
+    await expect(page.locator('.viewer-controls')).toHaveCount(0)
+    const overflows = await page.evaluate(
+      () => document.documentElement.scrollWidth > document.documentElement.clientWidth,
+    )
+    expect(overflows).toBe(false)
+
+    // Scroll down is the leftmost control, Scroll up the rightmost.
+    const down = await page.getByRole('button', { name: 'Scroll down' }).boundingBox()
+    const up = await page.getByRole('button', { name: 'Scroll up' }).boundingBox()
+    const key = await page.getByRole('group', { name: 'Key' }).boundingBox()
+    expect(down!.x).toBeLessThan(key!.x)
+    expect(up!.x).toBeGreaterThan(key!.x + key!.width)
+  })
+
+  test('the scroll buttons move the page down and back up', async ({ page }) => {
+    await enablePerformanceMode(page)
+    await page.evaluate(() => {
+      document.body.style.minHeight = '3000px'
+    })
+
+    await page.getByRole('button', { name: 'Scroll down' }).click()
+    await expect.poll(() => page.evaluate(() => window.scrollY)).toBeGreaterThan(100)
+    await page.getByRole('button', { name: 'Scroll up' }).click()
+    await expect.poll(() => page.evaluate(() => window.scrollY)).toBe(0)
+  })
+
+  test('the mode survives a reload and can be switched off from Settings', async ({ page }) => {
+    await enablePerformanceMode(page)
+    await page.reload()
+    await page.locator('input[type="file"]').setInputFiles(SAMPLE_CHART)
+    await expect(page.getByRole('toolbar', { name: 'Performance controls' })).toBeVisible()
+
+    await page.getByRole('button', { name: /Settings/ }).click()
+    await page.getByRole('checkbox', { name: /Performance mode/ }).uncheck()
+    await page.keyboard.press('Escape')
+    await expect(page.getByRole('toolbar', { name: 'Performance controls' })).toHaveCount(0)
+    await expect(page.locator('.viewer-controls')).toBeVisible()
+  })
 })

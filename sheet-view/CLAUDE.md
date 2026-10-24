@@ -50,12 +50,12 @@ src/
   stores/
     sheet.ts              # Pinia store: rawText, filename, song, parseError,
                           #   sourceFormat, viewFormat, instrument, diagramPosition,
-                          #   pinDiagrams, fontScale, sheetFont, pageTurner,
+                          #   pinDiagrams, performanceMode, fontScale, sheetFont, pageTurner,
                           #   showDiagrams, targetKey
                           #   + originalKey/availableKeys/canChangeKey/displaySong (computed)
                           #   + loadFile/loadFromUrl/parse/reset
                           #   viewFormat, instrument, diagramPosition, pinDiagrams,
-                          #   fontScale, sheetFont and pageTurner
+                          #   performanceMode, fontScale, sheetFont and pageTurner
                           #   persist (sheet-view:*) and survive reset();
                           #   showDiagrams + targetKey reset per sheet. targetKey is
                           #   remembered per song in sheet-view:songKeys (see sheet/key.ts)
@@ -142,15 +142,30 @@ src/
     SheetViewer.vue       # renders store.song; header = filename +
                           #   InstrumentSelector + KeySelector + Diagrams toggle +
                           #   Settings button + "Load another" (the sole direct-child
-                          #   <button> of .viewer-header — a spec depends on that);
+                          #   <button> of .viewer-header — a spec depends on that). With
+                          #   store.performanceMode the middle controls (.viewer-controls) are
+                          #   dropped and PerformanceToolbar renders instead; turnPage(dir)
+                          #   is the one scroll routine for the page-turner keys and the
+                          #   toolbar's buttons;
                           #   owns the click-a-chord -> ChordPopover interaction (both HTML views)
     SettingsDrawer.vue    # the "Settings" modal side drawer (bottom sheet <=640px) on a native
                           #   <dialog> — showModal() supplies focus trap, Esc and focus return;
                           #   jsdom falls back to the `open` attribute. Holds the set-once prefs,
-                          #   each captioned: View format / Diagrams position+pin / Text /
+                          #   each captioned: Layout (the Performance-mode checkbox) / Instrument (performance mode only —
+                          #   the header picker is hidden then) / View format / Diagrams position+pin / Text /
                           #   Page turner / Theme+CustomColorEditor. Mounted with v-if from
                           #   SheetViewer (local `settingsOpen` ref — deliberately not persisted),
                           #   emits `close` (Close button, Esc, backdrop click via @click.self).
+    PerformanceToolbar.vue # performance (tablet) mode's fixed bottom bar, role=toolbar: ▼ scroll
+                          #   down at the far left, ▲ scroll up at the far right (both emit
+                          #   `turn` 1/-1; hidden in the PDF view), between them a key stepper
+                          #   (♭/♯ through store.availableKeys + ↺; "No key" disabled without a
+                          #   {key}), A−/A+ text size, the Diagrams toggle and a Settings button
+                          #   (emits `open-settings` → the same SettingsDrawer). Always visible —
+                          #   it does not auto-hide, or it would vanish under the scroll button.
+                          #   Exposes `el`; SheetViewer measures it into --toolbar-size (pads the
+                          #   viewer, scroll-margin-block-end on chords, bottom-pinned strip offset,
+                          #   shorter page turn). Mounted only while store.performanceMode.
     ViewSelector.vue / DiagramPositionSelector.vue   # radiogroup, v-model on the store
     InstrumentSelector.vue # header <select> (thirteen tunings, one <optgroup> per family from
                           #   INSTRUMENT_FAMILIES), v-model on store.instrument
@@ -242,6 +257,7 @@ playwright.config.ts          # testDir e2e/, chromium only, webServer = build +
 - `--sv-focus` (`base.css`, aliased to `--sv-chord`) is the one focus-ring colour for the whole app, applied by a single global `:focus-visible { outline: 2px solid var(--sv-focus); outline-offset: 2px }` rule. Don't add per-component `outline: none` — if a component's default outline looks wrong against its own background, fix the component's background/padding, not the ring.
 - `.sr-only` lives in `base.css` (not per-component) — reuse it for anything that must reach screen readers but not the page (a `<legend>`, a live-region host). It sets both the legacy `clip` and modern `clip-path` for older AT.
 - The chord "buttons" in `SheetViewer.vue`'s `html` view and `InlineSheet.vue` share one convention for hover/focus/"diagram open": hover and open both paint `--sv-surface-hover`, but only `open` adds a persistent underline — the three states must stay visually distinguishable without relying on the (removed) `outline: none` + colour-only hack.
+- Performance mode's fixed bottom toolbar overlays the chart, so — like the pinned strip — it is measured (`--toolbar-size`) and the chart's focusable chords carry a matching `scroll-margin-block-end` (WCAG 2.4.11); page turns are shortened by its height. Its icon-only buttons carry `.sr-only` names.
 - `prefers-reduced-motion` is respected for the one global animation (`body`'s theme-change colour transition in `base.css`); wrap any new transition/animation the same way.
 - Status announcements (WCAG 4.1.3) go through `useAnnouncerStore` (`src/stores/announcer.ts`) — call its `announce(text)`, never mount a one-off live region. `LiveAnnouncer.vue` renders the single shared `role="status" aria-live="polite"` region and is mounted exactly once, in `App.vue`; a second instance would double-announce. `announce()` clears the message and sets it on the next tick, so the same text announced twice in a row still triggers (tests need an extra `await flushPromises()` beyond the state change itself to observe the final value). Pair it with `role="alert"` on any persistent visible error element (`store.parseError`, `pdfError`, `DropZone`'s `loadError`) — belt-and-suspenders, since not every screen reader reliably catches a freshly-inserted alert-role node. Watch a store field that's also mutated by non-UI code (like `store.parseError`, set both by `store.parse()` and by `App.vue`'s `?view=` catch) from a component mounted for the app's whole lifetime (`App.vue`), not one that mounts per sheet (`SheetViewer.vue`) — the latter's watcher baseline would already reflect an earlier change and silently miss it.
 - A group of same-role elements that should act as one tab stop uses the "roving tabindex" pattern (`src/sheet/rovingFocus.ts`: `moveRovingFocus`/`handleRovingArrowKey`) instead of making every one individually tabbable (WCAG 2.4.3) — the chord cells in both `SheetViewer.vue`'s `html` view (seeded by `markChordCells()`) and `InlineSheet.vue`'s spans (seeded imperatively in `InlineSheet.vue` itself, since Vue's patcher won't rewrite an attribute whose bound template expression hasn't changed, so a declarative binding alone can't undo an out-of-band roving-focus move) are one worked example; reuse the same helper for the next one rather than hand-rolling arrow-key math again. `App.vue`'s skip link (`#main-content`, `tabindex="-1"` on `<main>`) exists because of this — with the chart down to one or two tab stops, skipping the header controls actually matters.

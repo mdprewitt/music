@@ -16,6 +16,7 @@ import { handleRovingArrowKey } from '@/sheet/rovingFocus'
 import InstrumentSelector from './InstrumentSelector.vue'
 import KeySelector from './KeySelector.vue'
 import SettingsDrawer from './SettingsDrawer.vue'
+import PerformanceToolbar from './PerformanceToolbar.vue'
 import ChordDiagrams from './ChordDiagrams.vue'
 import InlineSheet from './InlineSheet.vue'
 import ChordPopover, { type AnchorRect } from './ChordPopover.vue'
@@ -181,6 +182,33 @@ watch(
   { immediate: true },
 )
 
+// Performance mode's fixed bottom toolbar covers the last stretch of the
+// viewport, so it is measured like the pinned strip: it pads the chart's end,
+// keeps focused chords clear of it (WCAG 2.4.11) and trims a page turn. Stays 0
+// when the mode is off (the toolbar isn't rendered, so the ref is null).
+const toolbarRef = ref<InstanceType<typeof PerformanceToolbar> | null>(null)
+const toolbarSize = ref(0)
+let toolbarResizeObserver: ResizeObserver | null = null
+
+watch(
+  toolbarRef,
+  (instance) => {
+    toolbarResizeObserver?.disconnect()
+    toolbarResizeObserver = null
+    const el = instance?.el
+    if (!el || typeof ResizeObserver === 'undefined') {
+      toolbarSize.value = 0
+      return
+    }
+    toolbarResizeObserver = new ResizeObserver(() => {
+      toolbarSize.value = el.getBoundingClientRect().height
+    })
+    toolbarResizeObserver.observe(el)
+  },
+  { immediate: true },
+)
+onBeforeUnmount(() => toolbarResizeObserver?.disconnect())
+
 const pinnedOverlay = computed(() => store.pinDiagrams && store.diagramPosition !== 'right')
 // Height the pinned strip covers (0 when not an overlay) — also trims a page turn.
 const pinnedOverlaySize = computed(() =>
@@ -298,12 +326,18 @@ function onPageTurnKeydown(event: KeyboardEvent) {
   const direction = pageTurnDirection(event, store.pageTurner)
   if (direction === null) return
   event.preventDefault()
+  turnPage(direction)
+}
+
+/** Scroll about a screen (1 = down, -1 = up) — shared by the keys and the toolbar buttons. */
+function turnPage(direction: 1 | -1) {
   closePopover()
   const reduceMotion =
     typeof window.matchMedia === 'function' &&
     window.matchMedia('(prefers-reduced-motion: reduce)').matches
   window.scrollBy({
-    top: direction * pageTurnDistance(window.innerHeight, pinnedOverlaySize.value),
+    top:
+      direction * pageTurnDistance(window.innerHeight, pinnedOverlaySize.value + toolbarSize.value),
     behavior: reduceMotion ? 'auto' : 'smooth',
   })
 }
@@ -338,10 +372,10 @@ watch(
 </script>
 
 <template>
-  <div class="viewer">
+  <div class="viewer" :style="{ '--toolbar-size': `${toolbarSize}px` }">
     <header class="viewer-header">
       <span class="filename">{{ store.filename }}</span>
-      <div class="viewer-controls">
+      <div v-if="!store.performanceMode" class="viewer-controls">
         <InstrumentSelector v-model="store.instrument" />
         <KeySelector
           v-model="store.targetKey"
@@ -366,6 +400,13 @@ watch(
     </header>
 
     <SettingsDrawer v-if="settingsOpen" @close="settingsOpen = false" />
+
+    <PerformanceToolbar
+      v-if="store.performanceMode"
+      ref="toolbarRef"
+      @turn="turnPage"
+      @open-settings="settingsOpen = true"
+    />
 
     <pre v-if="store.parseError" class="error" role="alert">{{ store.parseError }}</pre>
 
@@ -441,6 +482,8 @@ watch(
   /* Chord accent — sourced from the active theme. Inherits into
      ChordDiagram.vue too (custom properties pierce scoping). */
   --chord-accent: var(--sv-chord);
+  /* Room for performance mode's fixed bottom toolbar so the chart's last lines can scroll clear. */
+  padding-bottom: var(--toolbar-size, 0px);
 }
 
 .viewer-header {
@@ -648,7 +691,8 @@ button:hover {
      the pinned (position: sticky) strip when it's at the top or bottom
      (WCAG 2.4.11). :deep() also reaches InlineSheet.vue's chord spans, which
      share this same block. */
-  scroll-margin-block: var(--pinned-strip-size, 0px);
+  scroll-margin-block-start: var(--pinned-strip-size, 0px);
+  scroll-margin-block-end: calc(var(--pinned-strip-size, 0px) + var(--toolbar-size, 0px));
 }
 
 /* Hover, keyboard focus and "diagram open" are three distinct states and must
@@ -690,11 +734,20 @@ button:hover {
   overflow-wrap: anywhere;
 }
 
+/* A bottom-pinned strip must stop above the fixed toolbar, not slide under it. */
+.sheet-body.pinned :deep(.chord-diagrams.pos-bottom) {
+  bottom: var(--toolbar-size, 0px);
+}
+
 @media print {
   /* The header's view/instrument/key controls and "Load another" serve a
      screen, not a printed page — the chart underneath is what's wanted. */
   .viewer-header {
     display: none;
+  }
+
+  .viewer {
+    padding-bottom: 0;
   }
 
   /* position: sticky has no meaning across print pages, and the opaque

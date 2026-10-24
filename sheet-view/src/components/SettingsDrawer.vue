@@ -4,6 +4,7 @@ import { useSheetStore } from '@/stores/sheet'
 import { useThemeStore } from '@/stores/theme'
 import { PAGE_TURNER_PRESETS } from '@/sheet/pageTurner'
 import ViewSelector from './ViewSelector.vue'
+import InstrumentSelector from './InstrumentSelector.vue'
 import DiagramPositionSelector from './DiagramPositionSelector.vue'
 import ThemeSelector from './ThemeSelector.vue'
 import CustomColorEditor from './CustomColorEditor.vue'
@@ -55,6 +56,23 @@ onMounted(async () => {
         <h2 :id="titleId">Settings</h2>
         <button type="button" class="drawer-close" @click="emit('close')">Close</button>
       </header>
+
+      <section>
+        <h3 class="drawer-heading">Layout</h3>
+        <label class="drawer-check">
+          <input v-model="store.performanceMode" type="checkbox" />
+          Performance mode (bottom toolbar for tablets)
+        </label>
+        <p class="drawer-note">
+          Moves the controls to a bar at the bottom of the screen with big scroll-down and scroll-up
+          buttons at its ends.
+        </p>
+      </section>
+
+      <section v-if="store.performanceMode">
+        <h3 class="drawer-heading">Instrument</h3>
+        <InstrumentSelector v-model="store.instrument" />
+      </section>
 
       <section>
         <h3 class="drawer-heading">View</h3>

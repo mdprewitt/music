@@ -31,6 +31,7 @@ export function isViewFormat(value: unknown): value is ViewFormat {
 const INSTRUMENT_STORAGE_KEY = 'sheet-view:instrument'
 const DIAGRAM_POSITION_STORAGE_KEY = 'sheet-view:diagramPosition'
 const PIN_DIAGRAMS_STORAGE_KEY = 'sheet-view:pinDiagrams'
+const PERFORMANCE_MODE_STORAGE_KEY = 'sheet-view:performanceMode'
 const VIEW_FORMAT_STORAGE_KEY = 'sheet-view:viewFormat'
 const FONT_SCALE_STORAGE_KEY = 'sheet-view:fontScale'
 const SHEET_FONT_STORAGE_KEY = 'sheet-view:sheetFont'
@@ -100,6 +101,10 @@ export const useSheetStore = defineStore('sheet', () => {
   )
   // When pinned, the diagram strip stays put (position: sticky) while the chart scrolls.
   const pinDiagrams = ref<boolean>(readStored(PIN_DIAGRAMS_STORAGE_KEY, asBoolean) ?? false)
+  // Opt-in tablet layout: controls move to a bottom toolbar with scroll buttons.
+  const performanceMode = ref<boolean>(
+    readStored(PERFORMANCE_MODE_STORAGE_KEY, asBoolean) ?? false,
+  )
   // Whether the "Display" settings panel in the viewer header is expanded.
   // Chart text size multiplier and font — see `src/sheet/typography.ts`.
   const fontScale = ref<number>(
@@ -181,6 +186,9 @@ export const useSheetStore = defineStore('sheet', () => {
     flush: 'sync',
   })
   watch(pinDiagrams, (value) => writeStored(PIN_DIAGRAMS_STORAGE_KEY, String(value)), {
+    flush: 'sync',
+  })
+  watch(performanceMode, (value) => writeStored(PERFORMANCE_MODE_STORAGE_KEY, String(value)), {
     flush: 'sync',
   })
   watch(fontScale, (value) => writeStored(FONT_SCALE_STORAGE_KEY, String(value)), {
@@ -321,7 +329,7 @@ export const useSheetStore = defineStore('sheet', () => {
     sourceFormat.value = 'chordpro'
     showDiagrams.value = true
     targetKey.value = null
-    // keep `instrument`, `diagramPosition`, `pinDiagrams`, `viewFormat`,
+    // keep `instrument`, `diagramPosition`, `pinDiagrams`, `performanceMode`, `viewFormat`,
     // `fontScale`, `sheetFont` and `pageTurner` — they are user preferences
     // that outlive a single sheet.
     // `targetKey` is song-scoped (like `showDiagrams`) so it is cleared here, but
@@ -338,6 +346,7 @@ export const useSheetStore = defineStore('sheet', () => {
     instrument,
     diagramPosition,
     pinDiagrams,
+    performanceMode,
     fontScale,
     sheetFont,
     pageTurner,

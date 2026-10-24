@@ -228,6 +228,21 @@ describe('useSheetStore', () => {
     expect(store.pinDiagrams).toBe(true)
   })
 
+  it('defaults performanceMode to false and keeps it across a reset', async () => {
+    const store = useSheetStore()
+    expect(store.performanceMode).toBe(false)
+    store.performanceMode = true
+    await store.loadFile(fileOf(SAMPLE_CHORDPRO))
+    store.reset()
+    expect(store.performanceMode).toBe(true)
+  })
+
+  it('persists performanceMode and restores it in a fresh store', () => {
+    useSheetStore().performanceMode = true
+    setActivePinia(createPinia())
+    expect(useSheetStore().performanceMode).toBe(true)
+  })
+
   it('persists pinDiagrams and restores it in a fresh store', () => {
     useSheetStore().pinDiagrams = true
     setActivePinia(createPinia())

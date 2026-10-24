@@ -22,7 +22,18 @@ describe('SettingsDrawer', () => {
     expect(dialog.attributes('open')).toBeDefined()
     expect(dialog.attributes('aria-labelledby')).toBe(wrapper.find('h2').attributes('id'))
     const headings = wrapper.findAll('.drawer-heading').map((h) => h.text())
-    expect(headings).toEqual(['View', 'Diagrams', 'Text', 'Page turner', 'Theme'])
+    expect(headings).toEqual(['Layout', 'View', 'Diagrams', 'Text', 'Page turner', 'Theme'])
+  })
+
+  it('toggles performance mode, which adds the Instrument section', async () => {
+    const store = useSheetStore()
+    const wrapper = mount(SettingsDrawer)
+    await flushPromises()
+    expect(wrapper.find('.instrument-selector').exists()).toBe(false)
+    await wrapper.find('.drawer-check input').setValue(true)
+    expect(store.performanceMode).toBe(true)
+    expect(wrapper.find('.instrument-selector').exists()).toBe(true)
+    expect(wrapper.findAll('.drawer-heading').map((h) => h.text())).toContain('Instrument')
   })
 
   it('switches the view format from the drawer', async () => {
