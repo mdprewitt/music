@@ -10,7 +10,7 @@ export interface ThemeColors {
   chord: string
   /** `{comment}` lines and muted / secondary text. */
   comment: string
-  /** Heading, filename, and title / subtitle metadata. */
+  /** Heading and title / subtitle metadata. */
   meta: string
 }
 

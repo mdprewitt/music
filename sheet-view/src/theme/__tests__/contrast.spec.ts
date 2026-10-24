@@ -26,7 +26,7 @@ describe.each(THEME_PRESET_IDS.map((id) => THEME_PRESETS[id]))('theme preset con
     expect(contrastRatio(lyrics, background)).toBeGreaterThanOrEqual(AA_TEXT)
   })
 
-  it('meta (headings, filename) text clears 4.5:1 (1.4.3)', () => {
+  it('meta (headings, title) text clears 4.5:1 (1.4.3)', () => {
     expect(contrastRatio(meta, background)).toBeGreaterThanOrEqual(AA_TEXT)
   })
 

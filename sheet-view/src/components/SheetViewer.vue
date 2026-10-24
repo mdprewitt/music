@@ -374,7 +374,6 @@ watch(
 <template>
   <div class="viewer" :style="{ '--toolbar-size': `${toolbarSize}px` }">
     <header class="viewer-header">
-      <span class="filename">{{ store.filename }}</span>
       <div v-if="!store.performanceMode" class="viewer-controls">
         <InstrumentSelector v-model="store.instrument" />
         <KeySelector
@@ -496,11 +495,6 @@ watch(
   border-bottom: 1px solid var(--sv-divider);
 }
 
-.filename {
-  font-weight: bold;
-  color: var(--sv-meta);
-}
-
 .viewer-controls {
   display: flex;
   flex-wrap: wrap;
@@ -541,6 +535,7 @@ button:hover {
 
 /* Demoted: a plain link-style action, not a peer of the per-song controls. */
 .load-another {
+  margin-left: auto;
   border-color: transparent;
   background: none;
   color: var(--sv-chord);

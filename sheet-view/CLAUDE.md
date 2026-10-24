@@ -139,7 +139,7 @@ src/
     pdf.ts                # drawDiagramSheet() — prepend a diagram page to a jsPDF doc
   components/
     DropZone.vue          # drag-drop + file picker + paste-a-URL; calls store.loadFile() / store.loadFromUrl()
-    SheetViewer.vue       # renders store.song; header = filename +
+    SheetViewer.vue       # renders store.song; header =
                           #   InstrumentSelector + KeySelector + Diagrams toggle +
                           #   Settings button + "Load another" (the sole direct-child
                           #   <button> of .viewer-header — a spec depends on that). With
