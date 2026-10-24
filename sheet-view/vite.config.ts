@@ -13,6 +13,10 @@ export default defineConfig({
     vue(),
     vueDevTools(),
   ],
+  // Listen on all interfaces so the dev server (and `vite preview`) can be opened
+  // from a tablet/phone on the same network.
+  server: { host: '0.0.0.0' },
+  preview: { host: '0.0.0.0' },
   resolve: {
     alias: {
       '@': fileURLToPath(new URL('./src', import.meta.url)),

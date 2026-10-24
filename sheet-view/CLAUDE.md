@@ -5,7 +5,7 @@ ChordPro / chord-sheet viewer built with Vue 3 + Pinia + Vite. Accepts ChordPro 
 ## Commands
 
 ```bash
-bun dev          # dev server (http://localhost:5173)
+bun dev          # dev server (http://localhost:5173; listens on 0.0.0.0, so reachable from other devices on the LAN)
 bun test:unit    # vitest (watch mode)
 bun test:e2e     # playwright — builds, previews on :4173, drives Chromium
 bun run type-check   # vue-tsc — run before committing
