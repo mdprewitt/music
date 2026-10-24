@@ -24,9 +24,9 @@ startup — e.g. `https://mdprewitt.github.io/music/?view=https://github.com/mdp
 Percent-encode the chart URL if it has its own query string; a plain GitHub/Gist link needs no
 encoding.
 
-The viewer header stays to a single row: the filename, a view selector, a **Key** picker, a
-**Diagrams** on/off toggle, a **Display** button (see below), and **Load another**. A view
-selector lets the user switch between:
+The viewer header keeps to what you change per song: the filename, **Instrument** and **Key**
+pickers, a **Diagrams** on/off toggle, a **Settings** button (see below), and a **Load another**
+link. The view format (chosen in **Settings**) switches between:
 - ChordPro
 - HTML — chords stacked above the words, exact alignment
 - HTML inline — chords bracketed in the lyric flow, wraps to the window width
@@ -58,7 +58,9 @@ chord definitions — which only distinguishes the four- and six-string families
 beyond the usual ukulele or standard guitar needs the directive or a manual pick) and
 remembered once you pick one.
 
-**Display** opens a small panel with the rest of the set-once preferences, grouped and labelled:
+**Settings** opens a side drawer (a bottom sheet on a phone; Esc, the Close button or a click
+outside dismisses it) with the set-once preferences, grouped and labelled:
+- **View** — ChordPro, HTML, HTML inline or PDF.
 - **Diagrams** — where the chord strip sits (top, right, bottom) and whether it stays pinned in
   place while the music scrolls. Shown only while diagrams are on and outside the PDF view.
 - **Text** — make the chart text smaller or larger (**A−** / **A+**, 75%–250%, with a **Reset**
@@ -81,7 +83,7 @@ that chord — a quick look at one shape without scanning the whole strip. It wo
 
 ## Colour themes
 
-The theme selector lives in the **Display** panel and offers four standard colour
+The theme selector lives in the **Settings** drawer and offers four standard colour
 templates — **Light**, **Dark**, **Sepia** (warm, paper-like) and **Stage**
 (near-black with high-contrast amber chords, for low-light use) — plus **Custom**.
 Choosing Custom reveals five colour pickers (background, lyrics, chords, comments,

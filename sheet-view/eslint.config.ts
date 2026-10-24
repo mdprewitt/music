@@ -58,6 +58,7 @@ export default defineConfigWithVueTs(
       'src/components/LicenseDialog.vue',
       'src/components/DropZone.vue',
       'src/components/InlineSheet.vue',
+      'src/components/SettingsDrawer.vue',
     ],
     rules: {
       'vuejs-accessibility/no-static-element-interactions': 'off',
